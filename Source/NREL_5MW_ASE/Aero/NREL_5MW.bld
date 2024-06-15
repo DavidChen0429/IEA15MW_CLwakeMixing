@@ -1,0 +1,36 @@
+----------------------------------------QBlade Blade Definition File------------------------------------------------
+Generated with : QBlade EE v2.0.6.4_beta windows
+Archive Format: 310013
+Time : 08:57:22
+Date : 22.05.2024
+
+----------------------------------------Object Name-----------------------------------------------------------------
+NREL_5MW                                 OBJECTNAME         - the name of the blade object
+
+----------------------------------------Parameters------------------------------------------------------------------
+HAWT                                     ROTORTYPE          - the rotor type
+0                                        INVERTEDFOILS      - invert the airfoils? 0 - NO, 1 - YES (only VAWT)
+3                                        NUMBLADES          - number of blades
+
+----------------------------------------Blade Data------------------------------------------------------------------
+POS [m]             CHORD [m]           TWIST [deg]         OFFSET_X [m]        OFFSET_Y [m]        TAXIS [-]           POLAR_FILE          
+1.50000             3.54200             0.00                0.00000             0.00000             0.50                t100.0_nre_5mw_Cylinder_1_section_with_a_Cd_of_0.50.plr
+2.86740             3.54200             13.31               0.00272             0.00060             0.50                t100.0_nre_5mw_Cylinder_1_section_with_a_Cd_of_0.50.plr
+5.59916             3.85400             13.31               0.10567             0.02499             0.50                t100.0_nre_5mw_Cylinder_1_section_with_a_Cd_of_0.50.plr
+8.32894             4.16700             13.31               0.24989             0.05915             0.50                t90.0_nre_5mw_Cylinder_2_section_with_a_Cd_of_0.35.plr
+11.74021            4.55700             13.31               0.45860             0.10846             0.50                t40.0_nre_5mw_DU40_airfoil_with_an_aspect_ratio_of_17._Original_-180_to_180deg.plr
+15.83990            4.65200             11.48               0.56963             0.11568             0.50                t35.0_nre_5mw_DU35_airfoil_with_an_aspect_ratio_of_17._Original_-180_to_180deg.plr
+19.94101            4.45800             10.16               0.54855             0.09834             0.50                t35.0_nre_5mw_DU35_airfoil_with_an_aspect_ratio_of_17._Original_-180_to_180deg.plr
+24.04212            4.24900             9.01                0.52465             0.08323             0.50                t30.0_nre_5mw_DU30_airfoil_with_an_aspect_ratio_of_17._Original_-180_to_180deg.plr
+28.14320            4.00700             7.80                0.49625             0.06793             0.50                t25.0_nre_5mw_DU25_airfoil_with_an_aspect_ratio_of_17._Original_-180_to_180deg.plr
+32.24427            3.74800             6.55                0.46544             0.05342             0.50                t25.0_nre_5mw_DU25_airfoil_with_an_aspect_ratio_of_17._Original_-180_to_180deg.plr
+36.34535            3.50200             5.36                0.43583             0.04091             0.50                t21.0_nre_5mw_DU21_airfoil_with_an_aspect_ratio_of_17._Original_-180_to_180deg.plr
+40.44643            3.25600             4.19                0.40593             0.02971             0.50                t21.0_nre_5mw_DU21_airfoil_with_an_aspect_ratio_of_17._Original_-180_to_180deg.plr
+44.54752            3.01000             3.13                0.37572             0.02051             0.50                t17.0_nre_5mw_NA64_A17_airfoil_with_an_aspect_ratio_of_17._Original_-180_to_180deg.plr
+48.64861            2.76400             2.32                0.34521             0.01400             0.50                t17.0_nre_5mw_NA64_A17_airfoil_with_an_aspect_ratio_of_17._Original_-180_to_180deg.plr
+52.74970            2.51800             1.53                0.31460             0.00840             0.50                t17.0_nre_5mw_NA64_A17_airfoil_with_an_aspect_ratio_of_17._Original_-180_to_180deg.plr
+56.16761            2.31300             0.86                0.28909             0.00440             0.50                t17.0_nre_5mw_NA64_A17_airfoil_with_an_aspect_ratio_of_17._Original_-180_to_180deg.plr
+58.90126            2.08600             0.37                0.26066             0.00170             0.50                t17.0_nre_5mw_NA64_A17_airfoil_with_an_aspect_ratio_of_17._Original_-180_to_180deg.plr
+61.63380            1.41900             0.11                0.17737             0.00030             0.50                t17.0_nre_5mw_NA64_A17_airfoil_with_an_aspect_ratio_of_17._Original_-180_to_180deg.plr
+63.00000            0.96100             0.00                0.12010             0.00000             0.50                t17.0_nre_5mw_NA64_A17_airfoil_with_an_aspect_ratio_of_17._Original_-180_to_180deg.plr
+

@@ -1,0 +1,6 @@
+0.0000	= Uservar1: IPC enable(1) disable (0)
+0.0000	= Uservar2: Pulse (amplitude in rad/s and div. by 2 0.0698)
+0.0698	= Uservar3: Helix CM2 (amplitude in rad and div. by 2 0.0698)
+0.0698	= Uservar4: Helix CM3 (amplitude in rad and div. by 2 0.0698)
+0.1795	= Uservar5: Frequency (rad/s)
+0.0000	= Uservar6: Pitch Offset (rad)
