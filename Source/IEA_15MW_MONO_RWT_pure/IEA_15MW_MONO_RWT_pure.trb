@@ -63,7 +63,7 @@ Only used if waketype = 0
 0.50                                     NEARWAKELENGTH     - the near wake length [-]
 2.00                                     ZONE1LENGTH        - the wake zone 1 length [-]
 4.00                                     ZONE2LENGTH        - the wake zone 2 length [-]
-6.00                                     ZONE3LENGTH        - the wake zone 3 length [-]
+2.00                                     ZONE3LENGTH        - the wake zone 3 length [-]
 2                                        ZONE1FACTOR        - the wake zone 1 factor (integer!) [-]
 2                                        ZONE2FACTOR        - the wake zone 2 factor (integer!) [-]
 2                                        ZONE3FACTOR        - the wake zone 3 factor (integer!) [-]

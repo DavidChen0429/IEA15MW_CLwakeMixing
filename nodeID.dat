@@ -1,0 +1,33 @@
+
+Searching for license files [*.lic] in the QBlade-EE directory:
+C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\IEA15MW_CLwakeMixing
+
+Issues:
+ - license : ERROR - No license file(s) found
+
+A nodeID.dat file containing the hardware information has been created in the QBlade directory!
+To obtain a valid license contact license@qblade.org. For a node-locked license provide the node 
+information below, or the nodeID.dat file to: license@qblade.org
+
+================================================================
+Node ID             : AADo-amQx-hLc=
+Host                : LAPTOP-9DN4NRU3
+System              : Windows 10 Version 2009
+Cpu                 : Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz
+Bios vendor         : LENOVO
+System vendor       : LENOVO
+Cpu Vendor (dmi)    : Intel(R) Corporation
+Cpu Cores  (dmi)    : 6
+Virtualiz. class    : Virtual machine
+Virtualiz. detail   : Other type of vm
+Cloud provider      : Provider unknown
+Network adapter [0] : Realtek PCIe GbE Family Controller
+     ip address [0-0-0-0]
+    mac address [e8:6a:64:31:84:b7]
+Network adapter [0] : TAP-Windows Adapter V9
+     ip address [0-0-0-0]
+    mac address [0:ff:8d:f1:c2:3]
+Network adapter [0] : Netease UU TAP-Win32 Adapter V9.21
+     ip address [0-0-0-0]
+    mac address [0:ff:77:25:a3:e0]
+================================================================

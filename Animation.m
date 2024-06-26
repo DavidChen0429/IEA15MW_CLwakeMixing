@@ -1,4 +1,4 @@
-imageDir = 'Data/Figures/Version_ringFFT';
+imageDir = 'Data/Figures/LiDAR/1D_circle_Uni8_300s';
 imageFiles = dir(fullfile(imageDir, 'figure_*.png'));
 
 % Extract the indices from the filenames
@@ -13,7 +13,7 @@ sortedFiles = imageFiles(sortedIndices);
 
 %% Create a VideoWriter object
 Video = VideoWriter(fullfile(imageDir, 'LiDAR_sampling.avi'));
-Video.FrameRate = 45;
+Video.FrameRate = 24;
 open(Video);
 
 for i = 1:length(sortedFiles)

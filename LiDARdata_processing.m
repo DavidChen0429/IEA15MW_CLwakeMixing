@@ -3,7 +3,7 @@
 close all
 
 %% Load data
-windspeed = load('.\Data\MAT\IEA15_Helix_CCW_Str0.3_U8_Uni_600s_3Dd_1Hz_windspeedData.mat');
+windspeed = load('.\Data\MAT\IEA15_Helix_CCW_Str0.3_U8_Uni_600s_1Dd_1Hz_Circle150_windspeedData.mat');
 %windspeed = load('.\Data\MAT\IEA15_Helix_CCW_Str0.3_U7_Uni_300s_2Dd_1Hz_windspeedData.mat');
 dataLiDAR= windspeed.LiDAR_data;
 data_length = size(dataLiDAR);        % length of snapshot
@@ -17,7 +17,7 @@ Freq = Str*Uin/DIEA15;      % From Str, in Hz
 
 % Reference signal
 timeWakeTravel0 = round(measurementPos/Uin);
-timeWakeTravel0 = 85;
+timeWakeTravel0 = 45;
 t = linspace(0, data_length(1)-timeWakeTravel0, data_length(1)-timeWakeTravel0);
 refSine1 = 2 * sin(2*pi*Freq*t);
 bufferSine = zeros(1, timeWakeTravel0);
@@ -29,7 +29,7 @@ refSine = [bufferSine, refSine1] + 6.5;
 %   LOS speed info:         u_los
 
 %% Visualize the Ring
-for counter = 100:1:data_length(1)
+for counter = 1:1:data_length(1)
     snapshot = dataLiDAR(counter);
     u_los = snapshot.u_los;
     y = snapshot.y;
@@ -39,9 +39,9 @@ for counter = 100:1:data_length(1)
     ylabel('Z [m]')
     title('LiDAR Wind Speed', counter)
     colorbar;
-    caxis = ([4 8]);
+    clim([3 9])
 
-    filename = sprintf('Data/Figures/LiDAR_testing/2D_Uni8_600s/figure_%d.png', counter);
+    filename = sprintf('Data/Figures/LiDAR/1/figure_%d.png', counter);
     saveas(gcf, filename);
 end 
 
@@ -68,7 +68,7 @@ hold on
 plot(u_x_average)
 plot(u_y_average)
 plot(u_z_average)
-plot(refSine, '--')
+% plot(refSine, '--')
 xlabel("Time (s)");
 ylabel('Speed (m/s)')
 legend('u_{los}', 'u_x', 'u_y', 'u_z', 'ref')
@@ -106,7 +106,7 @@ text('Units', 'normalized', 'Position', text_position, ...
 
 %% Single point data analysis (Freq, Phase)
 % u_x for a single point during simulation intervials
-num_point = 2;  % one point over time top point has same phase
+num_point = 8;  % one point over time top point has same phase
 pos_x = arrayfun(@(x) x.x(num_point), dataLiDAR);
 pos_y = arrayfun(@(x) x.y(num_point), dataLiDAR);
 pos_z = arrayfun(@(x) x.z(num_point), dataLiDAR);
@@ -132,6 +132,18 @@ annotation_text = sprintf('Location 1.86D, point coordinate (%.2f, %.2f)', pos_y
 text('Units', 'normalized', 'Position', text_position, ...
     'String', annotation_text, 'HorizontalAlignment', ...
     'right', 'VerticalAlignment', 'bottom');
+
+%%
+% plot(arrayfun(@(x) x.u_los(1), dataLiDAR))
+% hold on
+% plot(arrayfun(@(x) x.u_los(3), dataLiDAR))
+% legend('1','3')
+
+for i = 1:10
+    point_u_los = arrayfun(@(x) x.u_los(i), dataLiDAR);
+    plot(point_u_los)
+    hold on
+end
 
 %% FFT Signal point overtime 
 point_u_losFiltered = point_u_los(100:end);   % filter out nonexcited period

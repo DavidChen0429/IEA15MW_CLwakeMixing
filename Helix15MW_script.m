@@ -19,12 +19,12 @@ end
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
-calllib('QBladeDLL','createInstance',2,64)  
+calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-%simTime = 12000;     % in timestep, actual time is simTime*timestep(Q-blade define)
-simTime = 500;     % test GPU speed 
+simTime = 12000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+% simTime = 500;     % test GPU speed 
 timeStep = 0.05;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 
@@ -81,7 +81,7 @@ sigYaw = Helix_amplitude * sin(2*pi*Freq*t + pi/2);  % CCW
 LiDAR_x = 1*D_IEA15MW;   % Definition of x is pointing downwind
 LiDAR_y = 0;
 LiDAR_z = Wind_Height;   % Wind height
-LiDAR_num_sample = 5;   % to speed up sampling, only 4 valid points
+LiDAR_num_sample = 50;   % 5(ring) to speed up sampling, only 4 valid points
 LiDAR_data = [];         % Array that store the windspeed struct 
 
 %% Simulation
@@ -123,7 +123,9 @@ for i = 1:1:simTime
         thetaBlade_Helix(1) thetaBlade_Helix(2) thetaBlade_Helix(3)],0)
 
     % LiDAR data sampling (Ring)
-    windspeed = ZXTM_lidar(LiDAR_x, LiDAR_y, LiDAR_z, LiDAR_num_sample);    
+    %windspeed = ZXTM_lidar(LiDAR_x, LiDAR_y, LiDAR_z, LiDAR_num_sample);    
+    windspeed = CircleLiDAR(LiDAR_x, LiDAR_y, LiDAR_z, LiDAR_num_sample);    
+    
 
     % Store values 
     omega_store(i,:) = omega;
@@ -138,7 +140,7 @@ for i = 1:1:simTime
     % When change the store frequency, change the Fs in FFT 
     % and the name of the data.mat accordingly
     if mod(i, 1/timeStep) == 0
-        %fprintf('%d seconds.\n', i*timeStep);
+        fprintf('%d seconds.\n', i*timeStep);
         LiDAR_data = [LiDAR_data; windspeed];   % store every second
     end
     %LiDAR_data = [LiDAR_data; windspeed];   % 50Hz, same as ZXTM-LiDAR
@@ -149,7 +151,7 @@ end
 close(f)
 %calllib('QBladeDLL','storeProject','15MW_Helix_Uni-U8_Str3.qpr') 
 calllib('QBladeDLL','closeInstance')
-%save('.\Data\MAT\IEA15_Helix_CCW_Str0.3_U8_Uni_600s_1Dd_1Hz_windspeedData.mat', 'LiDAR_data');
+save('.\Data\MAT\IEA15_Helix_CCW_Str0.3_U8_Uni_600s_1Dd_1Hz_Circle150_windspeedData.mat', 'LiDAR_data');
 toc 
 
 %% Visualization
