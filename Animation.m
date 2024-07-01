@@ -1,4 +1,4 @@
-imageDir = 'Data/Figures/LiDAR/1D_circle_Uni8_300s';
+imageDir = 'Data/Figures/LiDAR/1D_U8_600s';
 imageFiles = dir(fullfile(imageDir, 'figure_*.png'));
 
 % Extract the indices from the filenames

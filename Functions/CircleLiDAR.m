@@ -13,7 +13,7 @@ function windspeed = CircleLiDAR(Lidar_x,Lidar_y,Height,num_samples)
 % FUCK ME! x is pointing at the mother-fucking downwind position
 
 % Derive scanning area
-radius = 150;     % assume perfect LiDAR DIEA=240
+radius = 120;     % assume perfect LiDAR DIEA=240
 y0 = Lidar_y;           % center
 z0 = Height;            % hub height
 measureCenter = [0;0;z0];
@@ -24,12 +24,6 @@ measureCenter = [0;0;z0];
 mask = (y - y0).^2 + (z - z0).^2 <= radius^2;
 y = y(mask);
 z = z(mask);
-% plot(y, z, '*');
-
-if isempty(y) || isempty(z)
-    error(['No points within the specified radius. ' ...
-    'Please check your radius and num_samples values.'])
-end
 
 sampled_data = [];
 for j = 1:numel(y)

@@ -81,7 +81,7 @@ sigYaw = Helix_amplitude * sin(2*pi*Freq*t + pi/2);  % CCW
 LiDAR_x = 1*D_IEA15MW;   % Definition of x is pointing downwind
 LiDAR_y = 0;
 LiDAR_z = Wind_Height;   % Wind height
-LiDAR_num_sample = 50;   % 5(ring) to speed up sampling, only 4 valid points
+LiDAR_num_sample = 26;   % 5(ring) to speed up sampling, only 4 valid points
 LiDAR_data = [];         % Array that store the windspeed struct 
 
 %% Simulation

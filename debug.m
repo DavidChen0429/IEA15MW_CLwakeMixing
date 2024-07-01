@@ -1,8 +1,7 @@
-sampled_data = [];
 y0 = 0;
 z0 = 0;
-radius = 150;
-num_samples = 50;
+radius = 120;
+num_samples = 40;
 
 [y, z] = meshgrid(linspace(y0-radius, y0+radius, num_samples), ...
     linspace(z0-radius, z0+radius, num_samples));
@@ -11,6 +10,7 @@ mask = (y - y0).^2 + (z - z0).^2 <= radius^2;
 y = y(mask);
 z = z(mask);
 plot(y, z, "*")
+size(y)
 
 if isempty(y) || isempty(z)
     error(['No points within the specified radius. ' ...
@@ -24,3 +24,12 @@ for j = 1:numel(y)
 %     sampled_data(end+1, :) = [x, y(j), z(j), x_vel];
     
 end
+
+%%
+radius = 120;
+y0 = 0;
+z0 = 150;
+theta = linspace(0, 2*pi, 100);
+y = y0 + radius * cos(theta);
+z = z0 + radius * sin(theta);
+plot(y, z, "-", 'LineWidth',3);
