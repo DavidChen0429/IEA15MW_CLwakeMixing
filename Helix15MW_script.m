@@ -23,7 +23,7 @@ calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime = 12000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 6000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 % simTime = 500;     % test GPU speed 
 timeStep = 0.05;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
@@ -81,7 +81,7 @@ sigYaw = Helix_amplitude * sin(2*pi*Freq*t + pi/2);  % CCW
 LiDAR_x = 1*D_IEA15MW;   % Definition of x is pointing downwind
 LiDAR_y = 0;
 LiDAR_z = Wind_Height;   % Wind height
-LiDAR_num_sample = 26;   % 5(ring) to speed up sampling, only 4 valid points
+LiDAR_num_sample = 25;   % 5(ring) to speed up sampling, only 4 valid points
 LiDAR_data = [];         % Array that store the windspeed struct 
 
 %% Simulation
@@ -151,7 +151,7 @@ end
 close(f)
 %calllib('QBladeDLL','storeProject','15MW_Helix_Uni-U8_Str3.qpr') 
 calllib('QBladeDLL','closeInstance')
-save('.\Data\MAT\IEA15_Helix_CCW_Str0.3_U8_Uni_600s_1Dd_1Hz_Circle150_windspeedData.mat', 'LiDAR_data');
+save('.\Data\MAT\LiDAR_sampling\IEA15_Helix_CCW_Str0.3_U8_Uni_300s_1Dd_1Hz_Circle441_windspeedData.mat', 'LiDAR_data');
 toc 
 
 %% Visualization

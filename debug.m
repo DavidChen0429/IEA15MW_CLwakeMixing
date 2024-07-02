@@ -1,7 +1,7 @@
 y0 = 0;
 z0 = 0;
 radius = 120;
-num_samples = 40;
+num_samples = 25;
 
 [y, z] = meshgrid(linspace(y0-radius, y0+radius, num_samples), ...
     linspace(z0-radius, z0+radius, num_samples));
