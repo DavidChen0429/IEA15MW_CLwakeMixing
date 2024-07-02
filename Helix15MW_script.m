@@ -11,7 +11,8 @@ DllPath = [QBladePath 'QBladeEE_2.0.6.dll'];
 simFile = [SourcePath 'IEA15MW_torque_Helix.sim'];
 addpath('.\Functions');
 
-loadlibrary(DllPath,'.\QBladeDLLFunctions.h','alias','QBladeDLL') 
+% loadlibrary(DllPath,'.\QBladeDLLFunctions.h','alias','QBladeDLL') 
+loadlibrary(DllPath,'QBladeLibInclude.h','alias','QBladeDLL') 
 m = libfunctions('QBladeDLL');
 if isempty(m)
     fprintf('Error')
@@ -23,9 +24,9 @@ calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime = 6000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 3000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 % simTime = 500;     % test GPU speed 
-timeStep = 0.05;    % same with the Q-blade setting
+timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 
 % Variables we care
@@ -81,7 +82,7 @@ sigYaw = Helix_amplitude * sin(2*pi*Freq*t + pi/2);  % CCW
 LiDAR_x = 1*D_IEA15MW;   % Definition of x is pointing downwind
 LiDAR_y = 0;
 LiDAR_z = Wind_Height;   % Wind height
-LiDAR_num_sample = 25;   % 5(ring) to speed up sampling, only 4 valid points
+LiDAR_num_sample = 50;   % 5(ring) to speed up sampling, only 4 valid points
 LiDAR_data = [];         % Array that store the windspeed struct 
 
 %% Simulation
@@ -124,26 +125,22 @@ for i = 1:1:simTime
 
     % LiDAR data sampling (Ring)
     %windspeed = ZXTM_lidar(LiDAR_x, LiDAR_y, LiDAR_z, LiDAR_num_sample);    
-    windspeed = CircleLiDAR(LiDAR_x, LiDAR_y, LiDAR_z, LiDAR_num_sample);    
-    
+    windspeed = Circle_LiDAR_Parallel(LiDAR_x, LiDAR_y, LiDAR_z, LiDAR_num_sample);    
 
     % Store values 
-    omega_store(i,:) = omega;
-    genTorqueQB_store(i,:) = genTorqueQB;
-    genTorque_store(i,:) = genTorque;
+%     omega_store(i,:) = omega;
+%     genTorqueQB_store(i,:) = genTorqueQB;
+%     genTorque_store(i,:) = genTorque;
     TSR_store(i,:) = TSR;
-    AzimuthAngles(i,:) = [Azimuth1 Azimuth2 Azimuth3];
-    PitchAngles(i,:) = [Pitch1 Pitch2 Pitch3];
-    thetaTilt_store(i,:) = theta_tilt;
-    thetaYaw_store(i,:) = theta_yaw;
+%     AzimuthAngles(i,:) = [Azimuth1 Azimuth2 Azimuth3];
+%     PitchAngles(i,:) = [Pitch1 Pitch2 Pitch3];
+%     thetaTilt_store(i,:) = theta_tilt;
+%     thetaYaw_store(i,:) = theta_yaw;
 
-    % When change the store frequency, change the Fs in FFT 
-    % and the name of the data.mat accordingly
     if mod(i, 1/timeStep) == 0
         fprintf('%d seconds.\n', i*timeStep);
         LiDAR_data = [LiDAR_data; windspeed];   % store every second
     end
-    %LiDAR_data = [LiDAR_data; windspeed];   % 50Hz, same as ZXTM-LiDAR
 
     waitbar(i/simTime,f,'Simulation Running')
 
@@ -151,7 +148,7 @@ end
 close(f)
 %calllib('QBladeDLL','storeProject','15MW_Helix_Uni-U8_Str3.qpr') 
 calllib('QBladeDLL','closeInstance')
-save('.\Data\MAT\LiDAR_sampling\IEA15_Helix_CCW_Str0.3_U8_Uni_300s_1Dd_1Hz_Circle441_windspeedData.mat', 'LiDAR_data');
+save('.\Data\MAT\LiDAR_sampling\Basecase\parallel2.mat', 'LiDAR_data');
 toc 
 
 %% Visualization
@@ -172,17 +169,17 @@ ylabel("TSR");
 % xlabel("Time (s)");
 % ylabel("Torque (Nm)")
 % legend('QB HSS Torque','K omega^2')
-
-figure;
-plot(PitchAngles(:,1))
-hold on
-plot(PitchAngles(:,2))
-plot(PitchAngles(:,3))
-xticks(0:100:length(PitchAngles));
-xticklabels(0:100*timeStep:length(PitchAngles)*timeStep);
-xlabel("Time (s)");
-ylabel("Angle (deg)");
-legend('Blade 1','Blade 2','Blade 3')
+% 
+% figure;
+% plot(PitchAngles(:,1))
+% hold on
+% plot(PitchAngles(:,2))
+% plot(PitchAngles(:,3))
+% xticks(0:100:length(PitchAngles));
+% xticklabels(0:100*timeStep:length(PitchAngles)*timeStep);
+% xlabel("Time (s)");
+% ylabel("Angle (deg)");
+% legend('Blade 1','Blade 2','Blade 3')
 
 % figure;
 % plot(AzimuthAngles(:,1))
@@ -204,3 +201,6 @@ legend('Blade 1','Blade 2','Blade 3')
 % legend('\theta_{tilt}', '\theta_{yaw}')
 % xlabel("Time (s)");
 % title("Helix Signal")
+
+%% Unload Library 
+% unloadlibrary 'QBladeDLL'

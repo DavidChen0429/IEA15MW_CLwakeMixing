@@ -38,7 +38,7 @@ TURB_1
 END_TURB_1
 
 ----------------------------------------Simulation Settings-------------------------------------------------------
-0.050000                                 TIMESTEP           - the timestep size in [s]
+0.10000                                 TIMESTEP           - the timestep size in [s]
 1584                                     NUMTIMESTEPS       - the number of timesteps
 20.000                                   RAMPUP             - the rampup time for the structural model
 0.000                                    ADDDAMP            - the initial time with additional damping

@@ -4,13 +4,13 @@ close all
 addpath('.\Functions');
 
 %% Load data
-windspeed = load('.\Data\MAT\LiDAR_sampling\IEA15_Helix_CCW_Str0.3_U8_Uni_600s_1Dd_1Hz_Circle150_windspeedData');
-% windspeed = load('.\Data\MAT\LiDAR_sampling\IEA15_Helix_CCW_Str0.3_U8_Uni_300s_1Dd_1Hz_Circle_windspeedData.mat');
+% windspeed = load('.\Data\MAT\LiDAR_sampling\Basecase\IEA15_Helix_CCW_Str0.3_U8_Uni_300s_1Dd_1Hz_Circle441_windspeedData.mat');
+windspeed = load('.\Data\MAT\LiDAR_sampling\Basecase\parallel.mat');
 
 dataLiDAR= windspeed.LiDAR_data;
 data_length = size(dataLiDAR);        % length of snapshot
 lengthPoint = length(dataLiDAR(1).x);
-measurementPos = 450;
+measurementPos = 240;
 Uin = 8;
 Str = 0.3;           % Strouhal number 
 DIEA15 = 240;
@@ -75,7 +75,7 @@ plot(t, wake_center(:,2), 'b-');
 ylim([30 270]);
 xlabel('Time [s]')
 ylabel('Z [m]')
-save('300sMix1874.mat', 'wake_center');
+save('.\Data\MAT\Helix_wake_center\300sMixParallel.mat', 'wake_center');
 
 
 %% Visualize the Helix Center and Helix
@@ -83,6 +83,7 @@ save('300sMix1874.mat', 'wake_center');
 theta = linspace(0, 2*pi, 50);
 y_1Dref = 0 + 120 * cos(theta);
 z_1Dref = 150 + 120 * sin(theta);
+
 figure;
 for counter = 1:1:data_length(1)
     snapshot = dataLiDAR(counter);
@@ -102,6 +103,42 @@ for counter = 1:1:data_length(1)
     clim([4 8])
     pause(0.1);
 end 
+
+
+%% Save as video
+% Reference 1D ring
+theta = linspace(0, 2*pi, 50);
+y_1Dref = 0 + 120 * cos(theta);
+z_1Dref = 150 + 120 * sin(theta);
+
+videoFile = ".\Data\helix_center.avi";
+v = VideoWriter(videoFile);
+open(v);
+
+figure;
+for counter = 1:1:data_length(1)
+    snapshot = dataLiDAR(counter);
+    u_los = snapshot.u_los;
+    y = snapshot.y;
+    z = snapshot.z;
+    wakeCenter = HelixCenter(snapshot, Uin);
+    scatter(y, z, 10, u_los, 'filled');
+    hold on
+    scatter(wakeCenter(1), wakeCenter(2),'red');
+    plot(y_1Dref, z_1Dref, "k-", 'LineWidth',2);
+    hold off;
+    xlabel('Y [m]')
+    ylabel('Z [m]')
+    title('LiDAR Wind Speed', counter)
+    colorbar;
+    clim([4 8])
+%     pause(0.1);
+
+    frame = getframe(gcf);
+    writeVideo(v, frame);
+end 
+
+close(v);
 
 %% Compare two methods
 a = load(".\Data\MAT\Helix_wake_center\300sThreshold1874.mat");
@@ -127,22 +164,28 @@ legend('threshold', 'max')
 
 %% Compare Different Resolution 
 a = load(".\Data\MAT\Helix_wake_center\300sMix1874.mat");
-b = load(".\Data\MAT\Helix_wake_center\300sMix276.mat");
+b = load(".\Data\MAT\Helix_wake_center\300sMix441.mat");
+c = load(".\Data\MAT\Helix_wake_center\300sMix276.mat");
+d = load(".\Data\MAT\Helix_wake_center\300sMixParallel.mat");
 figure();
 sgtitle('Different Resolution');
 subplot(2,1,1);
 plot(t,a.wake_center(:,1))
 hold on 
 plot(t,b.wake_center(:,1))
+plot(t,c.wake_center(:,1))
+plot(t,d.wake_center(:,1))
 ylim([-120 120]);
 xlabel('Time [s]')
 ylabel('Y [m]')
-legend('1874', '276')
+legend('1874', '441', '276', 'parallel 276')
 subplot(2,1,2);
 plot(t,a.wake_center(:,2))
 hold on 
 plot(t,b.wake_center(:,2))
+plot(t,c.wake_center(:,2))
+plot(t,d.wake_center(:,2))
 ylim([30 270]);
 xlabel('Time [s]')
 ylabel('Z [m]')
-legend('1874', '276')
+legend('1874', '441', '276', 'parallel 276')

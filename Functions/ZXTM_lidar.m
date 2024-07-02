@@ -1,4 +1,4 @@
-function windspeed = ZXTM_lidar(Lidar_x,Lidar_y,Height,num_samples)
+function windspeed = ZXTM_LiDAR(Lidar_x,Lidar_y,Height,num_samples)
 % ZXTM_LIDAR parameters:
 %     Scanning Pattern: CW, Ring
 %     Scanning Frequency: 50Hz
