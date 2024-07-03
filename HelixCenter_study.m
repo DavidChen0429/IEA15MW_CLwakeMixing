@@ -4,8 +4,7 @@ close all
 addpath('.\Functions');
 
 %% Load data
-% windspeed = load('.\Data\MAT\LiDAR_sampling\Basecase\IEA15_Helix_CCW_Str0.3_U8_Uni_300s_1Dd_1Hz_Circle441_windspeedData.mat');
-windspeed = load('.\Data\MAT\LiDAR_sampling\Basecase\parallel.mat');
+windspeed = load('.\Data\MAT\LiDAR_sampling\Uni\Str0.3_U8_1Dd_1Hz\Point1874_Timestep0.1_600s_Parallel_Center.mat');
 
 dataLiDAR= windspeed.LiDAR_data;
 data_length = size(dataLiDAR);        % length of snapshot
@@ -56,7 +55,7 @@ clim([lowerbound upperbound])
 
 %% Calculate the Helix center
 wake_center = [];
-time = 300;
+time = 600;
 t = linspace(1, time, time);
 for counter = 1:1:time
     snapshot = dataLiDAR(counter);
@@ -75,8 +74,41 @@ plot(t, wake_center(:,2), 'b-');
 ylim([30 270]);
 xlabel('Time [s]')
 ylabel('Z [m]')
-save('.\Data\MAT\Helix_wake_center\300sMixParallel.mat', 'wake_center');
+% save('.\Data\MAT\Helix_wake_center\600sMix1874.mat', 'wake_center');
 
+%% Compare the real-time computation
+% Offline computation
+wake_center = [];
+time = 600;
+t = linspace(1, time, time);
+for counter = 1:1:time
+    snapshot = dataLiDAR(counter);
+    wakeCenter = HelixCenter(snapshot, Uin);
+    wake_center(end+1, :) = [wakeCenter(1), wakeCenter(2)];
+end 
+
+% Online computation
+wakeCenterY = arrayfun(@(x) x.centerY, dataLiDAR);
+wakeCenterZ = arrayfun(@(x) x.centerZ, dataLiDAR);
+
+figure();
+sgtitle('Helix Wake Center');
+subplot(2,1,1);
+plot(t, wake_center(:,1), 'r-');
+hold on
+plot(t, wakeCenterY)
+legend('offline', 'online')
+ylim([-120 120]);
+xlabel('Time [s]')
+ylabel('Y [m]')
+subplot(2,1,2);
+plot(t, wake_center(:,2), 'b-');
+hold on
+plot(t, wakeCenterZ)
+legend('offline', 'online')
+ylim([30 270]);
+xlabel('Time [s]')
+ylabel('Z [m]')
 
 %% Visualize the Helix Center and Helix
 % Reference 1D ring
@@ -162,30 +194,52 @@ xlabel('Time [s]')
 ylabel('Z [m]')
 legend('threshold', 'max')
 
+
 %% Compare Different Resolution 
-a = load(".\Data\MAT\Helix_wake_center\300sMix1874.mat");
-b = load(".\Data\MAT\Helix_wake_center\300sMix441.mat");
-c = load(".\Data\MAT\Helix_wake_center\300sMix276.mat");
-d = load(".\Data\MAT\Helix_wake_center\300sMixParallel.mat");
+% Uniform case
+a = load(".\Data\MAT\LiDAR_sampling\Uni\Str0.3_U8_1Dd_1Hz\Point1874_Timestep0.1_600s_Parallel_Center.mat");
+b = load(".\Data\MAT\LiDAR_sampling\Uni\Str0.3_U8_1Dd_1Hz\Point1184_Timestep0.1_600s_Parallel_Center.mat");
+c = load(".\Data\MAT\LiDAR_sampling\Uni\Str0.3_U8_1Dd_1Hz\Point648_Timestep0.1_600s_Parallel_Center.mat");
+d = load(".\Data\MAT\LiDAR_sampling\Uni\Str0.3_U8_1Dd_1Hz\Point276_Timestep0.1_600s_Parallel_Center.mat");
+e = load(".\Data\MAT\LiDAR_sampling\Uni\Str0.3_U8_1Dd_1Hz\Point149_Timestep0.1_600s_Parallel_Center.mat");
+f = load(".\Data\MAT\LiDAR_sampling\Uni\Str0.3_U8_1Dd_1Hz\Point60_Timestep0.1_600s_Parallel_Center.mat");
+a_wakeCenterY = arrayfun(@(x) x.centerY, a.LiDAR_data);
+a_wakeCenterZ = arrayfun(@(x) x.centerZ, a.LiDAR_data);
+b_wakeCenterY = arrayfun(@(x) x.centerY, b.LiDAR_data);
+b_wakeCenterZ = arrayfun(@(x) x.centerZ, b.LiDAR_data);
+c_wakeCenterY = arrayfun(@(x) x.centerY, c.LiDAR_data);
+c_wakeCenterZ = arrayfun(@(x) x.centerZ, c.LiDAR_data);
+d_wakeCenterY = arrayfun(@(x) x.centerY, d.LiDAR_data);
+d_wakeCenterZ = arrayfun(@(x) x.centerZ, d.LiDAR_data);
+e_wakeCenterY = arrayfun(@(x) x.centerY, e.LiDAR_data);
+e_wakeCenterZ = arrayfun(@(x) x.centerZ, e.LiDAR_data);
+f_wakeCenterY = arrayfun(@(x) x.centerY, f.LiDAR_data);
+f_wakeCenterZ = arrayfun(@(x) x.centerZ, f.LiDAR_data);
+t = linspace(1, 600, 600);
+
 figure();
 sgtitle('Different Resolution');
 subplot(2,1,1);
-plot(t,a.wake_center(:,1))
+plot(t, a_wakeCenterY)
 hold on 
-plot(t,b.wake_center(:,1))
-plot(t,c.wake_center(:,1))
-plot(t,d.wake_center(:,1))
+plot(t, b_wakeCenterY)
+plot(t, c_wakeCenterY)
+plot(t, d_wakeCenterY)
+plot(t, e_wakeCenterY)
+plot(t, f_wakeCenterY)
 ylim([-120 120]);
 xlabel('Time [s]')
 ylabel('Y [m]')
-legend('1874', '441', '276', 'parallel 276')
+legend('1874','1184','648','276','149','60')
 subplot(2,1,2);
-plot(t,a.wake_center(:,2))
+plot(t, a_wakeCenterZ)
 hold on 
-plot(t,b.wake_center(:,2))
-plot(t,c.wake_center(:,2))
-plot(t,d.wake_center(:,2))
+plot(t, b_wakeCenterZ)
+plot(t, c_wakeCenterZ)
+plot(t, d_wakeCenterZ)
+plot(t, e_wakeCenterZ)
+plot(t, f_wakeCenterZ)
 ylim([30 270]);
 xlabel('Time [s]')
 ylabel('Z [m]')
-legend('1874', '441', '276', 'parallel 276')
+legend('1874','1184','648','276','149','60')

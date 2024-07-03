@@ -24,7 +24,7 @@ calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime = 3000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 6000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 % simTime = 500;     % test GPU speed 
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
@@ -82,7 +82,7 @@ sigYaw = Helix_amplitude * sin(2*pi*Freq*t + pi/2);  % CCW
 LiDAR_x = 1*D_IEA15MW;   % Definition of x is pointing downwind
 LiDAR_y = 0;
 LiDAR_z = Wind_Height;   % Wind height
-LiDAR_num_sample = 50;   % 5(ring) to speed up sampling, only 4 valid points
+LiDAR_num_sample = 10;   % 5(ring) to speed up sampling, only 4 valid points
 LiDAR_data = [];         % Array that store the windspeed struct 
 
 %% Simulation
@@ -125,7 +125,8 @@ for i = 1:1:simTime
 
     % LiDAR data sampling (Ring)
     %windspeed = ZXTM_lidar(LiDAR_x, LiDAR_y, LiDAR_z, LiDAR_num_sample);    
-    windspeed = Circle_LiDAR_Parallel(LiDAR_x, LiDAR_y, LiDAR_z, LiDAR_num_sample);    
+%     windspeed = Circle_LiDAR_Parallel(LiDAR_x, LiDAR_y, LiDAR_z, LiDAR_num_sample);    
+    windspeed = Circle_LiDAR_Parallel_WakeCenter(LiDAR_x, LiDAR_y, LiDAR_z, LiDAR_num_sample, U_inflow);    % LiDAR with center calculation
 
     % Store values 
 %     omega_store(i,:) = omega;
@@ -138,17 +139,17 @@ for i = 1:1:simTime
 %     thetaYaw_store(i,:) = theta_yaw;
 
     if mod(i, 1/timeStep) == 0
-        fprintf('%d seconds.\n', i*timeStep);
-        LiDAR_data = [LiDAR_data; windspeed];   % store every second
+%         fprintf('%d seconds.\n', i*timeStep);
+        LiDAR_data = [LiDAR_data; windspeed];   % 1Hz sampling
     end
 
-    waitbar(i/simTime,f,'Simulation Running')
+    waitbar(i/simTime, f, sprintf('Simulation Running: %.2f%%', (i/simTime)*100));
 
 end
 close(f)
 %calllib('QBladeDLL','storeProject','15MW_Helix_Uni-U8_Str3.qpr') 
 calllib('QBladeDLL','closeInstance')
-save('.\Data\MAT\LiDAR_sampling\Basecase\parallel2.mat', 'LiDAR_data');
+save('.\Data\MAT\LiDAR_sampling\Uni\Str0.3_U8_1Dd_1Hz\Point60_Timestep0.1_600s_Parallel_Center.mat', 'LiDAR_data');
 toc 
 
 %% Visualization

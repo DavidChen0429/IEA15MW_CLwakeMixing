@@ -1,14 +1,15 @@
 function windspeed = Circle_LiDAR(Lidar_x,Lidar_y,Height,num_samples)
-% ZXTM_LIDAR parameters:
-%     Scanning Pattern: CW, Ring
-%     Scanning Frequency: 50Hz
-%     Half-cone-angle: 15 deg
+% CircleLiDAR parameters:
+%     Scanning Pattern: CW, Snapshot
 %     Measure Range: 10-550m
 %     Weight Function: W
+%     Addition: Calculate Helix Center
 
 % Function arguments:
 %     Distance x
-%     Discretize d 
+%     Distance y
+%     Height z
+%     Discretize num_samples
 
 % FUCK ME! x is pointing at the mother-fucking downwind position
 

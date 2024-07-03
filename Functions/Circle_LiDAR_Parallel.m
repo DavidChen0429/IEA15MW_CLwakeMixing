@@ -1,14 +1,15 @@
 function windspeed = Circle_LiDAR_Parallel(Lidar_x,Lidar_y,Height,num_samples)
-% ZXTM_LIDAR parameters:
-%     Scanning Pattern: CW, Ring
-%     Scanning Frequency: 50Hz
-%     Half-cone-angle: 15 deg
+% CircleLiDAR parameters:
+%     Scanning Pattern: CW, Snapshot
 %     Measure Range: 10-550m
 %     Weight Function: W
+%     Addition: Calculate Helix Center
 
 % Function arguments:
 %     Distance x
-%     Discretize d 
+%     Distance y
+%     Height z
+%     Discretize num_samples
 
 % FUCK ME! x is pointing at the mother-fucking downwind position
 
@@ -39,11 +40,10 @@ velz_ptr = libpointer('doublePtr', zeros(num_point, 1));
 calllib('QBladeDLL', 'getWindspeedArray', posx_ptr, posy_ptr, posz_ptr, ...
     velx_ptr,vely_ptr,velz_ptr, num_point)
 
+% Calculate the u_los
 original_los_vectors = [240 * ones(num_point, 1), y, z] - repmat(measureCenter, num_point, 1);
 los_magnitudes = sqrt(sum(original_los_vectors.^2, 2)); % Magnitude of each LOS vector
 los_unit_vectors = original_los_vectors ./ los_magnitudes; % Normalize to get unit vectors
-
-% Calculate vel_los for each point
 velocities = [velx_ptr.value, vely_ptr.value, velz_ptr.value]; % Combine velocities into a single matrix
 vel_los = sum(velocities .* los_unit_vectors, 2); % Dot product of velocity vectors and LOS unit vectors
 
