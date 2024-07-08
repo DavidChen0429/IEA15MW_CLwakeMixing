@@ -49,7 +49,7 @@ dimension = D_IEA15MW;     % span dim*dim meters
 grid_point = 50;     % sqaure grid
 Turb_time = 10;      % Simulation length of the windfield in seconds
 Turb_dt = timeStep;  % Temporal resolution of the windfield
-Turb_class = 'C';    % A, B, C
+Turb_class = 'A';    % A, B, C
 Turb_type = 'NTM';   % NTM, ETM, etc   
 seed = 43;
 vertInf = 0;         % Vertical inflow angle in degrees
@@ -74,15 +74,27 @@ Freq = Str*U_inflow/D_IEA15MW;      % From Str, in Hz
 
 % Genereate the tilt and yaw signal 
 t = linspace(timeStep, simLen, simTime);
+midPoint = simLen / 2;
+amplitudeTilt = Helix_amplitude * (t <= midPoint) + 2 * Helix_amplitude * (t > midPoint);
+% sigTilt = amplitudeTilt .* sin(2*pi*Freq*t);  
 sigTilt = Helix_amplitude * sin(2*pi*Freq*t);          
-sigYaw = Helix_amplitude * sin(2*pi*Freq*t + pi/2);  % CCW
+% sigYaw = Helix_amplitude * sin(2*pi*Freq*t + pi/2);  % CCW
+sigYaw = amplitudeTilt .* sin(2*pi*Freq*t + pi/2);  % CCW
+figure()
+plot(t, sigTilt)
+hold on
+plot(t, sigYaw)
+hold off
+xlabel('Time [s]')
+ylabel('Magnitude')
+legend('M_{tilt}','M_{yaw}')
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat
 LiDAR_x = 1*D_IEA15MW;   % Definition of x is pointing downwind
 LiDAR_y = 0;
 LiDAR_z = Wind_Height;   % Wind height
-LiDAR_num_sample = 10;   % 5(ring) to speed up sampling, only 4 valid points
+LiDAR_num_sample = 60;   % 5(ring) to speed up sampling, only 4 valid points
 LiDAR_data = [];         % Array that store the windspeed struct 
 
 %% Simulation
@@ -125,8 +137,8 @@ for i = 1:1:simTime
 
     % LiDAR data sampling (Ring)
     %windspeed = ZXTM_lidar(LiDAR_x, LiDAR_y, LiDAR_z, LiDAR_num_sample);    
-%     windspeed = Circle_LiDAR_Parallel(LiDAR_x, LiDAR_y, LiDAR_z, LiDAR_num_sample);    
-    windspeed = Circle_LiDAR_Parallel_WakeCenter(LiDAR_x, LiDAR_y, LiDAR_z, LiDAR_num_sample, U_inflow);    % LiDAR with center calculation
+    windspeed = Circle_LiDAR_Parallel(LiDAR_x, LiDAR_y, LiDAR_z, LiDAR_num_sample);    
+%     windspeed = Circle_LiDAR_Parallel_WakeCenter(LiDAR_x, LiDAR_y, LiDAR_z, LiDAR_num_sample, U_inflow);    % LiDAR with center calculation
 
     % Store values 
 %     omega_store(i,:) = omega;
@@ -149,7 +161,8 @@ end
 close(f)
 %calllib('QBladeDLL','storeProject','15MW_Helix_Uni-U8_Str3.qpr') 
 calllib('QBladeDLL','closeInstance')
-save('.\Data\MAT\LiDAR_sampling\Uni\Str0.3_U8_1Dd_1Hz\Point60_Timestep0.1_600s_Parallel_Center.mat', 'LiDAR_data');
+save('.\Data\MAT\LiDAR_sampling\Uni\Str0.3_U8_1Dd_1Hz\Point2724_Timestep0.1_600s_Parallel_changeMyaw.mat', 'LiDAR_data');
+% save('.\Data\MAT\LiDAR_sampling\Uni\Str0.3_U8_1Dd_1Hz\Point2724_Timestep0.1_600s_Parallel_Center.mat', 'LiDAR_data');
 toc 
 
 %% Visualization

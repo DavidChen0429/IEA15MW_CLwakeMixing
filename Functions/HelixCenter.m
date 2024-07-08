@@ -6,21 +6,45 @@ function wakeCenter = HelixCenter(snapshot, Uin)
     y = snapshot.y;
     z = snapshot.z;
 
-    % Find indices method1: threshold
-    indices = find(snapshot.u_losProcessed >= threshold & sqrt(y.^2 + (z-150).^2) <= 120);
+    % Method1: threshold (Uniform)
+%     indices = find(snapshot.u_losProcessed >= threshold & sqrt(y.^2 + (z-150).^2) <= 120);
+%     buf = size(indices);
+%     if buf(1) == 0
+%         filtered_indices = sqrt(y.^2 + (z-150).^2) < 120;
+%         filtered_u_losProcessed = snapshot.u_losProcessed(filtered_indices);
+%         [~, max_index_within_filtered] = max(filtered_u_losProcessed);
+%         original_indices = find(filtered_indices);
+%         indices = original_indices(max_index_within_filtered);
+%     end
+
+    % Method2: Max with in rotor disc (Turbulence)
+    indices = find(snapshot.u_los >= (Uin + 0) & sqrt(y.^2 + (z-150).^2) <= 120);
     buf = size(indices);
     if buf(1) == 0
         filtered_indices = sqrt(y.^2 + (z-150).^2) < 120;
-        filtered_u_losProcessed = snapshot.u_losProcessed(filtered_indices);
-        [~, max_index_within_filtered] = max(filtered_u_losProcessed);
+        filtered_u_Processed = snapshot.u_losProcessed(filtered_indices);
+        [~, max_index_within_filtered] = max(filtered_u_Processed);
         original_indices = find(filtered_indices);
         indices = original_indices(max_index_within_filtered);
     end
 
-    % Find indices method2: Max with in rotor disc
+    % Method3: Using magnitude of [u_x, u_y, u_z] (Turbulence)
+%     snapshot.magnitude_speed  = sqrt(snapshot.u_x.^2 + snapshot.u_y.^2 + snapshot.u_z.^2);
+%     indices = find(snapshot.magnitude_speed >= (Uin + 1) & sqrt(y.^2 + (z-150).^2) <= 120);
+%     buf = size(indices);
+%     if buf(1) == 0
+%         filtered_indices = sqrt(y.^2 + (z-150).^2) < 120;
+%         filtered_u_Processed = snapshot.magnitude_speed(filtered_indices);
+%         [~, max_index_within_filtered] = max(filtered_u_Processed);
+%         original_indices = find(filtered_indices);
+%         indices = original_indices(max_index_within_filtered);
+%     end
+
+    % Method4: Using magnitude of [u_x, u_y, u_z] and Max
+%     snapshot.magnitude_speed  = sqrt(snapshot.u_x.^2 + snapshot.u_y.^2 + snapshot.u_z.^2);
 %     filtered_indices = sqrt(y.^2 + (z-150).^2) < 120;
-%     filtered_u_losProcessed = snapshot.u_losProcessed(filtered_indices);
-%     [~, max_index_within_filtered] = max(filtered_u_losProcessed);
+%     filtered_u_Processed = snapshot.magnitude_speed(filtered_indices);
+%     [~, max_index_within_filtered] = max(filtered_u_Processed);
 %     original_indices = find(filtered_indices);
 %     indices = original_indices(max_index_within_filtered);
 
