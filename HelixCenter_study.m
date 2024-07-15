@@ -4,8 +4,8 @@ close all
 addpath('.\Functions');
 
 %% Load data
-% windspeed = load(".\Data\MAT\LiDAR_sampling\Uni\Str0.3_U8_1Dd_1Hz\Point2724_Timestep0.1_600s_Parallel_changeMTilt.mat");
-windspeed = load(".\Data\MAT\LiDAR_sampling\Uni\Str0.3_U8_1Dd_1Hz\Point2724_Timestep0.1_600s_Parallel_Center.mat");
+% windspeed = load(".\Data\MAT\LiDAR_sampling\Uni\Str0.3_U8_1Dd_1Hz\Point2724_Timestep0.1_1800s_Parallel_changeMTilt.mat");
+windspeed = load(".\Data\MAT\LiDAR_sampling\Uni\Str0.3_U8_1Dd_1Hz\Point2724_Timestep0.1_300s_Parallel_Center.mat");
 
 dataLiDAR= windspeed.LiDAR_data;
 data_length = size(dataLiDAR);        % length of snapshot
@@ -62,7 +62,7 @@ end
 
 %% Calculate the Helix center
 wake_center = [];
-time = 600;
+time = 1800;
 t = linspace(1, time, time);
 for counter = 1:1:time
     snapshot = dataLiDAR(counter);
@@ -81,7 +81,7 @@ plot(t, wake_center(:,2), 'b-');
 ylim([30 270]);
 xlabel('Time [s]')
 ylabel('Z [m]')
-save('.\Data\MAT\Helix_wake_center\600sMix2724_changeTilt.mat', 'wake_center');
+save('.\Data\MAT\Helix_wake_center\1800sMix2724_ulos.mat', 'wake_center');
 
 %% Compare the real-time computation
 % Offline computation
@@ -123,26 +123,8 @@ theta = linspace(0, 2*pi, 50);
 y_1Dref = 0 + 120 * cos(theta);
 z_1Dref = 150 + 120 * sin(theta);
 
-figure('Position', [10, 10, 700, 310]);
+figure()
 for counter = 1:1:data_length(1)  
-    subplot(1, 2, 1)
-    snapshot = dataLiDAR(counter);
-    u_los = snapshot.u_los;
-    y = snapshot.y;
-    z = snapshot.z;
-    wakeCenter = HelixCenter(snapshot, Uin);
-    scatter(y, z, 10, u_los, 'filled');
-    hold on
-    scatter(wakeCenter(1), wakeCenter(2),'red');
-    plot(y_1Dref, z_1Dref, "k-", 'LineWidth',2);
-    hold off;
-    xlabel('Y [m]')
-    ylabel('Z [m]')
-    title('LiDAR Wind Speed', counter)
-    colorbar;
-    clim([4 8])
-
-    subplot(1, 2, 2)
     snapshot = dataLiDAR(counter);
     u_los = snapshot.u_los;
     y = snapshot.y;
@@ -384,14 +366,21 @@ xlabel('Time [s]')
 ylabel('Z [m]')
 legend('NTM-A','NTM-B','NTM-C','Base')
 
-%% Compare Mtilt
+%% Compare Mtilt (fixed frame)
 % Load wake center data
-a = load(".\Data\MAT\Helix_wake_center\600sMix2724_basic.mat");
-b = load(".\Data\MAT\Helix_wake_center\600sMix2724_changeTilt.mat");
+a = load(".\Data\MAT\Helix_wake_center\1800sMix2724_ulos.mat");
+b = load(".\Data\MAT\Helix_wake_center\1800sMix2724_changeTilt.mat");
+
+% Basic helix information
+U_inflow = 8;        % Inflow wind speed, same with the Q-blade setting
+D_IEA15MW = 240;     % Rotor diameter
+Str = 0.3;                          % Strouhal number
+Helix_amplitude = 4;                % Helix amplitude                
+Freq = Str*U_inflow/D_IEA15MW;      % From Str, in Hz
+t = linspace(1, 1800, 1800);
 
 % Mtilt and Myaw
-midPoint = 600 / 2;
-Helix_amplitude = 4;   
+midPoint = 1800 / 3;
 amplitudeTilt = Helix_amplitude * (t <= midPoint) + 2 * Helix_amplitude * (t > midPoint);
 sigTilt = amplitudeTilt .* sin(2*pi*Freq*t);  
 sigTiltoriginal = Helix_amplitude * sin(2*pi*Freq*t);          
@@ -434,9 +423,16 @@ a = load(".\Data\MAT\Helix_wake_center\600sMix2724_basic.mat");
 % b = load(".\Data\MAT\Helix_wake_center\600sMix2724_changTilt.mat");
 c = load(".\Data\MAT\Helix_wake_center\600sMix2724_changeYaw.mat");
 
+% Basic Helix information 
+U_inflow = 8;        % Inflow wind speed, same with the Q-blade setting
+D_IEA15MW = 240;     % Rotor diameter
+Str = 0.3;                          % Strouhal number
+Helix_amplitude = 4;                % Helix amplitude                
+Freq = Str*U_inflow/D_IEA15MW;      % From Str, in Hz
+t = linspace(1, 1800, 1800);
+
 % Mtilt and Myaw
 midPoint = 600 / 2;
-Helix_amplitude = 4;   
 amplitudeTilt = Helix_amplitude * (t <= midPoint) + 2 * Helix_amplitude * (t > midPoint);
 sigTilt = amplitudeTilt .* sin(2*pi*Freq*t);  
 sigTiltoriginal = Helix_amplitude * sin(2*pi*Freq*t);          
@@ -472,3 +468,129 @@ hold off
 xlabel('Time [s]')
 ylabel('Magnitude')
 legend('M_{tilt}','M_{yaw}','M^{change}_{yaw}')
+
+%% Compare Mtilt (helix frame)
+% Load wake center data
+clear
+a = load(".\Data\MAT\Helix_wake_center\1800sMix2724_ulos.mat");
+b = load(".\Data\MAT\Helix_wake_center\1800sMix2724_changeTilt.mat");
+
+% Basic helix information 
+U_inflow = 8;        % Inflow wind speed, same with the Q-blade setting
+D_IEA15MW = 240;     % Rotor diameter
+Str = 0.3;                          % Strouhal number
+Helix_amplitude = 4;                % Helix amplitude                
+Freq = Str*U_inflow/D_IEA15MW;      % From Str, in Hz
+t = linspace(1, 1800, 1800);
+
+% Mtilt and Myaw
+midPoint = 1800 / 3;
+amplitudeTilt = Helix_amplitude * (t <= midPoint) + 2 * Helix_amplitude * (t > midPoint);
+sigTilt = amplitudeTilt .* sin(2*pi*Freq*t);  
+sigTiltoriginal = Helix_amplitude * sin(2*pi*Freq*t);          
+sigYaworiginal = Helix_amplitude * sin(2*pi*Freq*t + pi/2);  % CCW
+sigYaw = amplitudeTilt .* sin(2*pi*Freq*t + pi/2);  % CCW
+
+% Transform helix center to the helix frame
+wakeCenter_helixFrame = zeros(1800, 2);
+% wakeCenter_helixFrame = zeros(1800, 1);
+for i = 60:1:1800   % helix delay
+    R_helix = [cos(2*pi*Freq*t(i)) -sin(2*pi*Freq*t(i)); 
+               sin(2*pi*Freq*t(i)) cos(2*pi*Freq*t(i))];
+    buffer = R_helix * [a.wake_center(i, 2); a.wake_center(i, 1)]; % same sequence as tilt and yaw
+    wakeCenter_helixFrame(i, 1) = buffer(2);
+    wakeCenter_helixFrame(i, 2) = buffer(1);
+end
+
+figure();
+sgtitle('M_{tilt} and Helix center');
+subplot(3,1,1);
+plot(t,a.wake_center(:,1),'m')
+hold on 
+plot(t,b.wake_center(:,1),'b')
+plot(t,wakeCenter_helixFrame(:, 1))
+hold off
+ylim([-120 120]);
+xlabel('Time [s]')
+ylabel('Y [m]')
+legend('original', 'M^{change}_{tilt}')
+subplot(3,1,2);
+plot(t,a.wake_center(:,2),'m')
+hold on 
+plot(t,b.wake_center(:,2),'b')
+plot(t,wakeCenter_helixFrame(:, 2))
+hold off
+ylim([30 270]);
+xlabel('Time [s]')
+ylabel('Z [m]')
+legend('original', 'M^{change}_{tilt}')
+subplot(3,1,3);
+plot(t, sigTilt,'b')
+hold on
+plot(t, sigYaworiginal,'m')
+plot(t, sigTiltoriginal, 'm--')
+hold off
+xlabel('Time [s]')
+ylabel('Magnitude')
+legend('M^{change}_{tilt}','M_{yaw}','M_{tilt}')
+
+%% Study the phase difference between Mtilt Myaw and center y z
+clear
+close all
+a = load(".\Data\MAT\Helix_wake_center\1800sMix2724_ulos.mat");
+
+% Basic helix information 
+U_inflow = 8;        % Inflow wind speed, same with the Q-blade setting
+D_IEA15MW = 240;     % Rotor diameter
+Str = 0.3;                          % Strouhal number
+Helix_amplitude = 4;                % Helix amplitude                
+Freq = Str*U_inflow/D_IEA15MW;      % From Str, in Hz
+t = linspace(1, 1800, 1800);
+
+% Mtilt Myaw
+midPoint = 1800 / 3;
+amplitudeTilt = Helix_amplitude * (t <= midPoint) + 2 * Helix_amplitude * (t > midPoint);
+sigTilt = amplitudeTilt .* sin(2*pi*Freq*t);  
+sigTiltoriginal = Helix_amplitude * sin(2*pi*Freq*t);          
+sigYaworiginal = Helix_amplitude * sin(2*pi*Freq*t + pi/2);  % CCW
+sigYaw = amplitudeTilt .* sin(2*pi*Freq*t + pi/2);  % CCW
+
+wakeCenter_helixFrame = zeros(1800, 2);
+% wakeCenter_helixFrame = zeros(1800, 1);
+for i = 23:1:1800   % helix delay
+    R_helix = [cos(2*pi*Freq*t(i)) -sin(2*pi*Freq*t(i)); 
+               sin(2*pi*Freq*t(i)) cos(2*pi*Freq*t(i))];
+    buffer = R_helix * [a.wake_center(i, 1); a.wake_center(i, 2)]; % same sequence as tilt and yaw
+    wakeCenter_helixFrame(i, 1) = buffer(1);
+    wakeCenter_helixFrame(i, 2) = buffer(2);
+end
+
+figure();
+subplot(3,1,1);
+plot(t,sigYaworiginal,'m')
+hold on 
+plot(t,sigTiltoriginal,'b')
+hold off
+xlabel('Time [s]')
+ylabel('Magnitude')
+legend('M_{yaw}', 'M_{tilt}')
+
+subplot(3,1,2);
+plot(t,a.wake_center(:,1)+mean(a.wake_center(:,2)),'m')
+hold on 
+plot(t,a.wake_center(:,2),'b')
+hold off
+xlabel('Time [s]')
+ylabel('Distance [m]')
+legend('Y', 'Z')
+
+subplot(3,1,3);
+plot(wakeCenter_helixFrame(:,1)+mean(wakeCenter_helixFrame(:,2)),'m')
+hold on 
+plot(wakeCenter_helixFrame(:,2),'b')
+hold off
+xlabel('Time [s]')
+ylabel('Distance [m]')
+legend('Y^e', 'Z^e')
+
+FFT_func(a.wake_center(:,1), 35, 1);
