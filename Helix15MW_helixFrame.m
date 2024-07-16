@@ -1,6 +1,7 @@
 %% Helix of IEA15MW in script
 clear
 close all 
+addpath('.\Functions');
 %clc
 
 %% Define paths
@@ -11,12 +12,16 @@ DllPath = [QBladePath 'QBladeEE_2.0.6.dll'];
 simFile = [SourcePath 'IEA15MW_torque_Helix.sim'];
 addpath('.\Functions');
 
-% loadlibrary(DllPath,'.\QBladeDLLFunctions.h','alias','QBladeDLL') 
 loadlibrary(DllPath,'QBladeLibInclude.h','alias','QBladeDLL') 
 m = libfunctions('QBladeDLL');
 if isempty(m)
     fprintf('Error')
 end
+
+%% Data file 
+fileName = '600s_Center_HF_basecase.mat';
+dataPath = '.\Data\MAT\LiDAR_sampling\';
+caseName = 'Uni\Str0.3_U8_1Dd_10Hz_CCW\';
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
@@ -24,8 +29,7 @@ calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime = 3000;     % in timestep, actual time is simTime*timestep(Q-blade define)
-% simTime = 500;     % test GPU speed 
+simTime = 6000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 
@@ -71,23 +75,13 @@ N = 1;          % gearbox ratio of IEA15MW direct drive
 Str = 0.3;                          % Strouhal number
 Helix_amplitude = 4;                % Helix amplitude                
 Freq = Str*U_inflow/D_IEA15MW;      % From Str, in Hz
+omega_e = Freq*2*pi;
 
-% Genereate the tilt and yaw signal 
+sigTilt_e = 0 * ones(simTime, 1);
+% sigTilt_e = [linspace(0, 8, simTime*9/20) linspace(8, 0, simTime*9/20) 0*ones(1, simTime/10)];
+sigYaw_e = -4 * ones(simTime, 1);
+% sigYaw_e = [4 * ones(simTime/3, 1); 2 * ones(simTime*2/3, 1)];
 t = linspace(timeStep, simLen, simTime);
-midPoint = simLen / 3;
-amplitudeTilt = Helix_amplitude * (t <= midPoint) + 2 * Helix_amplitude * (t > midPoint);
-% sigTilt = amplitudeTilt .* sin(2*pi*Freq*t);  
-sigTilt = Helix_amplitude * sin(2*pi*Freq*t);          
-sigYaw = Helix_amplitude * sin(2*pi*Freq*t - pi/2);  % CCW
-% sigYaw = amplitudeTilt .* sin(2*pi*Freq*t - pi/2);  % CCW
-figure()
-plot(t, sigTilt)
-hold on
-plot(t, sigYaw)
-hold off
-xlabel('Time [s]')
-ylabel('Magnitude')
-legend('M_{tilt}','M_{yaw}')
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat
@@ -99,7 +93,10 @@ LiDAR_num_sample = 60;   % 5(ring) to speed up sampling, only 4 valid points
 %% Simulation
 % pre-define array to speed up code
 TSR_store = zeros(simTime, 1);
-LiDAR_data = [];
+thetaTiltYaw_fixedFrame = zeros(simTime, 2);
+thetaTiltYaw_helixFrame = zeros(simTime, 2);
+templateStruct = struct('x', [], 'y', [], 'z', [], 'u_x', [], 'u_y', [], 'u_z', [], 'u_los', [], 'centerY', [], 'centerZ', []);
+LiDAR_data(simTime, 1) = templateStruct;
 
 % start simulation
 tic
@@ -125,15 +122,18 @@ for i = 1:1:simTime
 
     % Helix control
     % 1. Get tilt and yaw signals
-    theta_tilt = sigTilt(i);
-    theta_yaw = sigYaw(i);
-    theta_col = 0;
+    theta_tilt_e = sigTilt_e(i);
+    theta_yaw_e = sigYaw_e(i);
     % 2. Inverse MBC 
     invMBC = [1 cosd(Azimuth1) sind(Azimuth1);
               1 cosd(Azimuth2) sind(Azimuth2);
               1 cosd(Azimuth3) sind(Azimuth3)];
+    invR_helix = [1 0 0;
+                  0 cos(omega_e*t(i)) -sin(omega_e*t(i)); 
+                  0 sin(omega_e*t(i)) cos(omega_e*t(i))];
     % 3. Blade pitch signal
-    thetaBlade_Helix = invMBC * [theta_col; theta_tilt; theta_yaw];    
+    thetaTiltYaw = invR_helix * [0; theta_tilt_e; theta_yaw_e];    
+    thetaBlade_Helix = invMBC * [thetaTiltYaw(1); thetaTiltYaw(2); thetaTiltYaw(3)];    
 
     % Send control signal to qblade
     calllib('QBladeDLL','setControlVars_at_num',[genTorque 0 ...
@@ -141,8 +141,8 @@ for i = 1:1:simTime
 
     % LiDAR data sampling (Ring)
     %windspeed = ZXTM_lidar(LiDAR_x, LiDAR_y, LiDAR_z, LiDAR_num_sample);    
-    windspeed = Circle_LiDAR_Parallel(LiDAR_x, LiDAR_y, LiDAR_z, LiDAR_num_sample);    
-%     windspeed = Circle_LiDAR_Parallel_WakeCenter(LiDAR_x, LiDAR_y, LiDAR_z, LiDAR_num_sample, U_inflow);    % LiDAR with center calculation
+%     windspeed = Circle_LiDAR_Parallel(LiDAR_x, LiDAR_y, LiDAR_z, LiDAR_num_sample);    
+    windspeed = Circle_LiDAR_Parallel_WakeCenter(LiDAR_x, LiDAR_y, LiDAR_z, LiDAR_num_sample, U_inflow);    % LiDAR with center calculation
 
     % Store values 
 %     omega_store(i,:) = omega;
@@ -151,22 +151,22 @@ for i = 1:1:simTime
     TSR_store(i) = TSR;
 %     AzimuthAngles(i,:) = [Azimuth1 Azimuth2 Azimuth3];
 %     PitchAngles(i,:) = [Pitch1 Pitch2 Pitch3];
-%     thetaTilt_store(i,:) = theta_tilt;
-%     thetaYaw_store(i,:) = theta_yaw;
-
-    if mod(i, 1/timeStep) == 0
-%         fprintf('%d seconds.\n', i*timeStep);
-        LiDAR_data = [LiDAR_data; windspeed];   % 1Hz sampling
-    end
-
+    thetaTiltYaw_helixFrame(i,:) = [theta_tilt_e theta_yaw_e];
+    thetaTiltYaw_fixedFrame(i,:) = [thetaTiltYaw(2) thetaTiltYaw(3)];
+    LiDAR_data(i) = windspeed;
+%     if mod(i, 1/timeStep) == 0
+% %         fprintf('%d seconds.\n', i*timeStep);
+%         LiDAR_data = [LiDAR_data; windspeed];   % 1Hz sampling
+%     end
     waitbar(i/simTime, f, sprintf('Simulation Running: %.2f%%', (i/simTime)*100));
 
 end
 close(f)
 %calllib('QBladeDLL','storeProject','15MW_Helix_Uni-U8_Str3.qpr') 
 calllib('QBladeDLL','closeInstance')
-save('.\Data\MAT\LiDAR_sampling\Uni\Str0.3_U8_1Dd_1Hz\Point2724_Timestep0.1_300s_Parallel_Center.mat', 'LiDAR_data');
-% save('.\Data\MAT\LiDAR_sampling\Uni\Str0.3_U8_1Dd_1Hz\Point2724_Timestep0.1_600s_Parallel_Center.mat', 'LiDAR_data');
+save([dataPath caseName fileName], 'LiDAR_data', ...
+                                   'thetaTiltYaw_fixedFrame', ...
+                                   'thetaTiltYaw_helixFrame');
 toc 
 
 %% Visualization
@@ -210,15 +210,23 @@ ylabel("TSR");
 % ylabel("Angle (deg)");
 % legend('Blade 1','Blade 2','Blade 3')
 
-% figure;
-% plot(thetaTilt_store, 'r');
-% hold on;
-% plot(thetaYaw_store, 'b');
-% xticks(0:100:length(thetaTilt_store));
-% xticklabels(0:100*timeStep:length(thetaTilt_store)*timeStep);
-% legend('\theta_{tilt}', '\theta_{yaw}')
-% xlabel("Time (s)");
-% title("Helix Signal")
+figure;
+subplot(2, 1, 1)
+plot(thetaTiltYaw_fixedFrame(:, 1));
+hold on;
+plot(thetaTiltYaw_fixedFrame(:, 2));
+hold off;
+title('Fixed Frame')
+legend('\theta_{tilt}', '\theta_{yaw}')
+subplot(2, 1, 2);
+plot(thetaTiltYaw_helixFrame(:, 1));
+hold on;
+plot(thetaTiltYaw_helixFrame(: ,2));
+hold off;
+title('Helix Frame')
+legend('\theta^e_{tilt}', '\theta^e_{yaw}')
+
+% ringVisualization(LiDAR_data)
 
 %% Unload Library 
 % unloadlibrary 'QBladeDLL'
