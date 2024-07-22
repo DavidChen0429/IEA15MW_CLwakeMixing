@@ -9,7 +9,7 @@ simTime = 6000;     % in timestep, actual time is simTime*timestep(Q-blade defin
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 Str = 0.3;                          % Strouhal number
-Helix_amplitude = 4;                % Helix amplitude                
+Helix_amplitude = 6;                % Helix amplitude                
 Freq = Str*U_inflow/D_IEA15MW;      % From Str, in Hz
 omega_e = Freq*2*pi;
 
@@ -214,10 +214,14 @@ t = linspace(timeStep, simLen, simTime);
 cutPoint1 = simLen / 3;
 amplitudeChange = Helix_amplitude*(t<=cutPoint1)+2*Helix_amplitude*(t>cutPoint1);
 
-% sigTilt_e = 0 * ones(simTime, 1);
-sigTilt_e = [linspace(0, 4, simTime*9/20) linspace(4, 0, simTime*9/20) 0*ones(1, simTime/10)];
-% sigYaw_e = -4 * ones(simTime, 1);
-sigYaw_e = [linspace(-4, -8, simTime*9/20) linspace(-8, -4, simTime*9/20) -4*ones(1, simTime/10)];
+sigTilt_e = 0 * ones(simTime, 1);
+% sigTilt_e = [linspace(0, 4, simTime*9/20) linspace(4, 0, simTime*9/20) 0*ones(1, simTime/10)];
+% sigTilt_e = [0*ones(1, simTime/5) 1*ones(1, simTime/5) 2*ones(1, simTime/5) 3*ones(1, simTime/5) 4*ones(1, simTime/5)];
+% sigYaw_e = -2 * ones(simTime, 1);
+sigYaw_e = [-2*ones(1, simTime/10) linspace(-2, 2, simTime*4/5) 2*ones(1, simTime/10)];
+
+% sigTilt_e = [0*ones(1, simTime/6) 1*ones(1, simTime/6) 2*ones(1, simTime/6) 3*ones(1, simTime/6) 4*ones(1, simTime/3)];
+% sigYaw_e = -2 * ones(simTime, 1);
 
 % Transfer to helix frame
 thetaTilt_fixFrame_store = zeros(simTime, 1);

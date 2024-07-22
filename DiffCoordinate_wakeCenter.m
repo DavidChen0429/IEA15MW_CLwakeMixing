@@ -4,19 +4,20 @@ close all
 addpath('.\Functions');
 
 %% Basic information definition
-fileName = 'Point2724_300s_Center_helix.mat';
+fileName = '600s_Center_HF_basecase.mat';
 dataPath = '.\Data\MAT\LiDAR_sampling\';
 caseName = 'Uni\Str0.3_U8_1Dd_10Hz_CCW\';
-windspeed = load([dataPath caseName fileName]);
-dataLiDAR= windspeed.LiDAR_data;
-filteredIndex = 60;
+SimData = load([dataPath caseName fileName]);
+% wakeCenterChange_Visualization(SimData)
+dataLiDAR= SimData.LiDAR_data;
+filteredIndex = 1;
 dataLiDAR = dataLiDAR(filteredIndex:end);
-data_length = size(dataLiDAR);        % length of snapshot
+data_length = size(dataLiDAR);              % length of snapshot
 lengthPoint = length(dataLiDAR(1).x);
 
 U_inflow = 8;        % Inflow wind speed, same with the Q-blade setting
 D_IEA15MW = 240;     % Rotor diameter
-simTime = 10000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = data_length(1);     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 Str = 0.3;                          % Strouhal number
@@ -32,12 +33,24 @@ omega_e = Freq*2*pi;
 %                   0 cos(Freq) sin(Freq); 
 %                   0 -sin(Freq) cos(Freq)];
 
-%% From Fixed Frame --> Helix Frame, CW
+%% From Fixed Frame --> Helix Frame, CCW
 % Fixed Frame
 wakeCenterY = arrayfun(@(x) x.centerY, dataLiDAR);
 wakeCenterZ = arrayfun(@(x) x.centerZ, dataLiDAR);
-t = linspace(1, data_length(1), data_length(1));
-% FFT_func(wakeCenterY, 1, 1)
+
+% LPF
+wakeCenterY_f = lowpassFilter(wakeCenterY, 10, 0.02);
+wakeCenterZ_f = lowpassFilter(wakeCenterZ, 10, 0.02);
+% figure()
+% plot(wakeCenterY_f)
+% hold on
+% plot(wakeCenterZ_f)
+% hold off
+
+% Normalize to get rid of previous 1D gain
+wakeCenterY = wakeCenterY_f - mean(wakeCenterY_f);
+wakeCenterZ = wakeCenterZ_f - mean(wakeCenterZ_f);
+t = linspace(1, simLen, data_length(1));
 
 % Store wake center information in helix frame
 wakecenterY_helixFrame_store = zeros(data_length(1), 1);
@@ -46,10 +59,10 @@ wakecenterY_fixFrame_store = zeros(data_length(1), 1);
 wakecenterZ_fixFrame_store = zeros(data_length(1), 1);
 
 for i = 1:1:data_length(1)
-    R_helix = [cos(omega_e*t(i)) sin(omega_e*t(i)); 
-               -sin(omega_e*t(i)) cos(omega_e*t(i))];
-    invR_helix = [cos(omega_e*t(i)) -sin(omega_e*t(i)); 
-                  sin(omega_e*t(i)) cos(omega_e*t(i))];
+    R_helix = [cos(omega_e*t(i)) -sin(omega_e*t(i)); 
+               sin(omega_e*t(i)) cos(omega_e*t(i))];
+    invR_helix = [cos(omega_e*t(i)) sin(omega_e*t(i)); 
+                  -sin(omega_e*t(i)) cos(omega_e*t(i))];
     centerY = wakeCenterY(i);
     centerZ = wakeCenterZ(i);
 
@@ -97,3 +110,10 @@ legend('Y', 'Z')
 
 %% Visualization
 % ringVisualization(dataLiDAR)
+figure('Position', [10, 10, 500, 500]);
+plot(wakeCenterY_f, wakeCenterZ_f,'red');
+xlabel('Y [m]')
+ylabel('Z [m]')
+xlim([-50 50])
+ylim([100 200])
+title('LiDAR Wind Speed (sec)', round(counter/interval + 1))

@@ -7,7 +7,7 @@ y_1Dref = 0 + 120 * cos(theta);
 z_1Dref = 150 + 120 * sin(theta);
 
 % Visualization
-figure;
+figure();
 for counter = 1:interval:data_length(1)  
     snapshot = dataLiDAR(counter);
     u_los = snapshot.u_los;
@@ -23,6 +23,7 @@ for counter = 1:interval:data_length(1)
 
     hold on
     plot(y_1Dref, z_1Dref, "k-", 'LineWidth',2);
+    scatter(snapshot.centerY, snapshot.centerZ,'red');
     hold off;
     xlabel('Y [m]')
     ylabel('Z [m]')

@@ -18,7 +18,7 @@ function wakeCenter = HelixCenter(snapshot, Uin)
 %     end
 
     % Method2: Max with in rotor disc (Turbulence)
-    indices = find(snapshot.u_los >= (Uin + 0) & sqrt(y.^2 + (z-150).^2) <= 120);
+    indices = find(snapshot.u_los >= (Uin - 0.5) & sqrt(y.^2 + (z-150).^2) <= 120);
     buf = size(indices);
     if buf(1) == 0
         filtered_indices = sqrt(y.^2 + (z-150).^2) < 120;

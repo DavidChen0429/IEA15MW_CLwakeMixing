@@ -3,44 +3,31 @@ clear
 close all
 addpath('.\Functions');
 
-%% Basic information definition
-fileName = '600s_Center_HF_Mtilte.mat';
+%% Fix Frame 
+Fs = 10;  % sampling frequency Hz
+Fc = 0.02;  % cutoff frequency Hz
+fileName = '600s_Center_FF_baseline.mat';
+fileName2 = '600s_Center_FF_yaw.mat';
 dataPath = '.\Data\MAT\LiDAR_sampling\';
 caseName = 'Uni\Str0.3_U8_1Dd_10Hz_CCW\';
 SimData = load([dataPath caseName fileName]);
-wakeCenterChange_Visualization(SimData)
-ringVisualization(SimData.LiDAR_data)
+SimData2 = load([dataPath caseName fileName2]);
+% MomentCenter_comparison_Visualization(SimData, SimData2, Fs, Fc)
+wakeCenterTraj(SimData.LiDAR_data, SimData2.LiDAR_data, Fs, Fc)
+% videoCompare_func(SimData, SimData2)
+% MomentCenter_Visualization(SimData, Fs, Fc)
 
-% LiDAR_sample= SimData.LiDAR_data;
-% TiltYaw_FF = SimData.thetaTiltYaw_fixedFrame;
-% TiltYaw_HF = SimData.thetaTiltYaw_helixFrame;
-% 
-% datalength = size(LiDAR_sample);
-% t = linspace(1, datalength(2), datalength(2));
-% wakeCenterY = arrayfun(@(x) x.centerY, LiDAR_sample);
-% wakeCenterZ = arrayfun(@(x) x.centerZ, LiDAR_sample);
-% 
-% figure()
-% subplot(3, 1, 1)
-% plot(t, TiltYaw_FF(:, 1));
-% hold on;
-% plot(t, TiltYaw_FF(:, 2));
-% hold off;
-% title('Fixed Frame')
-% legend('\beta_{tilt}', '\beta_{yaw}')
-% 
-% subplot(3, 1, 2)
-% plot(t, TiltYaw_HF(:, 1));
-% hold on;
-% plot(t, TiltYaw_HF(:, 2));
-% hold off;
-% title('Helix Frame')
-% legend('\beta^e_{tilt}', '\beta^e_{yaw}')
-% 
-% subplot(3, 1, 3)
-% plot(t, wakeCenterZ)
-% hold on;
-% plot(t, wakeCenterY)
-% hold off;
-% title('Wake Center')
-% legend('Z - tilt', 'Y - yaw')
+%% Helix Frame
+Fs = 10;  % sampling frequency Hz
+Fc = 0.02;  % cutoff frequency Hz
+fileName = '600s_Center_HF_basecase.mat';
+fileName2 = '600s_Center_HF_yaw_l2.mat';
+dataPath = '.\Data\MAT\LiDAR_sampling\';
+caseName = 'Uni\Str0.3_U8_1Dd_10Hz_CCW\';
+SimData = load([dataPath caseName fileName]);
+SimData2 = load([dataPath caseName fileName2]);
+% MomentCenter_Visualization(SimData, Fs, Fc);
+MomentCenter_comparison_Visualization(SimData, SimData2, Fs, Fc)
+wakeCenterTraj(SimData.LiDAR_data, SimData2.LiDAR_data, Fs, Fc)
+% videoCompare_func(SimData, SimData2)
+% ringVisualization(SimData2.LiDAR_data)

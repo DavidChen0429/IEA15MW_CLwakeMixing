@@ -19,7 +19,7 @@ if isempty(m)
 end
 
 %% Data file 
-fileName = '600s_Center_HF_basecase.mat';
+fileName = '600s_Center_HF_tilt_s,d.mat';
 dataPath = '.\Data\MAT\LiDAR_sampling\';
 caseName = 'Uni\Str0.3_U8_1Dd_10Hz_CCW\';
 
@@ -77,10 +77,14 @@ Helix_amplitude = 4;                % Helix amplitude
 Freq = Str*U_inflow/D_IEA15MW;      % From Str, in Hz
 omega_e = Freq*2*pi;
 
-sigTilt_e = 0 * ones(simTime, 1);
+% sigTilt_e = 0 * ones(simTime, 1);
 % sigTilt_e = [linspace(0, 8, simTime*9/20) linspace(8, 0, simTime*9/20) 0*ones(1, simTime/10)];
-sigYaw_e = -4 * ones(simTime, 1);
-% sigYaw_e = [4 * ones(simTime/3, 1); 2 * ones(simTime*2/3, 1)];
+sigTilt_e = [4*ones(1, simTime/6) 3*ones(1, simTime/6) 2*ones(1, simTime/6) 1*ones(1, simTime/6) 0*ones(1, simTime/3)];
+% sigTilt_e = [0*ones(1, simTime/10) linspace(0, 2, simTime*2/5) linspace(2, 0, simTime*2/5) 0*ones(1, simTime/10)];
+sigYaw_e = -2 * ones(simTime, 1);
+% sigYaw_e = [linspace(-4, -12, simTime*9/20) linspace(-12, -4, simTime*9/20) -4*ones(1, simTime/10)];
+% sigYaw_e = [-6*ones(1, simTime/6) -5*ones(1, simTime/6) -4*ones(1, simTime/6) -3*ones(1, simTime/6) -2*ones(1, simTime/3)];
+% sigYaw_e = [-2*ones(1, simTime/10) linspace(-2, 0, simTime*2/5) linspace(0, -2, simTime*2/5) -2*ones(1, simTime/10)];
 t = linspace(timeStep, simLen, simTime);
 
 %% Defining LiDAR sampling 

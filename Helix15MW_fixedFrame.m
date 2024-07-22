@@ -19,9 +19,9 @@ if isempty(m)
 end
 
 %% Data file 
-fileName = '300s_Center_FF_baseline.mat';
+fileName = '600s_Center_FF_yaw.mat';
 dataPath = '.\Data\MAT\LiDAR_sampling\';
-caseName = 'Uni\Str0.3_U8_1Dd_1Hz_CCW\';
+caseName = 'Uni\Str0.3_U8_1Dd_10Hz_CCW\';
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
@@ -29,7 +29,7 @@ calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime = 3000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 6000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 
@@ -73,19 +73,19 @@ N = 1;          % gearbox ratio of IEA15MW direct drive
 
 %% Defining Helix Control Setting
 Str = 0.3;                          % Strouhal number
-Helix_amplitude = 4;                % Helix amplitude                
+Helix_amplitude = 2;                % Helix amplitude                
 Freq = Str*U_inflow/D_IEA15MW;      % From Str, in Hz
 omega_e = Freq*2*pi;
 
 % Genereate the tilt and yaw signal 
 t = linspace(timeStep, simLen, simTime);
-cutPoint = simLen/3;
-cutPoint2 = simLen*2/3;
+cutPoint = simLen/4;
+cutPoint2 = simLen*3/4;
 amplitudeTilt = Helix_amplitude*(t<=cutPoint) + 2*Helix_amplitude*(t>cutPoint) - Helix_amplitude*(t>=cutPoint2);
 sigTilt = Helix_amplitude * sin(2*pi*Freq*t);          
-sigYaw = Helix_amplitude * sin(2*pi*Freq*t - pi/2);  % CCW
+% sigYaw = Helix_amplitude * sin(2*pi*Freq*t - pi/2);  % CCW
 % sigTilt = amplitudeTilt .* sin(2*pi*Freq*t);  
-% sigYaw = amplitudeTilt .* sin(2*pi*Freq*t - pi/2);  % CCW
+sigYaw = amplitudeTilt .* sin(2*pi*Freq*t - pi/2);  % CCW
 figure()
 plot(t, sigTilt)
 hold on
@@ -174,7 +174,7 @@ for i = 1:1:simTime
 % %         fprintf('%d seconds.\n', i*timeStep);
 %         LiDAR_data(i) = windspeed;   % 1Hz sampling
 %     end
-    waitbar(i/simTime, f, sprintf('Simulation Running: %.2f%%', (i/simTime)*100));
+    waitbar(i/simTime, f, sprintf('Simulation Running: %.1f%%', (i/simTime)*100));
 
 end
 close(f)
