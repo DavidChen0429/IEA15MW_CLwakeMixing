@@ -1,4 +1,4 @@
-function [] = MomentCenter_comparison_Visualization(SimData1, SimData2, Fs, Fc)
+function [] = MomentCenter_Comparison_Visualization(SimData1, SimData2, Fs, Fc)
 
 % Basic helix information
 U_inflow = 8;        % Inflow wind speed, same with the Q-blade setting

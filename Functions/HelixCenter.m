@@ -27,5 +27,5 @@ function wakeCenter = HelixCenter(snapshot, Uin, threshold_diameter)
 
     selected_y = y(indices);
     selected_z = z(indices);
-    wakeCenter = [mean(selected_y), mean(selected_z)];
+    wakeCenter = [mean(selected_z), mean(selected_y)];
 end

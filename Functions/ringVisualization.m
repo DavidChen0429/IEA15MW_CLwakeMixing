@@ -7,7 +7,7 @@ y_1Dref = 0 + D/2 * cos(theta);
 z_1Dref = 90 + D/2 * sin(theta);
 
 % Visualization
-figure();
+figure;
 for counter = 1:interval:data_length(1)  
     snapshot = dataLiDAR(counter);
     u_los = snapshot.u_los;
