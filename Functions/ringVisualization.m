@@ -7,7 +7,7 @@ y_1Dref = 0 + D/2 * cos(theta);
 z_1Dref = 90 + D/2 * sin(theta);
 
 % Visualization
-figure;
+figure('Position', [30, 30, 320, 300]);
 for counter = 1:interval:data_length(1)  
     snapshot = dataLiDAR(counter);
     u_los = snapshot.u_los;
@@ -29,7 +29,7 @@ for counter = 1:interval:data_length(1)
     ylabel('Z [m]')
     title('LiDAR Wind Speed (sec)', round(counter/interval + 1))
     colorbar;
-    clim([4 11])
+    clim([4 10])
     pause(0.1);
 end
 end

@@ -1,4 +1,4 @@
-function [T] = FFT_func(signal, fil_index, Fs)
+function [f, P1] = FFT_func(signal, fil_index, Fs)
     filtered_signal = signal(fil_index:end);   % filter out nonexcited period
     filtered_signal = filtered_signal - mean(filtered_signal);
     T = 1/Fs;

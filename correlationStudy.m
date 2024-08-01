@@ -5,17 +5,17 @@ addpath('.\Functions');
 
 %% Fix Frame 
 Fs = 10;  % sampling frequency Hz
-Fc = 0.02;  % cutoff frequency Hz
-fileName = '600s_Center_FF_baseline.mat';
-fileName2 = '600s_Center_FF_tilt,bias.mat';
-dataPath = '.\Data\MAT\LiDAR_sampling\';
-caseName = 'Uni\Str0.3_U8_1Dd_10Hz_CCW\';
-SimData = load([dataPath caseName fileName]);
-SimData2 = load([dataPath caseName fileName2]);
-MomentCenter_comparison_Visualization(SimData, SimData2, Fs, Fc)
-wakeCenterTraj(SimData.LiDAR_data, SimData2.LiDAR_data, Fs, Fc)
-% videoCompare_func(SimData, SimData2, Fs, Fc)
-% MomentCenter_Visualization(SimData, Fs, Fc)
+Fc = 0.05;  % cutoff frequency Hz
+fileName = 'FF_Uni_basecase.mat';   % Fixed Frame
+fileName2 = 'FF_Uni_tilt,yaw.mat';   % Fixed Frame
+turbineName = '.\Data\NREL5MW\';
+caseName = 'Str0.3_U10_1Dd_10Hz_CCW\';
+SimData = load([turbineName caseName fileName]);
+SimData2 = load([turbineName caseName fileName2]);
+BetaCenter_Comparison_Visualization(SimData, SimData2, Fs, Fc)
+% wakeCenterTraj(SimData.LiDAR_data, SimData2.LiDAR_data, Fs, Fc)
+% videoCompare_func(SimData, SimData2, Fs, Fc, 126)
+% BetaCenter_Visualization(SimData, Fs, Fc)
 
 %% Bias and center's center relationship
 close all
