@@ -13,12 +13,16 @@ wakeCenterZ2_f = lowpassFilter(wakeCenterZ2, Fs, Fc);
 figure('Position', [10, 10, 500, 500]);
 plot(wakeCenterY1_f, wakeCenterZ1_f,'red');
 hold on
+plot(mean(wakeCenterY1_f), mean(wakeCenterZ1_f),'ro', 'MarkerSize', 10, 'LineWidth', 2);
 plot(wakeCenterY2_f, wakeCenterZ2_f,'blue');
+plot(mean(wakeCenterY2_f), mean(wakeCenterZ2_f),'bo', 'MarkerSize', 10, 'LineWidth', 2);
 hold off
 xlabel('Y [m]')
 ylabel('Z [m]')
+text(mean(wakeCenterY1_f), mean(wakeCenterZ1_f), sprintf('(%0.2f, %0.2f)', mean(wakeCenterY1_f), mean(wakeCenterZ1_f)), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom');
+text(mean(wakeCenterY2_f), mean(wakeCenterZ2_f), sprintf('(%0.2f, %0.2f)', mean(wakeCenterY2_f), mean(wakeCenterZ2_f)), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom');
 xlim([-50 50])
 ylim([100 200])
-legend('case 1', 'case 2')
+legend('Traj1', 'Cetner1','Traj2', 'Cetner2')
 title('Wake Center Trajectory')
 end

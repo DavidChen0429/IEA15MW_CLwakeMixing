@@ -1,6 +1,18 @@
-function [] = videoCompare_func(data1, data2)
+function [] = videoCompare_func(data1, data2, Fs, Fc)
 dataLiDAR_A = data1.LiDAR_data;
 dataLiDAR_B = data2.LiDAR_data;
+
+% wake center traj
+wakeCenterY1 = arrayfun(@(x) x.centerY, dataLiDAR_A);
+wakeCenterZ1 = arrayfun(@(x) x.centerZ, dataLiDAR_A);
+wakeCenterY2 = arrayfun(@(x) x.centerY, dataLiDAR_B);
+wakeCenterZ2 = arrayfun(@(x) x.centerZ, dataLiDAR_B);
+
+wakeCenterY1_f = lowpassFilter(wakeCenterY1, Fs, Fc);
+wakeCenterZ1_f = lowpassFilter(wakeCenterZ1, Fs, Fc);
+wakeCenterY2_f = lowpassFilter(wakeCenterY2, Fs, Fc);
+wakeCenterZ2_f = lowpassFilter(wakeCenterZ2, Fs, Fc);
+
 data_length = size(dataLiDAR_A);
 interval = 10;
 
@@ -24,6 +36,7 @@ for counter = 1:interval:data_length(1)
     hold on
     scatter(snapshot.centerY, snapshot.centerZ,'red');
     plot(y_1Dref, z_1Dref, "k-", 'LineWidth',2);
+    plot(wakeCenterY1_f, wakeCenterZ1_f, "r-", 'LineWidth',0.5);
     hold off;
     xlabel('Y [m]')
     ylabel('Z [m]')
@@ -39,6 +52,7 @@ for counter = 1:interval:data_length(1)
     hold on
     scatter(snapshot2.centerY, snapshot2.centerZ,'red');
     plot(y_1Dref, z_1Dref, "k-", 'LineWidth',2);
+    plot(wakeCenterY2_f, wakeCenterZ2_f, "r-", 'LineWidth',0.5);
     hold off;
     xlabel('Y [m]')
     ylabel('Z [m]')

@@ -4,7 +4,7 @@ close all
 addpath('.\Functions');
 
 %% Basic information definition
-fileName = '600s_Center_HF_basecase.mat';
+fileName = '600s_Center_FF_baseline.mat';
 dataPath = '.\Data\MAT\LiDAR_sampling\';
 caseName = 'Uni\Str0.3_U8_1Dd_10Hz_CCW\';
 SimData = load([dataPath caseName fileName]);
@@ -33,6 +33,14 @@ omega_e = Freq*2*pi;
 %                   0 cos(Freq) sin(Freq); 
 %                   0 -sin(Freq) cos(Freq)];
 
+%% Perfect wake center
+idealZ = 25 * ones(1, data_length(1));  % 25
+idealY = -10 * ones(1, data_length(1)); % -10
+
+% idealZ = [25*ones(1, data_length(1)/4) 50*ones(1, data_length(1)/2) 25*ones(1, data_length(1)/4)];
+% idealY = [-10*ones(1, data_length(1)/4) 0*ones(1, data_length(1)/2) -10*ones(1, data_length(1)/4)];
+% idealZ = linspace(0, 50, data_length(1));
+
 %% From Fixed Frame --> Helix Frame, CCW
 % Fixed Frame
 wakeCenterY = arrayfun(@(x) x.centerY, dataLiDAR);
@@ -57,6 +65,8 @@ wakecenterY_helixFrame_store = zeros(data_length(1), 1);
 wakecenterZ_helixFrame_store = zeros(data_length(1), 1);
 wakecenterY_fixFrame_store = zeros(data_length(1), 1);
 wakecenterZ_fixFrame_store = zeros(data_length(1), 1);
+ideal_wakecenterY_fixFrame_store = zeros(data_length(1), 1);
+ideal_wakecenterZ_fixFrame_store = zeros(data_length(1), 1);
 
 for i = 1:1:data_length(1)
     R_helix = [cos(omega_e*t(i)) -sin(omega_e*t(i)); 
@@ -75,6 +85,10 @@ for i = 1:1:data_length(1)
     center_fixedFrame = invR_helix * center_helixFrame; 
     wakecenterY_fixFrame_store(i) = center_fixedFrame(2);
     wakecenterZ_fixFrame_store(i) = center_fixedFrame(1);
+
+    ideal_center_fixedFrame = invR_helix * [idealZ(i); idealY(i)];
+    ideal_wakecenterY_fixFrame_store(i) = ideal_center_fixedFrame(2);
+    ideal_wakecenterZ_fixFrame_store(i) = ideal_center_fixedFrame(1);
 end
 
 figure();
@@ -92,28 +106,36 @@ subplot(3,1,2);
 plot(t, wakecenterY_helixFrame_store)
 hold on;
 plot(t, wakecenterZ_helixFrame_store)
+plot(t, idealY, '--')
+plot(t, idealZ, '--')
 hold off;
 xlabel('Time [s]')
 ylabel('Distance [m]')
 title('Helix Frame')
-legend('Y', 'Z')
+legend('Y^e', 'Z^e', 'Y^e_r', 'Z^e_r')
 
 subplot(3,1,3);
 plot(t, wakecenterY_fixFrame_store + mean(wakecenterZ_fixFrame_store))
 hold on;
 plot(t, wakecenterZ_fixFrame_store)
+plot(t, ideal_wakecenterY_fixFrame_store, '--')
+plot(t, ideal_wakecenterZ_fixFrame_store, '--')
 hold off;
 xlabel('Time [s]')
 ylabel('Distance [m]')
 title('Again Fixed Frame')
-legend('Y', 'Z')
+legend('Y', 'Z', 'Y_r', 'Z_r')
 
 %% Visualization
-% ringVisualization(dataLiDAR)
 figure('Position', [10, 10, 500, 500]);
-plot(wakeCenterY_f, wakeCenterZ_f,'red');
+plot(wakeCenterY, wakeCenterZ,'red');
+hold on
+plot(mean(wakeCenterY), mean(wakeCenterZ),'ro', 'MarkerSize', 10, 'LineWidth', 2);
+plot(ideal_wakecenterY_fixFrame_store, ideal_wakecenterZ_fixFrame_store,'blue')
+plot(mean(ideal_wakecenterY_fixFrame_store), mean(ideal_wakecenterZ_fixFrame_store),'bo', 'MarkerSize', 10, 'LineWidth', 2);
+hold off
 xlabel('Y [m]')
 ylabel('Z [m]')
 xlim([-50 50])
-ylim([100 200])
-title('LiDAR Wind Speed (sec)', round(counter/interval + 1))
+ylim([-50 50])
+title('Wake center Trajectory')

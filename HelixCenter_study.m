@@ -4,8 +4,12 @@ close all
 addpath('.\Functions');
 
 %% Load data
-% windspeed = load(".\Data\MAT\LiDAR_sampling\Uni\Str0.3_U8_1Dd_1Hz\Point2724_Timestep0.1_1800s_Parallel_changeMTilt.mat");
-windspeed = load(".\Data\MAT\LiDAR_sampling\Uni\Str0.3_U8_1Dd_1Hz\Point2724_Timestep0.1_300s_Parallel_Center.mat");
+Fs = 10;  % sampling frequency Hz
+Fc = 0.02;  % cutoff frequency Hz
+fileName = '600s_Center_FF_VerticalShear10deg.mat'; 
+dataPath = '.\Data\MAT\LiDAR_sampling\';
+caseName = 'Uni\Str0.3_U8_1Dd_10Hz_CCW\';
+windspeed = load([dataPath caseName fileName]);
 
 dataLiDAR= windspeed.LiDAR_data;
 data_length = size(dataLiDAR);        % length of snapshot
@@ -18,7 +22,6 @@ Freq = Str*Uin/DIEA15;      % From Str, in Hz
 
 % Reference signal
 timeWakeTravel0 = round(measurementPos/Uin);
-timeWakeTravel0 = 45;
 t = linspace(0, data_length(1)-timeWakeTravel0, data_length(1)-timeWakeTravel0);
 refSine1 = 2 * sin(2*pi*Freq*t);
 bufferSine = zeros(1, timeWakeTravel0);
@@ -31,23 +34,17 @@ refSine = [bufferSine, refSine1] + 6.5;
 
 %% Pure visualization
 theta = linspace(0, 2*pi, 20);
-y_1Dref = 0 + 120 * cos(theta);
-z_1Dref = 150 + 120 * sin(theta);
+y_1Dref = 0 + 100 * cos(theta);
+z_1Dref = 150 + 100 * sin(theta);
 
 % Visualization
 figure;
-for counter = 1:1:data_length(1)  
+for counter = 1:10:data_length(1)  
     snapshot = dataLiDAR(counter);
     u_los = snapshot.u_los;
     y = snapshot.y;
     z = snapshot.z;
-%     scatter(y, z, 10, u_los, 'filled');
-
-    u_x = snapshot.u_x;
-    u_y = snapshot.u_y;
-    u_z = snapshot.u_z;
-    magnitude_speed = sqrt(u_x.^2 + u_y.^2 + u_z.^2);
-    scatter(y, z, 10, magnitude_speed, 'filled');
+    scatter(y, z, 10, u_los, 'filled');
 
     hold on
     plot(y_1Dref, z_1Dref, "k-", 'LineWidth',2);
@@ -60,6 +57,29 @@ for counter = 1:1:data_length(1)
     pause(0.1);
 end
 
+%% Pure snapshot visualization
+theta = linspace(0, 2*pi, 20);
+y_1Dref = 0 + 120 * cos(theta);
+z_1Dref = 150 + 120 * sin(theta);
+
+% Visualization
+figure;
+counter = 2011; 
+snapshot = dataLiDAR(counter);
+u_los = snapshot.u_los;
+y = snapshot.y;
+z = snapshot.z;
+scatter(y, z, 10, u_los, 'filled');
+
+hold on
+plot(y_1Dref, z_1Dref, "k-", 'LineWidth',2);
+hold off;
+xlabel('Y [m]')
+ylabel('Z [m]')
+title('LiDAR Wind Speed', counter)
+colorbar;
+clim([4 8])
+
 %% Calculate the Helix center
 wake_center = [];
 time = 1800;
@@ -69,19 +89,51 @@ for counter = 1:1:time
     wakeCenter = HelixCenter(snapshot, Uin);
     wake_center(end+1, :) = [wakeCenter(1), wakeCenter(2)];
 end 
+wakeCenterYf = lowpassFilter(wake_center(:,1), 10, 0.01);
+wakeCenterZf = lowpassFilter(wake_center(:,2), 10, 0.01);
 figure();
 sgtitle('Helix Wake Center');
 subplot(2,1,1);
 plot(t, wake_center(:,1), 'r-');
+% plot(t, wakeCenterYf, 'r-')
 ylim([-120 120]);
 xlabel('Time [s]')
 ylabel('Y [m]')
 subplot(2,1,2);
 plot(t, wake_center(:,2), 'b-');
+% plot(t, wakeCenterZf, 'b-')
 ylim([30 270]);
 xlabel('Time [s]')
 ylabel('Z [m]')
-save('.\Data\MAT\Helix_wake_center\1800sMix2724_ulos.mat', 'wake_center');
+% FFT_func(wake_center(:,1), 1, 10)
+
+% save('.\Data\MAT\Helix_wake_center\1800sMix2724_ulos.mat', 'wake_center');
+
+%% Visualize the Helix Center and Helix
+% Reference 1D ring
+theta = linspace(0, 2*pi, 50);
+y_1Dref = 0 + 120 * cos(theta);
+z_1Dref = 150 + 120 * sin(theta);
+
+figure()
+for counter = 1:10:data_length(1)  
+    snapshot = dataLiDAR(counter);
+    u_los = snapshot.u_los;
+    y = snapshot.y;
+    z = snapshot.z;
+    wakeCenter = HelixCenter(snapshot, Uin);
+    scatter(y, z, 10, u_los, 'filled');
+    hold on
+    scatter(wakeCenter(1), wakeCenter(2),'red');
+    plot(y_1Dref, z_1Dref, "k-", 'LineWidth',2);
+    hold off;
+    xlabel('Y [m]')
+    ylabel('Z [m]')
+    title('LiDAR Wind Speed', counter)
+    colorbar;
+    clim([4 8])
+    pause(0.1);
+end 
 
 %% Compare the real-time computation
 % Offline computation
@@ -90,7 +142,7 @@ time = 600;
 t = linspace(1, time, time);
 for counter = 1:1:time
     snapshot = dataLiDAR(counter);
-    wakeCenter = HelixCenter(snapshot, Uin);
+    wakeCenter = HelixCenter2(snapshot, Uin);
     wake_center(end+1, :) = [wakeCenter(1), wakeCenter(2)];
 end 
 
@@ -116,33 +168,6 @@ legend('offline', 'online')
 ylim([30 270]);
 xlabel('Time [s]')
 ylabel('Z [m]')
-
-%% Visualize the Helix Center and Helix
-% Reference 1D ring
-theta = linspace(0, 2*pi, 50);
-y_1Dref = 0 + 120 * cos(theta);
-z_1Dref = 150 + 120 * sin(theta);
-
-figure()
-for counter = 1:1:data_length(1)  
-    snapshot = dataLiDAR(counter);
-    u_los = snapshot.u_los;
-    y = snapshot.y;
-    z = snapshot.z;
-    wakeCenter = HelixCenter(snapshot, Uin);
-    scatter(y, z, 10, u_los, 'filled');
-    hold on
-    scatter(wakeCenter(1), wakeCenter(2),'red');
-    plot(y_1Dref, z_1Dref, "k-", 'LineWidth',2);
-    hold off;
-    xlabel('Y [m]')
-    ylabel('Z [m]')
-    title('LiDAR Wind Speed', counter)
-    colorbar;
-    clim([4 8])
-    pause(0.1);
-end 
-
 
 %% Save as video
 % Reference 1D ring

@@ -214,16 +214,19 @@ t = linspace(timeStep, simLen, simTime);
 cutPoint1 = simLen / 3;
 amplitudeChange = Helix_amplitude*(t<=cutPoint1)+2*Helix_amplitude*(t>cutPoint1);
 
-sigTilt_e = 0 * ones(simTime, 1);
+sigTilt_e_basic = 6 * ones(simTime, 1);
+sigYaw_e_basic = -6 * ones(simTime, 1);
+
 % sigTilt_e = [linspace(0, 4, simTime*9/20) linspace(4, 0, simTime*9/20) 0*ones(1, simTime/10)];
 % sigTilt_e = [0*ones(1, simTime/5) 1*ones(1, simTime/5) 2*ones(1, simTime/5) 3*ones(1, simTime/5) 4*ones(1, simTime/5)];
-% sigYaw_e = -2 * ones(simTime, 1);
-sigYaw_e = [-2*ones(1, simTime/10) linspace(-2, 2, simTime*4/5) 2*ones(1, simTime/10)];
-
+sigTilt_e = 6 * ones(simTime, 1);
+sigYaw_e = [-6*ones(1, simTime/10) linspace(-6, 6, simTime*4/5) 6*ones(1, simTime/10)];
 % sigTilt_e = [0*ones(1, simTime/6) 1*ones(1, simTime/6) 2*ones(1, simTime/6) 3*ones(1, simTime/6) 4*ones(1, simTime/3)];
 % sigYaw_e = -2 * ones(simTime, 1);
 
 % Transfer to helix frame
+thetaTilt_fixFrame_storeb = zeros(simTime, 1);
+thetaYaw_fixFrame_storeb = zeros(simTime, 1);
 thetaTilt_fixFrame_store = zeros(simTime, 1);
 thetaYaw_fixFrame_store = zeros(simTime, 1);
 
@@ -237,6 +240,9 @@ for i = 1:1:simTime
     MtMy_fixed = invR_helix * [theta_tilt_e; theta_yaw_e]; 
     thetaTilt_fixFrame_store(i) = MtMy_fixed(1);
     thetaYaw_fixFrame_store(i) = MtMy_fixed(2);
+    MtMy_fixed_b = invR_helix * [sigTilt_e_basic(i); sigYaw_e_basic(i)]; 
+    thetaTilt_fixFrame_storeb(i) = MtMy_fixed_b(1);
+    thetaYaw_fixFrame_storeb(i) = MtMy_fixed_b(2);
 end
 
 figure()
@@ -244,18 +250,22 @@ subplot(2, 1, 1)
 plot(t, sigTilt_e)
 hold on
 plot(t, sigYaw_e)
+plot(t, sigTilt_e_basic ,'--')
+plot(t, sigYaw_e_basic, '--')
 hold off
 xlabel('Time [s]')
 ylabel('Magnitude')
 title('Helix Frame')
-legend('M^e_{tilt}','M^e_{yaw}')
+legend('M^e_{tilt}','M^e_{yaw}','M^{e,b}_{tilt}','M^{e,b}_{yaw}')
 
 subplot(2, 1, 2)
 plot(t, thetaTilt_fixFrame_store)
 hold on
 plot(t, thetaYaw_fixFrame_store)
+plot(t, thetaTilt_fixFrame_storeb, '--')
+plot(t, thetaYaw_fixFrame_storeb, '--')
 hold off
 xlabel('Time [s]')
 ylabel('Magnitude')
 title("Fixed Frame")
-legend('M_{tilt}','M_{yaw}')
+legend('M_{tilt}','M_{yaw}','M^b_{tilt}','M^b_{yaw}')

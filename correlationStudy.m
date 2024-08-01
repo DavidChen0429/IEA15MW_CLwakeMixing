@@ -7,27 +7,78 @@ addpath('.\Functions');
 Fs = 10;  % sampling frequency Hz
 Fc = 0.02;  % cutoff frequency Hz
 fileName = '600s_Center_FF_baseline.mat';
-fileName2 = '600s_Center_FF_yaw.mat';
+fileName2 = '600s_Center_FF_tilt,bias.mat';
 dataPath = '.\Data\MAT\LiDAR_sampling\';
 caseName = 'Uni\Str0.3_U8_1Dd_10Hz_CCW\';
 SimData = load([dataPath caseName fileName]);
 SimData2 = load([dataPath caseName fileName2]);
-% MomentCenter_comparison_Visualization(SimData, SimData2, Fs, Fc)
+MomentCenter_comparison_Visualization(SimData, SimData2, Fs, Fc)
 wakeCenterTraj(SimData.LiDAR_data, SimData2.LiDAR_data, Fs, Fc)
-% videoCompare_func(SimData, SimData2)
+% videoCompare_func(SimData, SimData2, Fs, Fc)
 % MomentCenter_Visualization(SimData, Fs, Fc)
+
+%% Bias and center's center relationship
+close all
+Fs = 10;  % sampling frequency Hz
+Fc = 0.02;  % cutoff frequency Hz
+fileName = '600s_Center_FF_t,y,bias3.mat';
+dataPath = '.\Data\MAT\LiDAR_sampling\';
+caseName = 'Uni\Str0.3_U8_1Dd_10Hz_CCW\';
+SimData = load([dataPath caseName fileName]);
+MomentCenter_Visualization(SimData, Fs, Fc)
+
+data = SimData.LiDAR_data;
+wakeCenterYo = arrayfun(@(x) x.centerY, data);
+wakeCenterZo = arrayfun(@(x) x.centerZ, data);
+% wakeCenterYf = lowpassFilter(wakeCenterYo, Fs, Fc);
+% wakeCenterZf = lowpassFilter(wakeCenterZo, Fs, Fc);
+meanY = slideWindow(wakeCenterYo, 1000, 300);
+meanZ = slideWindow(wakeCenterZo, 1000, 300);
+
+figure();
+plot(meanY, meanZ, "*");
+hold on;
+plot(lowpassFilter(wakeCenterYo, Fs, Fc), lowpassFilter(wakeCenterZo, Fs, Fc));
+hold off;
+xlabel('Y [m]')
+ylabel('Z [m]')
+xlim([-50 50])
+ylim([100 200])
+meanValueY = mean(meanY(2:end));
+meanValueZ = mean(meanZ(2:end));
+fprintf('Y: %.2f, and Z: %.2f\n', meanValueY, meanValueZ);
+
+% rough conclusion
+Mtilt_unit = [2.72-(-7.525) 172.66-158.54]/5;   % (2.049 2.824)
+Myaw_unit = [2.72-(-19.82) 162.80-158.54]/5;    % (4.508 0.852)
+
 
 %% Helix Frame
 Fs = 10;  % sampling frequency Hz
 Fc = 0.02;  % cutoff frequency Hz
 fileName = '600s_Center_HF_basecase.mat';
-fileName2 = '600s_Center_HF_yaw_l2.mat';
+fileName2 = '600s_Center_HF_tilt,bias.mat';
 dataPath = '.\Data\MAT\LiDAR_sampling\';
 caseName = 'Uni\Str0.3_U8_1Dd_10Hz_CCW\';
 SimData = load([dataPath caseName fileName]);
 SimData2 = load([dataPath caseName fileName2]);
-% MomentCenter_Visualization(SimData, Fs, Fc);
+MomentCenter_Visualization(SimData, Fs, Fc);
 MomentCenter_comparison_Visualization(SimData, SimData2, Fs, Fc)
 wakeCenterTraj(SimData.LiDAR_data, SimData2.LiDAR_data, Fs, Fc)
 % videoCompare_func(SimData, SimData2)
 % ringVisualization(SimData2.LiDAR_data)
+
+%% Compare different distance and phase info difference
+Fs = 10;  % sampling frequency Hz
+Fc = 0.05;  % cutoff frequency Hz
+fileName = '600s_Center_FF_baseline.mat';
+fileName2 = '600s_Center_HF_NTM_A_basecase.mat';
+dataPath = '.\Data\MAT\LiDAR_sampling\';
+caseName = 'Uni\Str0.3_U8_1Dd_10Hz_CCW\';
+case2Name = 'Turbulence\Str0.3_U8_1Dd_10Hz_CCW\';
+SimData = load([dataPath caseName fileName]);
+SimData2 = load([dataPath case2Name fileName2]);
+MomentCenter_comparison_Visualization(SimData, SimData2, Fs, Fc)
+wakeCenterTraj(SimData.LiDAR_data, SimData2.LiDAR_data, Fs, Fc)
+% videoCompare_func(SimData, SimData2)
+% MomentCenter_Visualization(SimData, Fs, Fc)

@@ -27,8 +27,10 @@ wakeCenterZf = lowpassFilter(wakeCenterZo, Fs, Fc);
 % Subtract mean to get rid of previous 1D gain
 wakeCenterY = wakeCenterYf - mean(wakeCenterYf);
 wakeCenterZ = wakeCenterZf - mean(wakeCenterZf);
-disp(mean(wakeCenterYf))
-disp(mean(wakeCenterZf))
+% wakeCenterY = wakeCenterYf - 0;
+% wakeCenterZ = wakeCenterZf - 150;
+% disp(mean(wakeCenterYf))
+% disp(mean(wakeCenterZf))
 % wakeCenterY = wakeCenterYf - 0;
 % wakeCenterZ = wakeCenterZf - 150;
 
