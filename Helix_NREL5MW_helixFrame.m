@@ -19,7 +19,7 @@ if isempty(m)
 end
 
 %% Data file 
-fileName = 'HF_Uni_basecase.mat';   % Fixed Frame
+fileName = 'HF_Uni_tilt,yaw.mat';   % Fixed Frame
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\';
 
@@ -74,16 +74,21 @@ Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
 omega_e = Freq*2*pi;
 
 t = linspace(1, simLen, simTime);
-sigTilt_e = 0 * ones(simTime, 1);                 % basic
-sigYaw_e = -Helix_amplitude * ones(simTime, 1);   % basic
-% sigTilt_e = 0 * ones(simTime, 1);
-% sigTilt_e = [linspace(0, 8, simTime*9/20) linspace(8, 0, simTime*9/20) 0*ones(1, simTime/10)];
+% sigTilt_e = 0 * ones(simTime, 1);                 % basic
+% sigYaw_e = -Helix_amplitude * ones(simTime, 1);   % basic
+sigTilt_e = [linspace(0, -6, simTime*9/20) linspace(-6, 0, simTime*9/20) 0*ones(1, simTime/10)];
 % sigTilt_e = [4*ones(1, simTime/6) 3*ones(1, simTime/6) 2*ones(1, simTime/6) 1*ones(1, simTime/6) 0*ones(1, simTime/3)];
-% sigTilt_e = 6 * ones(simTime, 1);
 % sigYaw_e = [-6*ones(1, simTime/10) linspace(-6, 6, simTime*4/5) 6*ones(1, simTime/10)];
-% sigYaw_e = [linspace(-4, -12, simTime*9/20) linspace(-12, -4, simTime*9/20) -4*ones(1, simTime/10)];
+sigYaw_e = [linspace(-3, 3, simTime*9/20) linspace(3, -3, simTime*9/20) -3*ones(1, simTime/10)];
 % sigYaw_e = [-6*ones(1, simTime/6) -5*ones(1, simTime/6) -4*ones(1, simTime/6) -3*ones(1, simTime/6) -2*ones(1, simTime/3)];
 % sigYaw_e = [-2*ones(1, simTime/10) linspace(-2, 0, simTime*2/5) linspace(0, -2, simTime*2/5) -2*ones(1, simTime/10)];
+
+figure;
+plot(t, sigTilt_e);
+hold on
+plot(t, sigYaw_e);
+hold off
+legend('\beta_{tilt,e}', '\beta_{yaw,e}')
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat

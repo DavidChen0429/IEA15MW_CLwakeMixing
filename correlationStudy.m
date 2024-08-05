@@ -7,15 +7,16 @@ addpath('.\Functions');
 Fs = 10;  % sampling frequency Hz
 Fc = 0.05;  % cutoff frequency Hz
 fileName = 'FF_Uni_basecase.mat';   % Fixed Frame
-fileName2 = 'FF_Uni_tilt,yaw.mat';   % Fixed Frame
+fileName2 = 'FF_Uni_inflowAngle.mat';   % Fixed Frame
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\';
 SimData = load([turbineName caseName fileName]);
 SimData2 = load([turbineName caseName fileName2]);
 BetaCenter_Comparison_Visualization(SimData, SimData2, Fs, Fc)
-% wakeCenterTraj(SimData.LiDAR_data, SimData2.LiDAR_data, Fs, Fc)
-% videoCompare_func(SimData, SimData2, Fs, Fc, 126)
+wakeCenterTraj(SimData, SimData2, Fs, Fc)
+videoCompare_func(SimData, SimData2, Fs, Fc, 126, ".\Data\inflowAngle.avi")
 % BetaCenter_Visualization(SimData, Fs, Fc)
+% ringVisualization(SimData.LiDAR_data, 126)
 
 %% Bias and center's center relationship
 close all
@@ -55,18 +56,18 @@ Myaw_unit = [2.72-(-19.82) 162.80-158.54]/5;    % (4.508 0.852)
 
 %% Helix Frame
 Fs = 10;  % sampling frequency Hz
-Fc = 0.02;  % cutoff frequency Hz
-fileName = '600s_Center_HF_basecase.mat';
-fileName2 = '600s_Center_HF_tilt,bias.mat';
-dataPath = '.\Data\MAT\LiDAR_sampling\';
-caseName = 'Uni\Str0.3_U8_1Dd_10Hz_CCW\';
-SimData = load([dataPath caseName fileName]);
-SimData2 = load([dataPath caseName fileName2]);
-MomentCenter_Visualization(SimData, Fs, Fc);
-MomentCenter_comparison_Visualization(SimData, SimData2, Fs, Fc)
-wakeCenterTraj(SimData.LiDAR_data, SimData2.LiDAR_data, Fs, Fc)
-% videoCompare_func(SimData, SimData2)
-% ringVisualization(SimData2.LiDAR_data)
+Fc = 0.05;  % cutoff frequency Hz
+fileName = 'HF_Uni_basecase.mat';   % Fixed Frame
+fileName2 = 'HF_Uni_tilt,yaw.mat';   % Fixed Frame
+turbineName = '.\Data\NREL5MW\';
+caseName = 'Str0.3_U10_1Dd_10Hz_CCW\';
+SimData = load([turbineName caseName fileName]);
+SimData2 = load([turbineName caseName fileName2]);
+BetaCenter_Comparison_Visualization(SimData, SimData2, Fs, Fc)
+wakeCenterTraj(SimData, SimData2, Fs, Fc)
+% videoCompare_func(SimData, SimData2, Fs, Fc, 126, ".\Data\inflowAngle.avi")
+% BetaCenter_Visualization(SimData, Fs, Fc)
+% ringVisualization(SimData.LiDAR_data, 126)
 
 %% Compare different distance and phase info difference
 Fs = 10;  % sampling frequency Hz

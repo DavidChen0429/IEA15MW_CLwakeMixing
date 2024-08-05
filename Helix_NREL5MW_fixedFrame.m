@@ -19,7 +19,7 @@ if isempty(m)
 end
 
 %% Data file 
-fileName = 'FF_Uni_tilt,yaw.mat';   % Fixed Frame
+fileName = 'FF_Uni_inflowAngle.mat';   % Fixed Frame
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\';
 
@@ -80,13 +80,13 @@ cutPoint2 = simLen*3/4;
 amplitudeTilt = Helix_amplitude*(t<=cutPoint) + 2*Helix_amplitude*(t>cutPoint) - Helix_amplitude*(t>=cutPoint2);
 % plot(amplitudeTilt)
 cutPoint = simLen/6;
-% sigTilt = Helix_amplitude * sin(2*pi*Freq*t);          
+sigTilt = Helix_amplitude * sin(2*pi*Freq*t);          
 % sigTilt(t >= cutPoint) = sigTilt(t >= cutPoint) + 2;
-% sigYaw = Helix_amplitude * sin(2*pi*Freq*t - pi/2);  % CCW
+sigYaw = Helix_amplitude * sin(2*pi*Freq*t - pi/2);  % CCW
 % sigYaw(t >= cutPoint) = sigYaw(t >= cutPoint) - 5;
 
-sigTilt = amplitudeTilt .* sin(2*pi*Freq*t);  
-sigYaw = amplitudeTilt .* sin(2*pi*Freq*t - pi/2);  % CCW
+% sigTilt = amplitudeTilt .* sin(2*pi*Freq*t);  
+% sigYaw = amplitudeTilt .* sin(2*pi*Freq*t - pi/2);  % CCW
 figure()
 plot(t, sigTilt)
 hold on
@@ -168,7 +168,8 @@ for i = 1:1:simTime
                -sin(omega_e*t(i)) cos(omega_e*t(i))];
     invR_helix = [cos(omega_e*t(i)) -sin(omega_e*t(i)); 
                   sin(omega_e*t(i)) cos(omega_e*t(i))];
-    thetaTiltYaw_helix = R_helix * [theta_tilt; theta_yaw]; 
+    thetaTiltYaw_helix = R_helix * [theta_tilt; 
+                                    theta_yaw]; 
 
     % Send control signal to qblade
     calllib('QBladeDLL','setControlVars_at_num',[genTorque 0 ...

@@ -1,12 +1,12 @@
-function [] = videoCompare_func(data1, data2, Fs, Fc, D)
+function [] = videoCompare_func(data1, data2, Fs, Fc, D, fileName)
 dataLiDAR_A = data1.LiDAR_data;
 dataLiDAR_B = data2.LiDAR_data;
 
 % wake center traj
-wakeCenterZ1 = data1.helixCenter(:, 1);
-wakeCenterY1 = data1.helixCenter(:, 2);
-wakeCenterZ2 = data2.helixCenter(:, 1);
-wakeCenterY2 = data2.helixCenter(:, 2);
+wakeCenterZ1 = data1.FF_helixCenter(:, 1);
+wakeCenterY1 = data1.FF_helixCenter(:, 2);
+wakeCenterZ2 = data2.FF_helixCenter(:, 1);
+wakeCenterY2 = data2.FF_helixCenter(:, 2);
 
 % wakeCenterY1_f = lowpassFilter(wakeCenterY1, Fs, Fc);
 % wakeCenterZ1_f = lowpassFilter(wakeCenterZ1, Fs, Fc);
@@ -22,9 +22,9 @@ y_1Dref = 0 + D/2 * cos(theta);
 z_1Dref = 90 + D/2 * sin(theta);
 
 % ====== Uncomment if save video
-% videoFile = ".\Data\Me_tilt_l.avi";
-% v = VideoWriter(videoFile);
-% open(v);
+videoFile = fileName; % ".\Data\NTM-B.avi"
+v = VideoWriter(videoFile);
+open(v);
 
 figure('Position', [10, 10, 800, 310]);
 for counter = 1:interval:data_length(1)  
@@ -42,7 +42,7 @@ for counter = 1:interval:data_length(1)
     ylabel('Z [m]')
     title('LiDAR Wind Speed (sec)', round(counter/interval + 1))
     colorbar;
-    clim([4 8])
+    clim([4 10])
 
     subplot(1, 2, 2)
     snapshot2 = dataLiDAR_B(counter);
@@ -58,11 +58,12 @@ for counter = 1:interval:data_length(1)
     ylabel('Z [m]')
     title('LiDAR Wind Speed (sec)', round(counter/interval + 1))
     colorbar;
-    clim([4 8])
+    clim([4 10])
     pause(0.1);
 
-%     frame = getframe(gcf);
-%     writeVideo(v, frame);
+% ====== Uncomment if save video
+    frame = getframe(gcf);
+    writeVideo(v, frame);
 end 
 end
 
