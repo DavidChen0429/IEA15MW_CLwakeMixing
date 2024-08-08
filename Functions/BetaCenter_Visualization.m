@@ -31,6 +31,9 @@ subplot(2, 2, 4)
 plot(t, lowpassFilter(SimData.HF_helixCenter(:, 1), Fs, Fc))
 hold on;
 plot(t, lowpassFilter(SimData.HF_helixCenter(:, 2), Fs, Fc))
+% plot(t, SimData.HF_helixCenter(:, 1))
+% hold on;
+% plot(t, SimData.HF_helixCenter(:, 2))
 hold off;
 title('Wake Center Helix Frame')
 legend('z_e', 'y_e')

@@ -1,4 +1,4 @@
-%% Helix of IEA15MW in script
+%% Helix of NREL5MW in script
 clear
 close all 
 addpath('.\Functions');
@@ -117,9 +117,20 @@ ws_centering = ceil(1/(Freq * timeStep));
 % Deadtime Delay
 timeDelay = LiDAR_x / U_inflow;
 
-% Low pass filter property
+%% Real-time LPF
 Fs = 1/timeStep;
-Fc = 0.03;
+Fc = 0.05;
+Wn = Fc / (Fs / 2);
+
+% Finite Impulse Response LPF (small phase lag in real-time)
+n = 50; % Filter order
+b_fir = fir1(n, Wn, 'low');
+bufferSize = 50;   % 50
+buffer = zeros(bufferSize, 2);
+filterState1 = zeros(n, 1);
+filterState2 = zeros(n, 1);
+filterState3 = zeros(n, 1);
+filterState4 = zeros(n, 1);
 
 %% Simulation
 % start simulation
@@ -172,13 +183,26 @@ for i = 1:1:simTime
 
     % Get the helix center from the helix frame
     % LPF the single element
-%     if i > ws_filter
-%         buf_f1 = lowpassFilter(FF_helixCenter(i-ws_filter:i, 1), Fs, Fc);
-%         buf_f2 = lowpassFilter(FF_helixCenter(i-ws_filter:i, 2), Fs, Fc);
-%         wakeCenterZ_f = buf_f1(end);
-%         wakeCenterY_f = buf_f2(end);
-%         result(i, :) = [wakeCenterZ_f, wakeCenterY_f];
+%     buffer = [buffer(2:end, :); FF_helixCenter(i, :)];
+%     if i >= bufferSize
+%         % Forward filtering
+%         [forwardFiltered1, filterState1] = filter(b_fir, 1, buffer(:, 1), filterState1);
+%         [forwardFiltered2, filterState2] = filter(b_fir, 1, buffer(:, 2), filterState2);
+% 
+%         % Reverse filtering
+%         reverseFiltered1 = filter(b_fir, 1, flip(forwardFiltered1));
+%         reverseFiltered2 = filter(b_fir, 1, flip(forwardFiltered2));
+% 
+%         % Reverse back to original order
+%         result(i, 1) = reverseFiltered1(end);
+%         result(i, 2) = reverseFiltered2(end);
+%     else
+%         % Initial phase where buffer is not yet full
+%         result(i, 1) = FF_helixCenter(i, 1);
+%         result(i, 2) = FF_helixCenter(i, 2);
 %     end
+    [result(i, 1), filterState1] = filter(b_fir, 1, FF_helixCenter(i, 1), filterState1);
+    [result(i, 2), filterState2] = filter(b_fir, 1, FF_helixCenter(i, 2), filterState2);
 
     % Get the mean
     meanZ = Hub_NREL5MW;
@@ -194,6 +218,9 @@ for i = 1:1:simTime
     centerY = wakeCenter(2) - meanY;  % -3.1245
     center_e = invR_helix * [centerZ; centerY];
 %     center_e2 = invR_helix * [result(i, 1)-91.9411; result(i, 2)+3.1245];
+    % apply LPF to HF HelixCenter 
+    [result_e(i, 1), filterState3] = filter(b_fir, 1, center_e(1), filterState3);
+    [result_e(i, 2), filterState4] = filter(b_fir, 1, center_e(2), filterState4);
 
     % Store values 
 %     omega_store(i,:) = omega;
@@ -218,11 +245,11 @@ end
 close(f)
 %calllib('QBladeDLL','storeProject','15MW_Helix_Uni-U8_Str3.qpr') 
 calllib('QBladeDLL','closeInstance')
-save([turbineName caseName fileName], 'LiDAR_data', ...
-                                      'FF_helixCenter', ...
-                                      'HF_helixCenter', ...
-                                      'FF_theta', ...
-                                      'HF_theta');
+% save([turbineName caseName fileName], 'LiDAR_data', ...
+%                                       'FF_helixCenter', ...
+%                                       'HF_helixCenter', ...
+%                                       'FF_theta', ...
+%                                       'HF_theta');
 toc 
 
 %% Visualization
@@ -285,33 +312,20 @@ subplot(2, 2, 2)
 plot(FF_helixCenter(:, 1));
 hold on;
 plot(FF_helixCenter(:, 2));
+plot(result(:, 1));
+plot(result(:, 2));
 hold off;
 title('Center FF')
-legend('z', 'y')
+legend('z', 'y', 'z2', 'y2')
 subplot(2, 2, 4)
 plot(HF_helixCenter(:, 1));
 hold on;
 plot(HF_helixCenter(:, 2));
+plot(result_e(:, 1));
+plot(result_e(:, 2));
 hold off;
 title('Center HF')
-legend('z_e', 'y_e')
-
-% figure;
-% subplot(2, 1, 1)
-% plot(FF_helixCenter(:, 1));
-% hold on;
-% plot(FF_helixCenter(:, 2));
-% plot(result(:, 1));
-% plot(result(:, 2));
-% legend('z', 'y', 'z_f', 'y_f')
-% hold off;
-% subplot(2, 1, 2)
-% plot(HF_helixCenter(:, 1));
-% hold on;
-% plot(HF_helixCenter(:, 2));
-% plot(result_e(:, 1));
-% plot(result_e(:, 2));
-% legend('z', 'y', 'z_f', 'y_f')
+legend('z_e', 'y_e', 'z_e2', 'y_e2')
 
 % ringVisualization(LiDAR_data, D_NREL5MW)
 %% Unload Library 

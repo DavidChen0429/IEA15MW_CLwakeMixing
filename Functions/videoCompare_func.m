@@ -34,7 +34,7 @@ for counter = 1:interval:data_length(1)
     z = snapshot.z;
     scatter(y, z, 10, snapshot.u_los, 'filled');
     hold on
-    scatter(wakeCenterY1(counter), wakeCenterZ1(counter), 'red');
+%     scatter(wakeCenterY1(counter), wakeCenterZ1(counter), 'red');
     plot(y_1Dref, z_1Dref, "k-", 'LineWidth',2);
 %     plot(wakeCenterY1_f, wakeCenterZ1_f, "r-", 'LineWidth',0.5);
     hold off;
@@ -50,7 +50,7 @@ for counter = 1:interval:data_length(1)
     z = snapshot2.z;
     scatter(y, z, 10, snapshot2.u_los, 'filled');
     hold on
-    scatter(wakeCenterY2(counter), wakeCenterZ2(counter), 'red');
+%     scatter(wakeCenterY2(counter), wakeCenterZ2(counter), 'red');
     plot(y_1Dref, z_1Dref, "k-", 'LineWidth',2);
 %     plot(wakeCenterY2_f, wakeCenterZ2_f, "r-", 'LineWidth',0.5);
     hold off;

@@ -11,7 +11,7 @@ wakeCenterY2_f = lowpassFilter(wakeCenterY2, Fs, Fc);
 wakeCenterZ2_f = lowpassFilter(wakeCenterZ2, Fs, Fc);
 
 figure('Position', [10, 10, 500, 500]);
-plot(wakeCenterY1_f, wakeCenterZ1_f,'red');
+plot(wakeCenterY1_f, wakeCenterZ1_f, '--k');
 hold on
 % plot(mean(wakeCenterY1_f), mean(wakeCenterZ1_f),'ro', 'MarkerSize', 10, 'LineWidth', 2);
 plot(wakeCenterY2_f, wakeCenterZ2_f,'blue');

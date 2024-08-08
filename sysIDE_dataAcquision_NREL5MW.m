@@ -1,4 +1,4 @@
-%% An attempt for LiDAR-enhanced-CL-Ctrl (Fixed Frame)
+%% Helix of NREL5MW in script
 clear
 close all 
 addpath('.\Functions');
@@ -19,9 +19,9 @@ if isempty(m)
 end
 
 %% Data file 
-fileName = 'FF_Uni_tilt,bias.mat';   % Fixed Frame
+fileName = 'HF_Uni_sysIDE.mat';   % Fixed Frame
 turbineName = '.\Data\NREL5MW\';
-caseName = 'Str0.3_U10_1Dd_10Hz_CCW\';
+caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
@@ -29,7 +29,7 @@ calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime = 6000;    % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 3000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 
@@ -67,28 +67,8 @@ horInf = 0;          % Horizontal inflow angle in degrees
 K = 2.24;
 N = 97;          % Gearbox ratio
 
-%% Defining Helix Control Setting
-Str = 0.3;                          % Strouhal number
-Helix_amplitude = 3;                % Helix amplitude                
-Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
-omega_e = Freq*2*pi;
-
-% Genereate the tilt and yaw signal 
-t = linspace(1, simLen, simTime);
-% t = linspace(timeStep, simLen, simTime);
-sigTilt = Helix_amplitude * sin(2*pi*Freq*t);          
-sigYaw = Helix_amplitude * sin(2*pi*Freq*t - pi/2);  % CCW
-
-%% Defining LiDAR sampling 
-% When you change this, don't forget to change the name of data.mat
-LiDAR_x = 1*D_NREL5MW;   % Definition of x is pointing downwind
-LiDAR_y = 0;
-LiDAR_z = Hub_NREL5MW;   % Wind height
-LiDAR_num_sample = 80;   % 5(ring) to speed up sampling, only 4 valid points
-DeadtimeDelay = LiDAR_x / U_inflow;
-
 %% Signals for system IDE
-n = 100; 
+n = simTime; 
 seedA = [1 0 0 1]; 
 seedB = [1 1 0 1]; 
 tap = [1 0 0 1]; % polynomial x^4 + x + 1
@@ -111,13 +91,7 @@ for i = 1:n
     stateB = [feedbackB stateB(1:end-1)]; % Shift and insert feedback
 end
 
-% scale 
-% prbnA = prbnA * 5;
-% prbnB = prbnB * 5;
-prbnA(1:2) = 0;
-prbnB(1:2) = 0;
-
-% Plot the PRBN sequences
+% % Plot the PRBN sequences
 % figure;
 % subplot(2, 1, 1);
 % stairs(prbnA, 'LineWidth', 1.5);
@@ -133,23 +107,41 @@ prbnB(1:2) = 0;
 % ylabel('Binary Value');
 % grid on;
 
-%% Ctrl Variables
-% Ctrl inputs
-% biasZArray = prbnA;
-% biasYArray = prbnB;
-% biasZArray = [zeros(1, 2) 0*ones(1, 25)];
-% biasYArray = [zeros(1, 2) -3*ones(1, 25)];
-biasZArray = [zeros(1, 2) randi([-3, 3], 1, 30)];
-biasYArray = [zeros(1, 2) randi([-3, 3], 1, 30)];
-biasZ = biasZArray(1);
-biasY = biasYArray(1);
-k = 2;
+%% Defining Helix Control Setting
+Str = 0.3;                          % Strouhal number
+Helix_amplitude = 3;                % Helix amplitude                
+Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
+omega_e = Freq*2*pi;
 
-% Ctrl reference
-% RefY = 0;
-% RefZ = 90;
+t = linspace(1, simLen, simTime);
+sigTilt_e = 0 * ones(simTime, 1);                 % basic
+sigYaw_e = -Helix_amplitude * ones(simTime, 1);   % basic
+% sigTilt_e = [linspace(0, -6, simTime*9/20) linspace(-6, 0, simTime*9/20) 0*ones(1, simTime/10)];
+% sigTilt_e = [4*ones(1, simTime/6) 3*ones(1, simTime/6) 2*ones(1, simTime/6) 1*ones(1, simTime/6) 0*ones(1, simTime/3)];
+% sigYaw_e = [-6*ones(1, simTime/10) linspace(-6, 6, simTime*4/5) 6*ones(1, simTime/10)];
+% sigYaw_e = [linspace(-3, 3, simTime*9/20) linspace(3, -3, simTime*9/20) -3*ones(1, simTime/10)];
+% sigYaw_e = [-6*ones(1, simTime/6) -5*ones(1, simTime/6) -4*ones(1, simTime/6) -3*ones(1, simTime/6) -2*ones(1, simTime/3)];
+% sigYaw_e = [-2*ones(1, simTime/10) linspace(-2, 0, simTime*2/5) linspace(0, -2, simTime*2/5) -2*ones(1, simTime/10)];
 
-%% Simulation Data Array
+% for sysIDE
+sigTilt_e = prbnA * 3;
+sigYaw_e = prbnB * 3;
+
+% figure;
+% plot(t, sigTilt_e);
+% hold on
+% plot(t, sigYaw_e);
+% hold off
+% legend('\beta_{tilt,e}', '\beta_{yaw,e}')
+
+%% Defining LiDAR sampling 
+% When you change this, don't forget to change the name of data.mat
+LiDAR_x = 1*D_NREL5MW;   % Definition of x is pointing downwind
+LiDAR_y = 0;
+LiDAR_z = Hub_NREL5MW;   % Wind height
+LiDAR_num_sample = 80;   % 5(ring) to speed up sampling, only 4 valid points
+
+%% Simulation
 % pre-define array to speed up code
 TSR_store = zeros(simTime, 1);
 FF_theta = zeros(simTime, 2);
@@ -157,17 +149,8 @@ HF_theta = zeros(simTime, 2);
 PitchAngles = zeros(simTime, 3);
 FF_helixCenter = zeros(simTime, 2);
 HF_helixCenter = zeros(simTime, 2);
-biasZStore = [];
-biasYStore = [];
-j = 0 ; % create for counting delay
 templateStruct = struct('x', [], 'y', [], 'z', [], 'u_x', [], 'u_y', [], 'u_z', [], 'u_norm', [], 'u_los', []);
 LiDAR_data(simTime, 1) = templateStruct;
-
-% Sliding window to get the center of wake center
-buffer1 = [];
-buffer2 = [];
-meanValueY = [];
-meanValueZ = [];
 
 % Sliding window
 result = zeros(simTime, 2);
@@ -178,16 +161,27 @@ ws_centering = ceil(1/(Freq * timeStep));
 % Deadtime Delay
 timeDelay = LiDAR_x / U_inflow;
 
-% Low pass filter property
+%% Low pass filter property
 Fs = 1/timeStep;
 Fc = 0.03;
+Wn = Fc / (Fs / 2);
 
-%% Start Simulation
+% Finite Impulse Response LPF (small phase lag in real-time)
+n = 50; % Filter order
+b_fir = fir1(n, Wn, 'low');
+bufferSize = 50;
+buffer = zeros(bufferSize, 2);
+filterState1 = zeros(n, 1);
+filterState2 = zeros(n, 1);
+filterState3 = zeros(n, 1);
+filterState4 = zeros(n, 1);
+
+%% Simulation
+% start simulation
 tic
 f = waitbar(0,'Initializing Simulation');
 for i = 1:1:simTime
     calllib('QBladeDLL','advanceTurbineSimulation')
-    j = j + 1;
     
     % Get current value
     omega = calllib('QBladeDLL','getCustomData_at_num',valuestr, 0, 0);
@@ -207,35 +201,35 @@ for i = 1:1:simTime
 
     % Helix control
     % 1. Get tilt and yaw signals
-    theta_col = 0;
-    theta_tilt = sigTilt(i) + biasZ;
-    theta_yaw = sigYaw(i) + biasY;
+    theta_tilt_e = sigTilt_e(i);
+    theta_yaw_e = sigYaw_e(i);
     % 2. Inverse MBC 
     invMBC = [1 cosd(Azimuth1) sind(Azimuth1);
               1 cosd(Azimuth2) sind(Azimuth2);
               1 cosd(Azimuth3) sind(Azimuth3)];
-    % 3. Blade pitch signal
-    thetaBlade_Helix = invMBC * [theta_col; 
-                                 theta_tilt; 
-                                 theta_yaw];   
-
-    % 4. Corresponding helix frame value
-    R_helix = [cos(omega_e*t(i)) sin(omega_e*t(i)); 
-               -sin(omega_e*t(i)) cos(omega_e*t(i))];
     invR_helix = [cos(omega_e*t(i)) -sin(omega_e*t(i)); 
                   sin(omega_e*t(i)) cos(omega_e*t(i))];
-    thetaTiltYaw_helix = R_helix * [theta_tilt - biasZ; 
-                                    theta_yaw - biasY]; 
+    % 3. Blade pitch signal
+    thetaTiltYaw = invR_helix * [theta_tilt_e; 
+                                 theta_yaw_e];    
+    thetaBlade_Helix = invMBC * [0; 
+                                 thetaTiltYaw(1); 
+                                 thetaTiltYaw(2)];    
 
     % Send control signal to qblade
     calllib('QBladeDLL','setControlVars_at_num',[genTorque 0 ...
         thetaBlade_Helix(1) thetaBlade_Helix(2) thetaBlade_Helix(3)],0)
 
-    % LiDAR data sampling   
+    % LiDAR data sampling (Ring) 
     windspeed = Circle_LiDAR_Parallel(LiDAR_x, LiDAR_y, LiDAR_z, D_NREL5MW, LiDAR_num_sample); 
     wakeCenter = HelixCenter(windspeed, U_inflow, D_NREL5MW);
     FF_helixCenter(i, :) = [wakeCenter(1) wakeCenter(2)]; % Z(tilt), Y(yaw)
-    
+
+    % Get the helix center from the helix frame
+    % LPF the single element
+    [result(i, 1), filterState1] = filter(b_fir, 1, FF_helixCenter(i, 1), filterState1);
+    [result(i, 2), filterState2] = filter(b_fir, 1, FF_helixCenter(i, 2), filterState2);
+
     % Get the mean
     meanZ = Hub_NREL5MW;
     meanY = 0;
@@ -249,56 +243,25 @@ for i = 1:1:simTime
     centerZ = wakeCenter(1) - meanZ;  % 91.9411
     centerY = wakeCenter(2) - meanY;  % -3.1245
     center_e = invR_helix * [centerZ; centerY];
+    [result_e(i, 1), filterState3] = filter(b_fir, 1, center_e(1), filterState3);
+    [result_e(i, 2), filterState4] = filter(b_fir, 1, center_e(2), filterState4);
 
     % Store values 
 %     omega_store(i,:) = omega;
 %     genTorqueQB_store(i,:) = genTorqueQB;
 %     genTorque_store(i,:) = genTorque;
     TSR_store(i) = TSR;
-    FF_theta(i,:) = [theta_tilt theta_yaw];
-    HF_theta(i,:) = [thetaTiltYaw_helix(1) thetaTiltYaw_helix(2)];
+    FF_theta(i,:) = [thetaTiltYaw(1) thetaTiltYaw(2)];
+    HF_theta(i,:) = [theta_tilt_e theta_yaw_e];
 %     AzimuthAngles(i,:) = [Azimuth1 Azimuth2 Azimuth3];
     PitchAngles(i,:) = [Pitch1 Pitch2 Pitch3];
     FF_helixCenter(i, :) = [wakeCenter(1) wakeCenter(2)]; % Z(tilt), Y(yaw)
     HF_helixCenter(i, :) = [center_e(1) center_e(2)];   % Ze(tilt), Ye(yaw) 
-%     result_e(i, :) = [center_e2(1) center_e2(2)];
     LiDAR_data(i) = windspeed;
-    
-    % calculating the center's center using sliding window
-    if j >= DeadtimeDelay/timeStep
-        buffer1 = [buffer1 wakeCenter(1)];
-        buffer2 = [buffer2 wakeCenter(2)];
-        if length(buffer1) == ws_centering
-            % Save wake center's center info
-            buffer1 = lowpassFilter(buffer1, 1/timeStep, Freq+0.01);
-            buffer2 = lowpassFilter(buffer2, 1/timeStep, Freq+0.01);
-            meanValueY = [meanValueY mean(buffer2)];
-            meanValueZ = [meanValueZ mean(buffer1)];
-            biasZStore = [biasZStore biasZ];
-            biasYStore = [biasYStore biasY];
-           
-%             % Error signal
-%             errY = RefY - mean(buffer1);
-%             errZ = RefZ - mean(buffer2);
-%             errVec = [errZ errY];
-            
-            biasZ = biasZArray(k);
-            biasY = biasYArray(k);
-            k = k + 1;
-            
-            % reset the sliding window
-            buffer1 = [];  
-            buffer2 = [];
-            % if bias change, then recount the time delay
-            if biasZ ~= biasZStore(end)
-                j = 0;         
-            end             
-        end
-    end
 
 %     if mod(i, 1/timeStep) == 0
 % %         fprintf('%d seconds.\n', i*timeStep);
-%         LiDAR_data(i) = windspeed;   % 1Hz sampling
+%         LiDAR_data = [LiDAR_data; windspeed];   % 1Hz sampling
 %     end
     waitbar(i/simTime, f, sprintf('Simulation Running: %.1f%%', (i/simTime)*100));
 
@@ -332,6 +295,28 @@ toc
 % ylabel("Torque (Nm)")
 % legend('QB HSS Torque','K omega^2')
 
+% figure;
+% plot(PitchAngles(:,1))
+% hold on
+% plot(PitchAngles(:,2))
+% plot(PitchAngles(:,3))
+% xticks(0:100:length(PitchAngles));
+% xticklabels(0:100*timeStep:length(PitchAngles)*timeStep);
+% xlabel("Time (s)");
+% ylabel("Angle (deg)");
+% legend('Blade 1','Blade 2','Blade 3')
+
+% figure;
+% plot(AzimuthAngles(:,1))
+% hold on
+% plot(AzimuthAngles(:,2))
+% plot(AzimuthAngles(:,3))
+% xticks(0:100:length(AzimuthAngles));
+% xticklabels(0:100*timeStep:length(AzimuthAngles)*timeStep);
+% xlabel("Time (s)");
+% ylabel("Angle (deg)");
+% legend('Blade 1','Blade 2','Blade 3')
+
 figure;
 subplot(2, 2, 1)
 plot(FF_theta(:, 1));
@@ -351,32 +336,21 @@ subplot(2, 2, 2)
 plot(FF_helixCenter(:, 1));
 hold on;
 plot(FF_helixCenter(:, 2));
+plot(result(:, 1));
+plot(result(:, 2));
 hold off;
 title('Center FF')
-legend('z', 'y')
+legend('z', 'y', 'z2', 'y2')
 subplot(2, 2, 4)
-% plot(HF_helixCenter(:, 1));
-% hold on;
-% plot(HF_helixCenter(:, 2));
-plot(lowpassFilter(HF_helixCenter(:, 1),1/timeStep,Freq+0.01));
+plot(HF_helixCenter(:, 1));
 hold on;
-plot(lowpassFilter(HF_helixCenter(:, 2),1/timeStep,Freq+0.01));
+plot(HF_helixCenter(:, 2));
+plot(result_e(:, 1));
+plot(result_e(:, 2));
 hold off;
 title('Center HF')
-legend('z_e', 'y_e')
-subplot(2, 2, 4)
-
-figure('Position', [10, 10, 500, 500]);
-plot(lowpassFilter(FF_helixCenter(:,2), 1/timeStep, Freq+0.01), lowpassFilter(FF_helixCenter(:,1), 1/timeStep, Freq+0.01))
-hold on
-plot(meanValueY(1:end), meanValueZ(1:end),'*')
-hold off
-xlim([-30 30])
-ylim([60 120])
-xlabel("Y (m)");
-ylabel("Z (m)");
+legend('z_e', 'y_e', 'z_e2', 'y_e2')
 
 % ringVisualization(LiDAR_data, D_NREL5MW)
-
 %% Unload Library 
 % unloadlibrary 'QBladeDLL'

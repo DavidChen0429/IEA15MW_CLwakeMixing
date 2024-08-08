@@ -9,12 +9,12 @@ Fc = 0.05;  % cutoff frequency Hz
 fileName = 'FF_Uni_basecase.mat';   % Fixed Frame
 fileName2 = 'FF_Uni_inflowAngle.mat';   % Fixed Frame
 turbineName = '.\Data\NREL5MW\';
-caseName = 'Str0.3_U10_1Dd_10Hz_CCW\';
+caseName = 'Str0.3_U10_1Dd_10Hz_CCW\CRstudy\';
 SimData = load([turbineName caseName fileName]);
 SimData2 = load([turbineName caseName fileName2]);
-BetaCenter_Comparison_Visualization(SimData, SimData2, Fs, Fc)
-wakeCenterTraj(SimData, SimData2, Fs, Fc)
-videoCompare_func(SimData, SimData2, Fs, Fc, 126, ".\Data\inflowAngle.avi")
+% BetaCenter_Comparison_Visualization(SimData, SimData2, Fs, Fc)
+% wakeCenterTraj(SimData, SimData2, Fs, Fc)
+videoCompare_func(SimData, SimData2, Fs, Fc, 126, ".\Data\inflowAngle_noCen.avi")
 % BetaCenter_Visualization(SimData, Fs, Fc)
 % ringVisualization(SimData.LiDAR_data, 126)
 
@@ -57,10 +57,10 @@ Myaw_unit = [2.72-(-19.82) 162.80-158.54]/5;    % (4.508 0.852)
 %% Helix Frame
 Fs = 10;  % sampling frequency Hz
 Fc = 0.05;  % cutoff frequency Hz
-fileName = 'HF_Uni_basecase.mat';   % Fixed Frame
-fileName2 = 'HF_Uni_tilt,yaw.mat';   % Fixed Frame
+fileName = 'HF_Uni_basecase.mat';  
+fileName2 = 'HF_Uni_tilt,yaw.mat';   
 turbineName = '.\Data\NREL5MW\';
-caseName = 'Str0.3_U10_1Dd_10Hz_CCW\';
+caseName = 'Str0.3_U10_1Dd_10Hz_CCW\CRstudy\';
 SimData = load([turbineName caseName fileName]);
 SimData2 = load([turbineName caseName fileName2]);
 BetaCenter_Comparison_Visualization(SimData, SimData2, Fs, Fc)
