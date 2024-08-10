@@ -29,7 +29,7 @@ calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime = 3000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 1000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 
@@ -147,14 +147,14 @@ TSR_store = zeros(simTime, 1);
 FF_theta = zeros(simTime, 2);
 HF_theta = zeros(simTime, 2);
 PitchAngles = zeros(simTime, 3);
+FF_helixCenter_filtered = zeros(simTime, 2);
+HF_helixCenter_filtered = zeros(simTime, 2);
 FF_helixCenter = zeros(simTime, 2);
 HF_helixCenter = zeros(simTime, 2);
 templateStruct = struct('x', [], 'y', [], 'z', [], 'u_x', [], 'u_y', [], 'u_z', [], 'u_norm', [], 'u_los', []);
 LiDAR_data(simTime, 1) = templateStruct;
 
 % Sliding window
-result = zeros(simTime, 2);
-result_e = zeros(simTime, 2);
 ws_filter = 100;
 ws_centering = ceil(1/(Freq * timeStep));
 
@@ -163,7 +163,7 @@ timeDelay = LiDAR_x / U_inflow;
 
 %% Low pass filter property
 Fs = 1/timeStep;
-Fc = 0.03;
+Fc = 0.05;
 Wn = Fc / (Fs / 2);
 
 % Finite Impulse Response LPF (small phase lag in real-time)
@@ -227,8 +227,8 @@ for i = 1:1:simTime
 
     % Get the helix center from the helix frame
     % LPF the single element
-    [result(i, 1), filterState1] = filter(b_fir, 1, FF_helixCenter(i, 1), filterState1);
-    [result(i, 2), filterState2] = filter(b_fir, 1, FF_helixCenter(i, 2), filterState2);
+    [FF_helixCenter_filtered(i, 1), filterState1] = filter(b_fir, 1, FF_helixCenter(i, 1), filterState1);
+    [FF_helixCenter_filtered(i, 2), filterState2] = filter(b_fir, 1, FF_helixCenter(i, 2), filterState2);
 
     % Get the mean
     meanZ = Hub_NREL5MW;
@@ -243,8 +243,8 @@ for i = 1:1:simTime
     centerZ = wakeCenter(1) - meanZ;  % 91.9411
     centerY = wakeCenter(2) - meanY;  % -3.1245
     center_e = invR_helix * [centerZ; centerY];
-    [result_e(i, 1), filterState3] = filter(b_fir, 1, center_e(1), filterState3);
-    [result_e(i, 2), filterState4] = filter(b_fir, 1, center_e(2), filterState4);
+    [HF_helixCenter_filtered(i, 1), filterState3] = filter(b_fir, 1, center_e(1), filterState3);
+    [HF_helixCenter_filtered(i, 2), filterState4] = filter(b_fir, 1, center_e(2), filterState4);
 
     % Store values 
 %     omega_store(i,:) = omega;
@@ -336,8 +336,8 @@ subplot(2, 2, 2)
 plot(FF_helixCenter(:, 1));
 hold on;
 plot(FF_helixCenter(:, 2));
-plot(result(:, 1));
-plot(result(:, 2));
+plot(FF_helixCenter_filtered(:, 1));
+plot(FF_helixCenter_filtered(:, 2));
 hold off;
 title('Center FF')
 legend('z', 'y', 'z2', 'y2')
@@ -345,8 +345,8 @@ subplot(2, 2, 4)
 plot(HF_helixCenter(:, 1));
 hold on;
 plot(HF_helixCenter(:, 2));
-plot(result_e(:, 1));
-plot(result_e(:, 2));
+plot(HF_helixCenter_filtered(:, 1));
+plot(HF_helixCenter_filtered(:, 2));
 hold off;
 title('Center HF')
 legend('z_e', 'y_e', 'z_e2', 'y_e2')

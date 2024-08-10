@@ -69,26 +69,31 @@ N = 97;          % Gearbox ratio
 
 %% Defining Helix Control Setting
 Str = 0.3;                          % Strouhal number
-Helix_amplitude = 3;                % Helix amplitude                
+Helix_amplitude = 1;                % Helix amplitude                
 Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
 omega_e = Freq*2*pi;
 
 t = linspace(1, simLen, simTime);
-% sigTilt_e = 0 * ones(simTime, 1);                 % basic
-% sigYaw_e = -Helix_amplitude * ones(simTime, 1);   % basic
-sigTilt_e = [linspace(0, -6, simTime*9/20) linspace(-6, 0, simTime*9/20) 0*ones(1, simTime/10)];
+% sigTilt_e = Helix_amplitude * ones(simTime, 1);                 % basic
+% sigYaw_e = 0 * ones(simTime, 1);   % basic
+% sigTilt_e = [linspace(0, -6, simTime*9/20) linspace(-6, 0, simTime*9/20) 0*ones(1, simTime/10)];
 % sigTilt_e = [4*ones(1, simTime/6) 3*ones(1, simTime/6) 2*ones(1, simTime/6) 1*ones(1, simTime/6) 0*ones(1, simTime/3)];
 % sigYaw_e = [-6*ones(1, simTime/10) linspace(-6, 6, simTime*4/5) 6*ones(1, simTime/10)];
-sigYaw_e = [linspace(-3, 3, simTime*9/20) linspace(3, -3, simTime*9/20) -3*ones(1, simTime/10)];
+% sigYaw_e = [linspace(-3, 3, simTime*9/20) linspace(3, -3, simTime*9/20) -3*ones(1, simTime/10)];
 % sigYaw_e = [-6*ones(1, simTime/6) -5*ones(1, simTime/6) -4*ones(1, simTime/6) -3*ones(1, simTime/6) -2*ones(1, simTime/3)];
 % sigYaw_e = [-2*ones(1, simTime/10) linspace(-2, 0, simTime*2/5) linspace(0, -2, simTime*2/5) -2*ones(1, simTime/10)];
 
-figure;
-plot(t, sigTilt_e);
-hold on
-plot(t, sigYaw_e);
-hold off
-legend('\beta_{tilt,e}', '\beta_{yaw,e}')
+% Step input to test basic properties
+steps = [0*ones(1, simTime/3) Helix_amplitude*ones(1, simTime*2/3)];
+sigTilt_e = steps;   % 0 * ones(simTime, 1)
+sigYaw_e = 0 * ones(simTime, 1); 
+
+% figure;
+% plot(t, sigTilt_e);
+% hold on
+% plot(t, sigYaw_e);
+% hold off
+% legend('\beta_{tilt,e}', '\beta_{yaw,e}')
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat
@@ -102,6 +107,8 @@ LiDAR_num_sample = 80;   % 5(ring) to speed up sampling, only 4 valid points
 TSR_store = zeros(simTime, 1);
 FF_theta = zeros(simTime, 2);
 HF_theta = zeros(simTime, 2);
+FF_helixCenter_filtered = zeros(simTime, 2);
+HF_helixCenter_filtered = zeros(simTime, 2);
 PitchAngles = zeros(simTime, 3);
 FF_helixCenter = zeros(simTime, 2);
 HF_helixCenter = zeros(simTime, 2);
@@ -109,8 +116,6 @@ templateStruct = struct('x', [], 'y', [], 'z', [], 'u_x', [], 'u_y', [], 'u_z', 
 LiDAR_data(simTime, 1) = templateStruct;
 
 % Sliding window
-result = zeros(simTime, 2);
-result_e = zeros(simTime, 2);
 ws_filter = 100;
 ws_centering = ceil(1/(Freq * timeStep));
 
@@ -194,15 +199,15 @@ for i = 1:1:simTime
 %         reverseFiltered2 = filter(b_fir, 1, flip(forwardFiltered2));
 % 
 %         % Reverse back to original order
-%         result(i, 1) = reverseFiltered1(end);
-%         result(i, 2) = reverseFiltered2(end);
+%         FF_helixCenter_filtered(i, 1) = reverseFiltered1(end);
+%         FF_helixCenter_filtered(i, 2) = reverseFiltered2(end);
 %     else
 %         % Initial phase where buffer is not yet full
-%         result(i, 1) = FF_helixCenter(i, 1);
-%         result(i, 2) = FF_helixCenter(i, 2);
+%         FF_helixCenter_filtered(i, 1) = FF_helixCenter(i, 1);
+%         FF_helixCenter_filtered(i, 2) = FF_helixCenter(i, 2);
 %     end
-    [result(i, 1), filterState1] = filter(b_fir, 1, FF_helixCenter(i, 1), filterState1);
-    [result(i, 2), filterState2] = filter(b_fir, 1, FF_helixCenter(i, 2), filterState2);
+    [FF_helixCenter_filtered(i, 1), filterState1] = filter(b_fir, 1, FF_helixCenter(i, 1), filterState1);
+    [FF_helixCenter_filtered(i, 2), filterState2] = filter(b_fir, 1, FF_helixCenter(i, 2), filterState2);
 
     % Get the mean
     meanZ = Hub_NREL5MW;
@@ -217,10 +222,10 @@ for i = 1:1:simTime
     centerZ = wakeCenter(1) - meanZ;  % 91.9411
     centerY = wakeCenter(2) - meanY;  % -3.1245
     center_e = invR_helix * [centerZ; centerY];
-%     center_e2 = invR_helix * [result(i, 1)-91.9411; result(i, 2)+3.1245];
+%     center_e2 = invR_helix * [FF_helixCenter_filtered(i, 1)-91.9411; FF_helixCenter_filtered(i, 2)+3.1245];
     % apply LPF to HF HelixCenter 
-    [result_e(i, 1), filterState3] = filter(b_fir, 1, center_e(1), filterState3);
-    [result_e(i, 2), filterState4] = filter(b_fir, 1, center_e(2), filterState4);
+    [HF_helixCenter_filtered(i, 1), filterState3] = filter(b_fir, 1, center_e(1), filterState3);
+    [HF_helixCenter_filtered(i, 2), filterState4] = filter(b_fir, 1, center_e(2), filterState4);
 
     % Store values 
 %     omega_store(i,:) = omega;
@@ -312,8 +317,8 @@ subplot(2, 2, 2)
 plot(FF_helixCenter(:, 1));
 hold on;
 plot(FF_helixCenter(:, 2));
-plot(result(:, 1));
-plot(result(:, 2));
+plot(FF_helixCenter_filtered(:, 1));
+plot(FF_helixCenter_filtered(:, 2));
 hold off;
 title('Center FF')
 legend('z', 'y', 'z2', 'y2')
@@ -321,11 +326,22 @@ subplot(2, 2, 4)
 plot(HF_helixCenter(:, 1));
 hold on;
 plot(HF_helixCenter(:, 2));
-plot(result_e(:, 1));
-plot(result_e(:, 2));
+plot(HF_helixCenter_filtered(:, 1));
+plot(HF_helixCenter_filtered(:, 2));
 hold off;
 title('Center HF')
 legend('z_e', 'y_e', 'z_e2', 'y_e2')
+
+figure();
+% plot(HF_helixCenter(:, 1));
+% hold on;
+% plot(HF_helixCenter(:, 2));
+plot(HF_helixCenter_filtered(:, 1));
+hold on;
+plot(HF_helixCenter_filtered(:, 2));
+hold off;
+title('Center HF')
+legend('z_e', 'y_e')
 
 % ringVisualization(LiDAR_data, D_NREL5MW)
 %% Unload Library 
