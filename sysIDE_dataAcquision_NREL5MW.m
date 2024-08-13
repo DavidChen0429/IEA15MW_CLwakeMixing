@@ -19,7 +19,7 @@ if isempty(m)
 end
 
 %% Data file 
-fileName = 'HF_Uni_sysIDE.mat';   % Fixed Frame
+fileName = 'HF_Uni_bandwidth.mat';   % Fixed Frame
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 
@@ -68,10 +68,10 @@ K = 2.24;
 N = 97;          % Gearbox ratio
 
 %% Signals for system IDE
-N_prbn = simLen;        % signal length [s] simLen
+N_prbn = simTime;       % signal length [s] simLen
 AMPL_prbn = 1;          % amplitude
 Ts_prbn = timeStep;     % sampling time [s] timeStep
-F_prbn = 10;            % cutoff frequency [Hz]
+F_prbn = 0.0175;            % cutoff frequency [Hz] 2*bandwidth (0.0175)
 Fstop_prbn = inf;       % band-stop filtered around this frequency
 T0_prbn = 0;            % starting time [s]
 P_prbn = 2;             % number of channels
@@ -79,15 +79,17 @@ IDEsig = idprbs(N_prbn,AMPL_prbn,Ts_prbn,F_prbn,Fstop_prbn,T0_prbn,P_prbn);
 ns_prbn = floor((length(IDEsig)-N_prbn)/2);
 sigTilt_e = IDEsig(ns_prbn+1:N_prbn+ns_prbn,1);   % tailor length
 sigYaw_e = IDEsig(ns_prbn+1:N_prbn+ns_prbn,2);    % tailor length
-% [u1s,Du1,u2s,Du2] = sigscale(sigTilt_e,sigYaw_e); % signal scaling
+[u1s,Du1,u2s,Du2] = sigscale(sigTilt_e,sigYaw_e); % signal scaling
+sigTilt_e = u1s;
+sigYaw_e = u2s;
 
-% Stretch signal
-t_original = (0:length(sigTilt_e)-1) * Ts_prbn;
-t_new = linspace(0, (length(sigTilt_e)-1) * Ts_prbn, length(sigTilt_e) * 10);
-sigTilt_e_stretched = interp1(t_original, sigTilt_e, t_new, 'previous');
-sigYaw_e_stretched = interp1(t_original, sigYaw_e, t_new, 'previous');
-sigTilt_e = sigTilt_e_stretched;
-sigYaw_e = sigYaw_e_stretched;
+% % Stretch signal
+% t_original = (0:length(sigTilt_e)-1) * Ts_prbn;
+% t_new = linspace(0, (length(sigTilt_e)-1) * Ts_prbn, length(sigTilt_e) * 10);
+% sigTilt_e_stretched = interp1(t_original, sigTilt_e, t_new, 'previous');
+% sigYaw_e_stretched = interp1(t_original, sigYaw_e, t_new, 'previous');
+% sigTilt_e = sigTilt_e_stretched;
+% sigYaw_e = sigYaw_e_stretched;
 
 % Power Spectrum Density
 [M1,F1] = pwelch(sigTilt_e,[],[],[],1/Ts_prbn);
@@ -372,6 +374,10 @@ xlabel('Frequency [Hz]');
 ylabel('Amplitude [dB]');
 legend('z_{f,e}', 'y_{f,e}');
 title('Output PSD');
+
+% % SPA average between input and output
+% [Ga,ws] = spa_avf(u,y,1,25,[],[],'hamming');
+% Ga = frd(Ga,ws);
 
 % ringVisualization(LiDAR_data, D_NREL5MW)
 %% Unload Library 

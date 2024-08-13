@@ -19,9 +19,9 @@ if isempty(m)
 end
 
 %% Data file 
-fileName = 'HF_Uni_tilt,yaw.mat';   % Fixed Frame
+fileName = 'testingSet.mat';   % Fixed Frame
 turbineName = '.\Data\NREL5MW\';
-caseName = 'Str0.3_U10_1Dd_10Hz_CCW\';
+caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
@@ -231,13 +231,13 @@ end
 close(f)
 %calllib('QBladeDLL','storeProject','15MW_Helix_Uni-U8_Str3.qpr') 
 calllib('QBladeDLL','closeInstance')
-% save([turbineName caseName fileName], 'LiDAR_data', ...
-%                                       'FF_helixCenter', ...
-%                                       'FF_helixCenter_filtered', ...
-%                                       'HF_helixCenter', ...
-%                                       'HF_helixCenter_filtered', ...
-%                                       'FF_beta', ...
-%                                       'HF_beta');
+save([turbineName caseName fileName], 'LiDAR_data', ...
+                                      'FF_helixCenter', ...
+                                      'FF_helixCenter_filtered', ...
+                                      'HF_helixCenter', ...
+                                      'HF_helixCenter_filtered', ...
+                                      'FF_beta', ...
+                                      'HF_beta');
 toc 
 
 %% Visualization
@@ -266,8 +266,11 @@ toc
 % plot(PitchAngles(:,3))
 % xticks(0:100:length(PitchAngles));
 % xticklabels(0:100*timeStep:length(PitchAngles)*timeStep);
+% ylim([-1.5 1.5])
+% xlim([0 300])
 % xlabel("Time (s)");
 % ylabel("Angle (deg)");
+% title('Blade Pitch Signal')
 % legend('Blade 1','Blade 2','Blade 3')
 
 % figure;
@@ -315,46 +318,74 @@ hold off;
 title('Center HF')
 legend('z_e', 'y_e', 'z_e2', 'y_e2')
 
-figure;
-subplot(2, 2, 1)
-plot(FF_beta(:, 1));
-hold on;
-plot(FF_beta(:, 2));
-hold off;
-title('\beta FF')
-legend('\beta_{tilt}', '\beta_{yaw}')
-subplot(2, 2, 3);
-plot(HF_beta(:, 1));
-hold on;
-plot(HF_beta(: ,2));
-hold off;
-title('\beta_e HF')
-legend('\beta^e_{tilt}', '\beta^e_{yaw}')
-subplot(2, 2, 2)
-plot(FF_helixCenter_filtered(:, 1));
-hold on;
-plot(FF_helixCenter_filtered(:, 2));
-hold off;
-title('Center FF')
-legend('z_f', 'y_f')
-subplot(2, 2, 4)
-plot(HF_helixCenter_filtered(:, 1));
-hold on;
-plot(HF_helixCenter_filtered(:, 2));
-hold off;
-title('Center HF')
-legend('z_{f,e}', 'y_{f,e}')
-
-figure();
-% plot(HF_helixCenter(:, 1));
+% figure;
+% subplot(2, 2, 1)
+% plot(FF_beta(:, 1));
 % hold on;
-% plot(HF_helixCenter(:, 2));
-plot(HF_helixCenter_filtered(:, 1));
-hold on;
-plot(HF_helixCenter_filtered(:, 2));
-hold off;
-title('Center HF')
-legend('z_e', 'y_e')
+% plot(FF_beta(:, 2));
+% hold off;
+% title('\beta FF')
+% legend('\beta_{tilt}', '\beta_{yaw}')
+% subplot(2, 2, 3);
+% plot(HF_beta(:, 1));
+% hold on;
+% plot(HF_beta(: ,2));
+% hold off;
+% title('\beta_e HF')
+% legend('\beta^e_{tilt}', '\beta^e_{yaw}')
+% subplot(2, 2, 2)
+% plot(FF_helixCenter_filtered(:, 1));
+% hold on;
+% plot(FF_helixCenter_filtered(:, 2));
+% hold off;
+% title('Center FF')
+% legend('z_f', 'y_f')
+% subplot(2, 2, 4)
+% plot(HF_helixCenter_filtered(:, 1));
+% hold on;
+% plot(HF_helixCenter_filtered(:, 2));
+% hold off;
+% title('Center HF')
+% legend('z_{f,e}', 'y_{f,e}')
+
+% figure();
+% % plot(HF_helixCenter(:, 1));
+% % hold on;
+% % plot(HF_helixCenter(:, 2));
+% plot(HF_helixCenter_filtered(:, 1));
+% hold on;
+% plot(HF_helixCenter_filtered(:, 2));
+% hold off;
+% title('Center HF')
+% legend('z_e', 'y_e')
+
+% figure()
+% plot(PitchAngles(:,1))
+% hold on
+% plot(PitchAngles(:,2))
+% plot(PitchAngles(:,3))
+% hold off
+% xticks(0:100:length(PitchAngles));
+% xticklabels(0:100*timeStep:length(PitchAngles)*timeStep);
+% ylim([-1.25 1.25])
+% % xlim([0 300])
+% xlabel("Time (s)");
+% ylabel("Angle (deg)");
+% title('Blade Pitch Signal')
+% legend('\beta_1','\beta_2','\beta_3')
+% 
+% figure()
+% plot(FF_beta(:, 1))
+% hold on
+% plot(FF_beta(:, 2))
+% hold off
+% xticks(0:100:length(PitchAngles));
+% xticklabels(0:100*timeStep:length(PitchAngles)*timeStep);
+% ylim([-1.25 1.25])
+% xlabel("Time (s)");
+% ylabel("Angle (deg)");
+% title('Rotor Disc Signal')
+% legend('\beta_{tilt}', '\beta_{yaw}')
 
 % ringVisualization(LiDAR_data, D_NREL5MW)
 %% Unload Library 
