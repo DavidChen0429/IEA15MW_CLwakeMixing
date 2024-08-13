@@ -29,7 +29,7 @@ calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime = 1000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 18000;   % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 
@@ -68,71 +68,48 @@ K = 2.24;
 N = 97;          % Gearbox ratio
 
 %% Signals for system IDE
-n = simTime; 
-seedA = [1 0 0 1]; 
-seedB = [1 1 0 1]; 
-tap = [1 0 0 1]; % polynomial x^4 + x + 1
+N_prbn = simLen;        % signal length [s] simLen
+AMPL_prbn = 1;          % amplitude
+Ts_prbn = timeStep;     % sampling time [s] timeStep
+F_prbn = 10;            % cutoff frequency [Hz]
+Fstop_prbn = inf;       % band-stop filtered around this frequency
+T0_prbn = 0;            % starting time [s]
+P_prbn = 2;             % number of channels
+IDEsig = idprbs(N_prbn,AMPL_prbn,Ts_prbn,F_prbn,Fstop_prbn,T0_prbn,P_prbn);
+ns_prbn = floor((length(IDEsig)-N_prbn)/2);
+sigTilt_e = IDEsig(ns_prbn+1:N_prbn+ns_prbn,1);   % tailor length
+sigYaw_e = IDEsig(ns_prbn+1:N_prbn+ns_prbn,2);    % tailor length
+% [u1s,Du1,u2s,Du2] = sigscale(sigTilt_e,sigYaw_e); % signal scaling
 
-% PRBN Signal A
-stateA = seedA;
-prbnA = zeros(1, n);
-for i = 1:n
-    prbnA(i) = stateA(end); % Output the last bit
-    feedbackA = mod(sum(stateA .* tap), 2); % Calculate feedback using tap positions
-    stateA = [feedbackA stateA(1:end-1)]; % Shift and insert feedback
-end
+% Stretch signal
+t_original = (0:length(sigTilt_e)-1) * Ts_prbn;
+t_new = linspace(0, (length(sigTilt_e)-1) * Ts_prbn, length(sigTilt_e) * 10);
+sigTilt_e_stretched = interp1(t_original, sigTilt_e, t_new, 'previous');
+sigYaw_e_stretched = interp1(t_original, sigYaw_e, t_new, 'previous');
+sigTilt_e = sigTilt_e_stretched;
+sigYaw_e = sigYaw_e_stretched;
 
-% PRBN Signal B
-stateB = seedB;
-prbnB = zeros(1, n);
-for i = 1:n
-    prbnB(i) = stateB(end); % Output the last bit
-    feedbackB = mod(sum(stateB .* tap), 2); % Calculate feedback using tap positions
-    stateB = [feedbackB stateB(1:end-1)]; % Shift and insert feedback
-end
+% Power Spectrum Density
+[M1,F1] = pwelch(sigTilt_e,[],[],[],1/Ts_prbn);
+[M2,F2] = pwelch(sigYaw_e,[],[],[],1/Ts_prbn);
+figure
+semilogx(F1,mag2db(M1),'k','LineWidth',1)
+hold on
+semilogx(F2,mag2db(M2),'r','LineWidth',1)
+hold off
+xlabel('Frequency [Hz]');
+ylabel('Amplitude [dB]');
+legend('\beta^e_{tilt}', '\beta^e_{yaw}')
+title('Input PSD')
 
-% % Plot the PRBN sequences
-% figure;
-% subplot(2, 1, 1);
-% stairs(prbnA, 'LineWidth', 1.5);
-% title('Pseudo-Random Binary Noise (PRBN) Sequence A');
-% xlabel('Sample Index');
-% ylabel('Binary Value');
-% grid on;
-% 
-% subplot(2, 1, 2);
-% stairs(prbnB, 'LineWidth', 1.5);
-% title('Pseudo-Random Binary Noise (PRBN) Sequence B');
-% xlabel('Sample Index');
-% ylabel('Binary Value');
-% grid on;
-
-%% Defining Helix Control Setting
+%% Helix Setting
 Str = 0.3;                          % Strouhal number
 Helix_amplitude = 3;                % Helix amplitude                
 Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
 omega_e = Freq*2*pi;
-
 t = linspace(1, simLen, simTime);
-sigTilt_e = 0 * ones(simTime, 1);                 % basic
-sigYaw_e = -Helix_amplitude * ones(simTime, 1);   % basic
-% sigTilt_e = [linspace(0, -6, simTime*9/20) linspace(-6, 0, simTime*9/20) 0*ones(1, simTime/10)];
-% sigTilt_e = [4*ones(1, simTime/6) 3*ones(1, simTime/6) 2*ones(1, simTime/6) 1*ones(1, simTime/6) 0*ones(1, simTime/3)];
-% sigYaw_e = [-6*ones(1, simTime/10) linspace(-6, 6, simTime*4/5) 6*ones(1, simTime/10)];
-% sigYaw_e = [linspace(-3, 3, simTime*9/20) linspace(3, -3, simTime*9/20) -3*ones(1, simTime/10)];
-% sigYaw_e = [-6*ones(1, simTime/6) -5*ones(1, simTime/6) -4*ones(1, simTime/6) -3*ones(1, simTime/6) -2*ones(1, simTime/3)];
-% sigYaw_e = [-2*ones(1, simTime/10) linspace(-2, 0, simTime*2/5) linspace(0, -2, simTime*2/5) -2*ones(1, simTime/10)];
-
-% for sysIDE
-sigTilt_e = prbnA * 3;
-sigYaw_e = prbnB * 3;
-
-% figure;
-% plot(t, sigTilt_e);
-% hold on
-% plot(t, sigYaw_e);
-% hold off
-% legend('\beta_{tilt,e}', '\beta_{yaw,e}')
+% sigTilt_e = 0 * ones(simTime, 1);                 % basic
+% sigYaw_e = -Helix_amplitude * ones(simTime, 1);   % basic
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat
@@ -144,8 +121,8 @@ LiDAR_num_sample = 80;   % 5(ring) to speed up sampling, only 4 valid points
 %% Simulation
 % pre-define array to speed up code
 TSR_store = zeros(simTime, 1);
-FF_theta = zeros(simTime, 2);
-HF_theta = zeros(simTime, 2);
+FF_beta = zeros(simTime, 2);
+HF_beta = zeros(simTime, 2);
 PitchAngles = zeros(simTime, 3);
 FF_helixCenter_filtered = zeros(simTime, 2);
 HF_helixCenter_filtered = zeros(simTime, 2);
@@ -201,8 +178,8 @@ for i = 1:1:simTime
 
     % Helix control
     % 1. Get tilt and yaw signals
-    theta_tilt_e = sigTilt_e(i);
-    theta_yaw_e = sigYaw_e(i);
+    beta_tilt_e = sigTilt_e(i);
+    beta_yaw_e = sigYaw_e(i);
     % 2. Inverse MBC 
     invMBC = [1 cosd(Azimuth1) sind(Azimuth1);
               1 cosd(Azimuth2) sind(Azimuth2);
@@ -210,15 +187,15 @@ for i = 1:1:simTime
     invR_helix = [cos(omega_e*t(i)) -sin(omega_e*t(i)); 
                   sin(omega_e*t(i)) cos(omega_e*t(i))];
     % 3. Blade pitch signal
-    thetaTiltYaw = invR_helix * [theta_tilt_e; 
-                                 theta_yaw_e];    
-    thetaBlade_Helix = invMBC * [0; 
-                                 thetaTiltYaw(1); 
-                                 thetaTiltYaw(2)];    
+    betaTiltYaw = invR_helix * [beta_tilt_e; 
+                                beta_yaw_e];    
+    betaBlade_Helix = invMBC * [0; 
+                                betaTiltYaw(1); 
+                                betaTiltYaw(2)];    
 
     % Send control signal to qblade
     calllib('QBladeDLL','setControlVars_at_num',[genTorque 0 ...
-        thetaBlade_Helix(1) thetaBlade_Helix(2) thetaBlade_Helix(3)],0)
+        betaBlade_Helix(1) betaBlade_Helix(2) betaBlade_Helix(3)],0)
 
     % LiDAR data sampling (Ring) 
     windspeed = Circle_LiDAR_Parallel(LiDAR_x, LiDAR_y, LiDAR_z, D_NREL5MW, LiDAR_num_sample); 
@@ -251,8 +228,8 @@ for i = 1:1:simTime
 %     genTorqueQB_store(i,:) = genTorqueQB;
 %     genTorque_store(i,:) = genTorque;
     TSR_store(i) = TSR;
-    FF_theta(i,:) = [thetaTiltYaw(1) thetaTiltYaw(2)];
-    HF_theta(i,:) = [theta_tilt_e theta_yaw_e];
+    FF_beta(i,:) = [betaTiltYaw(1) betaTiltYaw(2)];
+    HF_beta(i,:) = [beta_tilt_e beta_yaw_e];
 %     AzimuthAngles(i,:) = [Azimuth1 Azimuth2 Azimuth3];
     PitchAngles(i,:) = [Pitch1 Pitch2 Pitch3];
     FF_helixCenter(i, :) = [wakeCenter(1) wakeCenter(2)]; % Z(tilt), Y(yaw)
@@ -269,11 +246,13 @@ end
 close(f)
 %calllib('QBladeDLL','storeProject','15MW_Helix_Uni-U8_Str3.qpr') 
 calllib('QBladeDLL','closeInstance')
-% save([turbineName caseName fileName], 'LiDAR_data', ...
-%                                       'FF_helixCenter', ...
-%                                       'HF_helixCenter', ...
-%                                       'FF_theta', ...
-%                                       'HF_theta');
+save([turbineName caseName fileName], 'LiDAR_data', ...
+                                      'FF_helixCenter', ...
+                                      'FF_helixCenter_filtered', ...
+                                      'HF_helixCenter', ...
+                                      'HF_helixCenter_filtered', ...
+                                      'FF_beta', ...
+                                      'HF_beta');
 toc 
 
 %% Visualization
@@ -319,19 +298,19 @@ toc
 
 figure;
 subplot(2, 2, 1)
-plot(FF_theta(:, 1));
+plot(FF_beta(:, 1));
 hold on;
-plot(FF_theta(:, 2));
+plot(FF_beta(:, 2));
 hold off;
 title('\beta FF')
-legend('\theta_{tilt}', '\theta_{yaw}')
+legend('\beta_{tilt}', '\beta_{yaw}')
 subplot(2, 2, 3);
-plot(HF_theta(:, 1));
+plot(HF_beta(:, 1));
 hold on;
-plot(HF_theta(: ,2));
+plot(HF_beta(: ,2));
 hold off;
 title('\beta_e HF')
-legend('\theta^e_{tilt}', '\theta^e_{yaw}')
+legend('\beta^e_{tilt}', '\beta^e_{yaw}')
 subplot(2, 2, 2)
 plot(FF_helixCenter(:, 1));
 hold on;
@@ -350,6 +329,49 @@ plot(HF_helixCenter_filtered(:, 2));
 hold off;
 title('Center HF')
 legend('z_e', 'y_e', 'z_e2', 'y_e2')
+
+figure;
+subplot(2, 2, 1)
+plot(FF_beta(:, 1));
+hold on;
+plot(FF_beta(:, 2));
+hold off;
+title('\beta FF')
+legend('\beta_{tilt}', '\beta_{yaw}')
+subplot(2, 2, 3);
+plot(HF_beta(:, 1));
+hold on;
+plot(HF_beta(: ,2));
+hold off;
+title('\beta_e HF')
+legend('\beta^e_{tilt}', '\beta^e_{yaw}')
+subplot(2, 2, 2)
+plot(FF_helixCenter_filtered(:, 1));
+hold on;
+plot(FF_helixCenter_filtered(:, 2));
+hold off;
+title('Center FF')
+legend('z_f', 'y_f')
+subplot(2, 2, 4)
+plot(HF_helixCenter_filtered(:, 1));
+hold on;
+plot(HF_helixCenter_filtered(:, 2));
+hold off;
+title('Center HF')
+legend('z_{f,e}', 'y_{f,e}')
+
+% Power Spectrum Density
+[M1,F1] = pwelch(HF_helixCenter_filtered(:, 1),[],[],[],1/Ts_prbn);
+[M2,F2] = pwelch(HF_helixCenter_filtered(:, 2),[],[],[],1/Ts_prbn);
+figure 
+semilogx(F1,mag2db(M1),'k','LineWidth',1)
+hold on
+semilogx(F2,mag2db(M2),'r','LineWidth',1)
+hold off
+xlabel('Frequency [Hz]');
+ylabel('Amplitude [dB]');
+legend('z_{f,e}', 'y_{f,e}');
+title('Output PSD');
 
 % ringVisualization(LiDAR_data, D_NREL5MW)
 %% Unload Library 

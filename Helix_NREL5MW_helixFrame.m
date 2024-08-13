@@ -29,7 +29,7 @@ calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime = 3000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 5000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 
@@ -84,9 +84,10 @@ t = linspace(1, simLen, simTime);
 % sigYaw_e = [-2*ones(1, simTime/10) linspace(-2, 0, simTime*2/5) linspace(0, -2, simTime*2/5) -2*ones(1, simTime/10)];
 
 % Step input to test basic properties
-steps = [0*ones(1, simTime/3) Helix_amplitude*ones(1, simTime*2/3)];
-sigTilt_e = steps;   % 0 * ones(simTime, 1)
-sigYaw_e = 0 * ones(simTime, 1); 
+% steps = [0*ones(1, simTime/3) Helix_amplitude*ones(1, simTime*2/3)];
+steps2 = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5)];
+sigTilt_e = 0 * ones(simTime, 1);   % 0 * ones(simTime, 1)
+sigYaw_e = steps2;               % 0 * ones(simTime, 1)
 
 % figure;
 % plot(t, sigTilt_e);
@@ -105,8 +106,8 @@ LiDAR_num_sample = 80;   % 5(ring) to speed up sampling, only 4 valid points
 %% Simulation
 % pre-define array to speed up code
 TSR_store = zeros(simTime, 1);
-FF_theta = zeros(simTime, 2);
-HF_theta = zeros(simTime, 2);
+FF_beta = zeros(simTime, 2);
+HF_beta = zeros(simTime, 2);
 FF_helixCenter_filtered = zeros(simTime, 2);
 HF_helixCenter_filtered = zeros(simTime, 2);
 PitchAngles = zeros(simTime, 3);
@@ -162,8 +163,8 @@ for i = 1:1:simTime
 
     % Helix control
     % 1. Get tilt and yaw signals
-    theta_tilt_e = sigTilt_e(i);
-    theta_yaw_e = sigYaw_e(i);
+    beta_tilt_e = sigTilt_e(i);
+    beta_yaw_e = sigYaw_e(i);
     % 2. Inverse MBC 
     invMBC = [1 cosd(Azimuth1) sind(Azimuth1);
               1 cosd(Azimuth2) sind(Azimuth2);
@@ -171,15 +172,15 @@ for i = 1:1:simTime
     invR_helix = [cos(omega_e*t(i)) -sin(omega_e*t(i)); 
                   sin(omega_e*t(i)) cos(omega_e*t(i))];
     % 3. Blade pitch signal
-    thetaTiltYaw = invR_helix * [theta_tilt_e; 
-                                 theta_yaw_e];    
-    thetaBlade_Helix = invMBC * [0; 
-                                 thetaTiltYaw(1); 
-                                 thetaTiltYaw(2)];    
+    betaTiltYaw = invR_helix * [beta_tilt_e; 
+                                beta_yaw_e];    
+    betaBlade_Helix = invMBC * [0; 
+                                betaTiltYaw(1); 
+                                betaTiltYaw(2)];    
 
     % Send control signal to qblade
     calllib('QBladeDLL','setControlVars_at_num',[genTorque 0 ...
-        thetaBlade_Helix(1) thetaBlade_Helix(2) thetaBlade_Helix(3)],0)
+        betaBlade_Helix(1) betaBlade_Helix(2) betaBlade_Helix(3)],0)
 
     % LiDAR data sampling (Ring) 
     windspeed = Circle_LiDAR_Parallel(LiDAR_x, LiDAR_y, LiDAR_z, D_NREL5MW, LiDAR_num_sample); 
@@ -188,24 +189,6 @@ for i = 1:1:simTime
 
     % Get the helix center from the helix frame
     % LPF the single element
-%     buffer = [buffer(2:end, :); FF_helixCenter(i, :)];
-%     if i >= bufferSize
-%         % Forward filtering
-%         [forwardFiltered1, filterState1] = filter(b_fir, 1, buffer(:, 1), filterState1);
-%         [forwardFiltered2, filterState2] = filter(b_fir, 1, buffer(:, 2), filterState2);
-% 
-%         % Reverse filtering
-%         reverseFiltered1 = filter(b_fir, 1, flip(forwardFiltered1));
-%         reverseFiltered2 = filter(b_fir, 1, flip(forwardFiltered2));
-% 
-%         % Reverse back to original order
-%         FF_helixCenter_filtered(i, 1) = reverseFiltered1(end);
-%         FF_helixCenter_filtered(i, 2) = reverseFiltered2(end);
-%     else
-%         % Initial phase where buffer is not yet full
-%         FF_helixCenter_filtered(i, 1) = FF_helixCenter(i, 1);
-%         FF_helixCenter_filtered(i, 2) = FF_helixCenter(i, 2);
-%     end
     [FF_helixCenter_filtered(i, 1), filterState1] = filter(b_fir, 1, FF_helixCenter(i, 1), filterState1);
     [FF_helixCenter_filtered(i, 2), filterState2] = filter(b_fir, 1, FF_helixCenter(i, 2), filterState2);
 
@@ -222,8 +205,6 @@ for i = 1:1:simTime
     centerZ = wakeCenter(1) - meanZ;  % 91.9411
     centerY = wakeCenter(2) - meanY;  % -3.1245
     center_e = invR_helix * [centerZ; centerY];
-%     center_e2 = invR_helix * [FF_helixCenter_filtered(i, 1)-91.9411; FF_helixCenter_filtered(i, 2)+3.1245];
-    % apply LPF to HF HelixCenter 
     [HF_helixCenter_filtered(i, 1), filterState3] = filter(b_fir, 1, center_e(1), filterState3);
     [HF_helixCenter_filtered(i, 2), filterState4] = filter(b_fir, 1, center_e(2), filterState4);
 
@@ -232,8 +213,8 @@ for i = 1:1:simTime
 %     genTorqueQB_store(i,:) = genTorqueQB;
 %     genTorque_store(i,:) = genTorque;
     TSR_store(i) = TSR;
-    FF_theta(i,:) = [thetaTiltYaw(1) thetaTiltYaw(2)];
-    HF_theta(i,:) = [theta_tilt_e theta_yaw_e];
+    FF_beta(i,:) = [betaTiltYaw(1) betaTiltYaw(2)];
+    HF_beta(i,:) = [beta_tilt_e beta_yaw_e];
 %     AzimuthAngles(i,:) = [Azimuth1 Azimuth2 Azimuth3];
     PitchAngles(i,:) = [Pitch1 Pitch2 Pitch3];
     FF_helixCenter(i, :) = [wakeCenter(1) wakeCenter(2)]; % Z(tilt), Y(yaw)
@@ -252,9 +233,11 @@ close(f)
 calllib('QBladeDLL','closeInstance')
 % save([turbineName caseName fileName], 'LiDAR_data', ...
 %                                       'FF_helixCenter', ...
+%                                       'FF_helixCenter_filtered', ...
 %                                       'HF_helixCenter', ...
-%                                       'FF_theta', ...
-%                                       'HF_theta');
+%                                       'HF_helixCenter_filtered', ...
+%                                       'FF_beta', ...
+%                                       'HF_beta');
 toc 
 
 %% Visualization
@@ -300,19 +283,19 @@ toc
 
 figure;
 subplot(2, 2, 1)
-plot(FF_theta(:, 1));
+plot(FF_beta(:, 1));
 hold on;
-plot(FF_theta(:, 2));
+plot(FF_beta(:, 2));
 hold off;
 title('\beta FF')
-legend('\theta_{tilt}', '\theta_{yaw}')
+legend('\beta_{tilt}', '\beta_{yaw}')
 subplot(2, 2, 3);
-plot(HF_theta(:, 1));
+plot(HF_beta(:, 1));
 hold on;
-plot(HF_theta(: ,2));
+plot(HF_beta(: ,2));
 hold off;
 title('\beta_e HF')
-legend('\theta^e_{tilt}', '\theta^e_{yaw}')
+legend('\beta^e_{tilt}', '\beta^e_{yaw}')
 subplot(2, 2, 2)
 plot(FF_helixCenter(:, 1));
 hold on;
@@ -331,6 +314,36 @@ plot(HF_helixCenter_filtered(:, 2));
 hold off;
 title('Center HF')
 legend('z_e', 'y_e', 'z_e2', 'y_e2')
+
+figure;
+subplot(2, 2, 1)
+plot(FF_beta(:, 1));
+hold on;
+plot(FF_beta(:, 2));
+hold off;
+title('\beta FF')
+legend('\beta_{tilt}', '\beta_{yaw}')
+subplot(2, 2, 3);
+plot(HF_beta(:, 1));
+hold on;
+plot(HF_beta(: ,2));
+hold off;
+title('\beta_e HF')
+legend('\beta^e_{tilt}', '\beta^e_{yaw}')
+subplot(2, 2, 2)
+plot(FF_helixCenter_filtered(:, 1));
+hold on;
+plot(FF_helixCenter_filtered(:, 2));
+hold off;
+title('Center FF')
+legend('z_f', 'y_f')
+subplot(2, 2, 4)
+plot(HF_helixCenter_filtered(:, 1));
+hold on;
+plot(HF_helixCenter_filtered(:, 2));
+hold off;
+title('Center HF')
+legend('z_{f,e}', 'y_{f,e}')
 
 figure();
 % plot(HF_helixCenter(:, 1));
