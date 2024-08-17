@@ -19,7 +19,7 @@ if isempty(m)
 end
 
 %% Data file 
-fileName = 'HF_Uni_bandwidth.mat';   % Fixed Frame
+fileName = 'train_30min_1step.mat';   % Fixed Frame 'train_30min_1bw.mat'
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 
@@ -29,7 +29,7 @@ calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime = 18000;   % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 5000;   % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 
@@ -68,50 +68,58 @@ K = 2.24;
 N = 97;          % Gearbox ratio
 
 %% Signals for system IDE
-N_prbn = simTime;       % signal length [s] simLen
-AMPL_prbn = 1;          % amplitude
-Ts_prbn = timeStep;     % sampling time [s] timeStep
-F_prbn = 0.0175;            % cutoff frequency [Hz] 2*bandwidth (0.0175)
-Fstop_prbn = inf;       % band-stop filtered around this frequency
-T0_prbn = 0;            % starting time [s]
-P_prbn = 2;             % number of channels
-IDEsig = idprbs(N_prbn,AMPL_prbn,Ts_prbn,F_prbn,Fstop_prbn,T0_prbn,P_prbn);
-ns_prbn = floor((length(IDEsig)-N_prbn)/2);
-sigTilt_e = IDEsig(ns_prbn+1:N_prbn+ns_prbn,1);   % tailor length
-sigYaw_e = IDEsig(ns_prbn+1:N_prbn+ns_prbn,2);    % tailor length
-[u1s,Du1,u2s,Du2] = sigscale(sigTilt_e,sigYaw_e); % signal scaling
-sigTilt_e = u1s;
-sigYaw_e = u2s;
+% ======== Train data
+% N_prbn = simTime;       % signal length [s] simLen
+% AMPL_prbn = 1;          % amplitude
+% Ts_prbn = timeStep;     % sampling time [s] timeStep
+% bw = 0.0175;            % estimated bandwidth
+% F_prbn = 10*bw;          % cutoff frequency [Hz] 2*bandwidth (0.0175)
+% Fstop_prbn = inf;       % band-stop filtered around this frequency
+% T0_prbn = 0;            % starting time [s]
+% P_prbn = 2;             % number of channels
+% IDEsig = idprbs(N_prbn,AMPL_prbn,Ts_prbn,F_prbn,Fstop_prbn,T0_prbn,P_prbn);
+% ns_prbn = floor((length(IDEsig)-N_prbn)/2);
+% sigTilt_e = IDEsig(ns_prbn+1:N_prbn+ns_prbn,1);   % tailor length
+% sigYaw_e = IDEsig(ns_prbn+1:N_prbn+ns_prbn,2);    % tailor length
+% [u1s,Du1,u2s,Du2] = sigscale(sigTilt_e,sigYaw_e); % signal scaling
 
-% % Stretch signal
-% t_original = (0:length(sigTilt_e)-1) * Ts_prbn;
-% t_new = linspace(0, (length(sigTilt_e)-1) * Ts_prbn, length(sigTilt_e) * 10);
-% sigTilt_e_stretched = interp1(t_original, sigTilt_e, t_new, 'previous');
-% sigYaw_e_stretched = interp1(t_original, sigYaw_e, t_new, 'previous');
-% sigTilt_e = sigTilt_e_stretched;
-% sigYaw_e = sigYaw_e_stretched;
+% % ======== Test data
+% Helix_amplitude = 1;
+% steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5)];
+% sigTilt_e = steps;   % 0 * ones(simTime, 1)
+% sigYaw_e = 0 * ones(simTime, 1);                   % 0 * ones(simTime, 1)
+% step_size = 1000;
+% num_steps = simTime / step_size;
+% Helix_amplitude = 1;
+% steps = repmat([0 Helix_amplitude], 1, num_steps/2);
+% original_time = linspace(0, 1, length(steps));
+% new_time = linspace(0, 1, simTime);
+% stretched_signal = interp1(original_time, steps, new_time, 'previous');
+% steps = stretched_signal;
+% sigTilt_e = steps;   % 0 * ones(simTime, 1)
+% sigYaw_e = 0 * ones(simTime, 1);    % 0 * ones(simTime, 1)
 
-% Power Spectrum Density
-[M1,F1] = pwelch(sigTilt_e,[],[],[],1/Ts_prbn);
-[M2,F2] = pwelch(sigYaw_e,[],[],[],1/Ts_prbn);
-figure
-semilogx(F1,mag2db(M1),'k','LineWidth',1)
-hold on
-semilogx(F2,mag2db(M2),'r','LineWidth',1)
-hold off
-xlabel('Frequency [Hz]');
-ylabel('Amplitude [dB]');
-legend('\beta^e_{tilt}', '\beta^e_{yaw}')
-title('Input PSD')
+% % Power Spectrum Density
+% [M1,F1] = pwelch(sigTilt_e,[],[],[],1/Ts_prbn);
+% [M2,F2] = pwelch(sigYaw_e,[],[],[],1/Ts_prbn);
+% figure
+% semilogx(F1,mag2db(M1),'k','LineWidth',1)
+% hold on
+% semilogx(F2,mag2db(M2),'r','LineWidth',1)
+% hold off
+% xlabel('Frequency [Hz]');
+% ylabel('Amplitude [dB]');
+% legend('\beta^e_{tilt}', '\beta^e_{yaw}')
+% title('Input PSD')
 
 %% Helix Setting
 Str = 0.3;                          % Strouhal number
-Helix_amplitude = 3;                % Helix amplitude                
+Helix_amplitude = 1;                % Helix amplitude                
 Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
 omega_e = Freq*2*pi;
 t = linspace(1, simLen, simTime);
-% sigTilt_e = 0 * ones(simTime, 1);                 % basic
-% sigYaw_e = -Helix_amplitude * ones(simTime, 1);   % basic
+sigTilt_e = 0 * ones(simTime, 1);                 % basic
+sigYaw_e = -Helix_amplitude * ones(simTime, 1);   % basic
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat
@@ -238,23 +246,25 @@ for i = 1:1:simTime
     HF_helixCenter(i, :) = [center_e(1) center_e(2)];   % Ze(tilt), Ye(yaw) 
     LiDAR_data(i) = windspeed;
 
-%     if mod(i, 1/timeStep) == 0
-% %         fprintf('%d seconds.\n', i*timeStep);
-%         LiDAR_data = [LiDAR_data; windspeed];   % 1Hz sampling
-%     end
     waitbar(i/simTime, f, sprintf('Simulation Running: %.1f%%', (i/simTime)*100));
 
 end
 close(f)
 %calllib('QBladeDLL','storeProject','15MW_Helix_Uni-U8_Str3.qpr') 
 calllib('QBladeDLL','closeInstance')
-save([turbineName caseName fileName], 'LiDAR_data', ...
-                                      'FF_helixCenter', ...
-                                      'FF_helixCenter_filtered', ...
-                                      'HF_helixCenter', ...
-                                      'HF_helixCenter_filtered', ...
-                                      'FF_beta', ...
-                                      'HF_beta');
+% save([turbineName caseName fileName], 'LiDAR_data', ...
+%                                       'FF_helixCenter', ...
+%                                       'FF_helixCenter_filtered', ...
+%                                       'HF_helixCenter', ...
+%                                       'HF_helixCenter_filtered', ...
+%                                       'FF_beta', ...
+%                                       'HF_beta');
+% save([turbineName caseName fileName], 'FF_helixCenter', ...
+%                                       'FF_helixCenter_filtered', ...
+%                                       'HF_helixCenter', ...
+%                                       'HF_helixCenter_filtered', ...
+%                                       'FF_beta', ...
+%                                       'HF_beta');
 toc 
 
 %% Visualization
@@ -332,48 +342,48 @@ hold off;
 title('Center HF')
 legend('z_e', 'y_e', 'z_e2', 'y_e2')
 
-figure;
-subplot(2, 2, 1)
-plot(FF_beta(:, 1));
-hold on;
-plot(FF_beta(:, 2));
-hold off;
-title('\beta FF')
-legend('\beta_{tilt}', '\beta_{yaw}')
-subplot(2, 2, 3);
-plot(HF_beta(:, 1));
-hold on;
-plot(HF_beta(: ,2));
-hold off;
-title('\beta_e HF')
-legend('\beta^e_{tilt}', '\beta^e_{yaw}')
-subplot(2, 2, 2)
-plot(FF_helixCenter_filtered(:, 1));
-hold on;
-plot(FF_helixCenter_filtered(:, 2));
-hold off;
-title('Center FF')
-legend('z_f', 'y_f')
-subplot(2, 2, 4)
-plot(HF_helixCenter_filtered(:, 1));
-hold on;
-plot(HF_helixCenter_filtered(:, 2));
-hold off;
-title('Center HF')
-legend('z_{f,e}', 'y_{f,e}')
+% figure;
+% subplot(2, 2, 1)
+% plot(FF_beta(:, 1));
+% hold on;
+% plot(FF_beta(:, 2));
+% hold off;
+% title('\beta FF')
+% legend('\beta_{tilt}', '\beta_{yaw}')
+% subplot(2, 2, 3);
+% plot(HF_beta(:, 1));
+% hold on;
+% plot(HF_beta(: ,2));
+% hold off;
+% title('\beta_e HF')
+% legend('\beta^e_{tilt}', '\beta^e_{yaw}')
+% subplot(2, 2, 2)
+% plot(FF_helixCenter_filtered(:, 1));
+% hold on;
+% plot(FF_helixCenter_filtered(:, 2));
+% hold off;
+% title('Center FF')
+% legend('z_f', 'y_f')
+% subplot(2, 2, 4)
+% plot(HF_helixCenter_filtered(:, 1));
+% hold on;
+% plot(HF_helixCenter_filtered(:, 2));
+% hold off;
+% title('Center HF')
+% legend('z_{f,e}', 'y_{f,e}')
 
-% Power Spectrum Density
-[M1,F1] = pwelch(HF_helixCenter_filtered(:, 1),[],[],[],1/Ts_prbn);
-[M2,F2] = pwelch(HF_helixCenter_filtered(:, 2),[],[],[],1/Ts_prbn);
-figure 
-semilogx(F1,mag2db(M1),'k','LineWidth',1)
-hold on
-semilogx(F2,mag2db(M2),'r','LineWidth',1)
-hold off
-xlabel('Frequency [Hz]');
-ylabel('Amplitude [dB]');
-legend('z_{f,e}', 'y_{f,e}');
-title('Output PSD');
+% % Power Spectrum Density
+% [M1,F1] = pwelch(HF_helixCenter_filtered(:, 1),[],[],[],1/Ts_prbn);
+% [M2,F2] = pwelch(HF_helixCenter_filtered(:, 2),[],[],[],1/Ts_prbn);
+% figure 
+% semilogx(F1,mag2db(M1),'k','LineWidth',1)
+% hold on
+% semilogx(F2,mag2db(M2),'r','LineWidth',1)
+% hold off
+% xlabel('Frequency [Hz]');
+% ylabel('Amplitude [dB]');
+% legend('z_{f,e}', 'y_{f,e}');
+% title('Output PSD');
 
 % % SPA average between input and output
 % [Ga,ws] = spa_avf(u,y,1,25,[],[],'hamming');

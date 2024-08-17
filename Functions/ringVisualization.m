@@ -6,10 +6,10 @@ theta = linspace(0, 2*pi, 20);
 y_1Dref = 0 + D/2 * cos(theta);
 z_1Dref = 90 + D/2 * sin(theta);
 
-% ====== Uncomment if save video
-videoFile = ".\Data\helixDemo1.avi";
-v = VideoWriter(videoFile);
-open(v);
+% % ====== Uncomment if save video
+% videoFile = ".\Data\helixDemo1.avi";
+% v = VideoWriter(videoFile);
+% open(v);
 
 % Visualization
 figure('Position', [30, 30, 320, 300]);
@@ -37,8 +37,8 @@ for counter = 1:interval:data_length(1)
     clim([4 10])
     pause(0.1);
 
-% ====== Uncomment if save video
-    frame = getframe(gcf);
-    writeVideo(v, frame);
+% % ====== Uncomment if save video
+%     frame = getframe(gcf);
+%     writeVideo(v, frame);
 end
 end

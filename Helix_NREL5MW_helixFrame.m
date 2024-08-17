@@ -19,7 +19,7 @@ if isempty(m)
 end
 
 %% Data file 
-fileName = 'testingSet.mat';   % Fixed Frame
+fileName = 'test_2steps.mat';   % Fixed Frame
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 
@@ -76,18 +76,11 @@ omega_e = Freq*2*pi;
 t = linspace(1, simLen, simTime);
 % sigTilt_e = Helix_amplitude * ones(simTime, 1);                 % basic
 % sigYaw_e = 0 * ones(simTime, 1);   % basic
-% sigTilt_e = [linspace(0, -6, simTime*9/20) linspace(-6, 0, simTime*9/20) 0*ones(1, simTime/10)];
-% sigTilt_e = [4*ones(1, simTime/6) 3*ones(1, simTime/6) 2*ones(1, simTime/6) 1*ones(1, simTime/6) 0*ones(1, simTime/3)];
-% sigYaw_e = [-6*ones(1, simTime/10) linspace(-6, 6, simTime*4/5) 6*ones(1, simTime/10)];
-% sigYaw_e = [linspace(-3, 3, simTime*9/20) linspace(3, -3, simTime*9/20) -3*ones(1, simTime/10)];
-% sigYaw_e = [-6*ones(1, simTime/6) -5*ones(1, simTime/6) -4*ones(1, simTime/6) -3*ones(1, simTime/6) -2*ones(1, simTime/3)];
-% sigYaw_e = [-2*ones(1, simTime/10) linspace(-2, 0, simTime*2/5) linspace(0, -2, simTime*2/5) -2*ones(1, simTime/10)];
 
 % Step input to test basic properties
-% steps = [0*ones(1, simTime/3) Helix_amplitude*ones(1, simTime*2/3)];
-steps2 = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5)];
-sigTilt_e = 0 * ones(simTime, 1);   % 0 * ones(simTime, 1)
-sigYaw_e = steps2;               % 0 * ones(simTime, 1)
+steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5)];
+sigTilt_e = steps;   % 0 * ones(simTime, 1)
+sigYaw_e = steps;               % 0 * ones(simTime, 1)
 
 % figure;
 % plot(t, sigTilt_e);
@@ -221,18 +214,20 @@ for i = 1:1:simTime
     HF_helixCenter(i, :) = [center_e(1) center_e(2)];   % Ze(tilt), Ye(yaw) 
     LiDAR_data(i) = windspeed;
 
-%     if mod(i, 1/timeStep) == 0
-% %         fprintf('%d seconds.\n', i*timeStep);
-%         LiDAR_data = [LiDAR_data; windspeed];   % 1Hz sampling
-%     end
     waitbar(i/simTime, f, sprintf('Simulation Running: %.1f%%', (i/simTime)*100));
 
 end
 close(f)
 %calllib('QBladeDLL','storeProject','15MW_Helix_Uni-U8_Str3.qpr') 
 calllib('QBladeDLL','closeInstance')
-save([turbineName caseName fileName], 'LiDAR_data', ...
-                                      'FF_helixCenter', ...
+% save([turbineName caseName fileName], 'LiDAR_data', ...
+%                                       'FF_helixCenter', ...
+%                                       'FF_helixCenter_filtered', ...
+%                                       'HF_helixCenter', ...
+%                                       'HF_helixCenter_filtered', ...
+%                                       'FF_beta', ...
+%                                       'HF_beta');
+save([turbineName caseName fileName], 'FF_helixCenter', ...
                                       'FF_helixCenter_filtered', ...
                                       'HF_helixCenter', ...
                                       'HF_helixCenter_filtered', ...
