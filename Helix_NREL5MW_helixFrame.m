@@ -19,7 +19,7 @@ if isempty(m)
 end
 
 %% Data file 
-fileName = 'test_2steps.mat';   % Fixed Frame
+fileName = 'stepResponse.mat';   % Fixed Frame
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 
@@ -29,7 +29,7 @@ calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime = 5000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 6000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 
@@ -78,7 +78,8 @@ t = linspace(1, simLen, simTime);
 % sigYaw_e = 0 * ones(simTime, 1);   % basic
 
 % Step input to test basic properties
-steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5)];
+% steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5)];
+steps = [0*ones(1, simTime/3) Helix_amplitude*ones(1, simTime*2/3)];
 sigTilt_e = steps;   % 0 * ones(simTime, 1)
 sigYaw_e = steps;               % 0 * ones(simTime, 1)
 
@@ -227,12 +228,12 @@ calllib('QBladeDLL','closeInstance')
 %                                       'HF_helixCenter_filtered', ...
 %                                       'FF_beta', ...
 %                                       'HF_beta');
-save([turbineName caseName fileName], 'FF_helixCenter', ...
-                                      'FF_helixCenter_filtered', ...
-                                      'HF_helixCenter', ...
-                                      'HF_helixCenter_filtered', ...
-                                      'FF_beta', ...
-                                      'HF_beta');
+% save([turbineName caseName fileName], 'FF_helixCenter', ...
+%                                       'FF_helixCenter_filtered', ...
+%                                       'HF_helixCenter', ...
+%                                       'HF_helixCenter_filtered', ...
+%                                       'FF_beta', ...
+%                                       'HF_beta');
 toc 
 
 %% Visualization

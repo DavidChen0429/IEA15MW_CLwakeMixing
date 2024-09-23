@@ -19,7 +19,7 @@ if isempty(m)
 end
 
 %% Data file 
-fileName = 'train_30min_1step.mat';   % Fixed Frame 'train_30min_1bw.mat'
+fileName = 'train_30min_1bw.mat';   % Fixed Frame 'train_30min_1bw.mat'
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 
@@ -29,7 +29,7 @@ calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime = 5000;   % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 18000;   % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 
@@ -69,25 +69,25 @@ N = 97;          % Gearbox ratio
 
 %% Signals for system IDE
 % ======== Train data
-% N_prbn = simTime;       % signal length [s] simLen
-% AMPL_prbn = 1;          % amplitude
-% Ts_prbn = timeStep;     % sampling time [s] timeStep
-% bw = 0.0175;            % estimated bandwidth
-% F_prbn = 10*bw;          % cutoff frequency [Hz] 2*bandwidth (0.0175)
-% Fstop_prbn = inf;       % band-stop filtered around this frequency
-% T0_prbn = 0;            % starting time [s]
-% P_prbn = 2;             % number of channels
-% IDEsig = idprbs(N_prbn,AMPL_prbn,Ts_prbn,F_prbn,Fstop_prbn,T0_prbn,P_prbn);
-% ns_prbn = floor((length(IDEsig)-N_prbn)/2);
-% sigTilt_e = IDEsig(ns_prbn+1:N_prbn+ns_prbn,1);   % tailor length
-% sigYaw_e = IDEsig(ns_prbn+1:N_prbn+ns_prbn,2);    % tailor length
+N_prbn = simTime;       % signal length [s] simLen
+AMPL_prbn = 1;          % amplitude
+Ts_prbn = timeStep;     % sampling time [s] timeStep
+bw = 0.0175;            % estimated bandwidth
+F_prbn = bw;       % cutoff frequency [Hz] 2*bandwidth (0.0175)
+Fstop_prbn = 2*bw;      % band-stop filtered around this frequency
+T0_prbn = 0;            % starting time [s]
+P_prbn = 2;             % number of channels
+IDEsig = idprbs(N_prbn,AMPL_prbn,Ts_prbn,F_prbn,Fstop_prbn,T0_prbn,P_prbn);
+ns_prbn = floor((length(IDEsig)-N_prbn)/2);
+sigTilt_e = IDEsig(ns_prbn+1:N_prbn+ns_prbn,1);   % tailor length
+sigYaw_e = IDEsig(ns_prbn+1:N_prbn+ns_prbn,2);    % tailor length
 % [u1s,Du1,u2s,Du2] = sigscale(sigTilt_e,sigYaw_e); % signal scaling
 
 % % ======== Test data
 % Helix_amplitude = 1;
 % steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5)];
-% sigTilt_e = steps;   % 0 * ones(simTime, 1)
-% sigYaw_e = 0 * ones(simTime, 1);                   % 0 * ones(simTime, 1)
+% sigTilt_e = steps;                  % 0 * ones(simTime, 1)
+% sigYaw_e = steps;                   % 0 * ones(simTime, 1)
 % step_size = 1000;
 % num_steps = simTime / step_size;
 % Helix_amplitude = 1;
@@ -99,18 +99,19 @@ N = 97;          % Gearbox ratio
 % sigTilt_e = steps;   % 0 * ones(simTime, 1)
 % sigYaw_e = 0 * ones(simTime, 1);    % 0 * ones(simTime, 1)
 
-% % Power Spectrum Density
-% [M1,F1] = pwelch(sigTilt_e,[],[],[],1/Ts_prbn);
-% [M2,F2] = pwelch(sigYaw_e,[],[],[],1/Ts_prbn);
-% figure
-% semilogx(F1,mag2db(M1),'k','LineWidth',1)
-% hold on
-% semilogx(F2,mag2db(M2),'r','LineWidth',1)
-% hold off
-% xlabel('Frequency [Hz]');
-% ylabel('Amplitude [dB]');
-% legend('\beta^e_{tilt}', '\beta^e_{yaw}')
-% title('Input PSD')
+% Power Spectrum Density
+[M1,F1] = pwelch(sigTilt_e,[],[],[],1/Ts_prbn);
+[M2,F2] = pwelch(sigYaw_e,[],[],[],1/Ts_prbn);
+figure
+semilogx(F1,mag2db(M1),'k','LineWidth',1)
+hold on
+semilogx(F2,mag2db(M2),'r','LineWidth',1)
+yline(0, '--', 'LineWidth', 1)
+hold off
+xlabel('Frequency [Hz]');
+ylabel('Amplitude [dB]');
+legend('\beta^e_{tilt}', '\beta^e_{yaw}')
+title('Input PSD')
 
 %% Helix Setting
 Str = 0.3;                          % Strouhal number
@@ -118,15 +119,18 @@ Helix_amplitude = 1;                % Helix amplitude
 Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
 omega_e = Freq*2*pi;
 t = linspace(1, simLen, simTime);
-sigTilt_e = 0 * ones(simTime, 1);                 % basic
-sigYaw_e = -Helix_amplitude * ones(simTime, 1);   % basic
+
+% !!! If input signals has been generated from 'idprbs', then note below
+% line 
+% sigTilt_e = 0 * ones(simTime, 1);                 % basic
+% sigYaw_e = -Helix_amplitude * ones(simTime, 1);   % basic
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat
 LiDAR_x = 1*D_NREL5MW;   % Definition of x is pointing downwind
 LiDAR_y = 0;
 LiDAR_z = Hub_NREL5MW;   % Wind height
-LiDAR_num_sample = 80;   % 5(ring) to speed up sampling, only 4 valid points
+LiDAR_num_sample = 80;
 
 %% Simulation
 % pre-define array to speed up code
@@ -259,12 +263,12 @@ calllib('QBladeDLL','closeInstance')
 %                                       'HF_helixCenter_filtered', ...
 %                                       'FF_beta', ...
 %                                       'HF_beta');
-% save([turbineName caseName fileName], 'FF_helixCenter', ...
-%                                       'FF_helixCenter_filtered', ...
-%                                       'HF_helixCenter', ...
-%                                       'HF_helixCenter_filtered', ...
-%                                       'FF_beta', ...
-%                                       'HF_beta');
+save([turbineName caseName fileName], 'FF_helixCenter', ...
+                                      'FF_helixCenter_filtered', ...
+                                      'HF_helixCenter', ...
+                                      'HF_helixCenter_filtered', ...
+                                      'FF_beta', ...
+                                      'HF_beta');
 toc 
 
 %% Visualization

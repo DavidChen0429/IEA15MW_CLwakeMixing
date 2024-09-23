@@ -2,22 +2,21 @@ clear
 close all
 addpath('.\Functions');
 
-%%
-trainData = 'train_30min_2bw.mat';   % train set
-testData = 'test_2steps.mat';        % test set
+%% Get Training data and Testing data
+trainData = 'train_30min_1bw.mat';       % train set
+testData = 'stepResponse.mat';            % test set
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 IDEdata_train = load([turbineName caseName trainData]);
 IDEdata_test = load([turbineName caseName testData]);
 
-%% Get Training data and Testing data
 u_train = IDEdata_train.HF_beta;
 y_train = IDEdata_train.HF_helixCenter_filtered;
 u_test = IDEdata_test.HF_beta;
 y_test = IDEdata_test.HF_helixCenter_filtered;
 
 % Remove first few data
-shiftNum = 1000;
+shiftNum = 800;
 u_train = u_train(shiftNum:end, :);
 y_train = y_train(shiftNum:end, :);
 u_test = u_test(shiftNum:end, :);
@@ -36,95 +35,173 @@ N_test = length(u_test);
 t_test = (0:N_test-1);
 
 % Detrend data
-u_train = u_train - mean(u_train);  % [data2_d,Tr] = detrend(data2);
-y_train = y_train - mean(y_train);
-u_test = u_test - mean(u_test);
-y_test = y_test - mean(y_test);
+u_train = detrend(u_train, 'constant');
+y_train = detrend(y_train, 'constant');
+u_test = detrend(u_test, 'constant');
+y_test = detrend(y_test, 'constant');
 
-%% 
-% % Power Spectrum Density
-% [M1,F1] = pwelch(u_train(:, 1),[],[],[],1/Ts_prbn);
-% [M2,F2] = pwelch(u_train(:, 2),[],[],[],1/Ts_prbn);
-% figure
-% semilogx(F1,mag2db(M1),'k','LineWidth',1)
-% hold on
-% semilogx(F2,mag2db(M2),'r','LineWidth',1)
-% hold off
-% xlabel('Frequency [Hz]');
-% ylabel('Amplitude [dB]');
-% legend('\beta^e_{tilt}', '\beta^e_{yaw}')
-% title('Input PSD')
-% 
-% [M1,F1] = pwelch(y_train(:, 1),[],[],[],1/Ts_prbn);
-% [M2,F2] = pwelch(y_train(:, 2),[],[],[],1/Ts_prbn);
-% figure
-% semilogx(F1,mag2db(M1),'k','LineWidth',1)
-% hold on
-% semilogx(F2,mag2db(M2),'r','LineWidth',1)
-% hold off
-% xlabel('Frequency [Hz]');
-% ylabel('Amplitude [dB]');
-% legend('z_f', 'y_f')
-% title('Output PSD')
+% Signal scaling
+[us,Du,ys,Dy] = sigscale(u_train, y_train);
+[us2,Du2,ys2,Dy2] = sigscale(u_test, y_test);
+
+%% Power Spectrum Density
+Ts_prbn = 0.1;
+[M1,F1] = pwelch(us(1, :),[],[],[],1/Ts_prbn);
+[M2,F2] = pwelch(us(2, :),[],[],[],1/Ts_prbn);
+figure
+semilogx(F1,mag2db(M1),'k','LineWidth',1)
+hold on
+semilogx(F2,mag2db(M2),'r','LineWidth',1)
+yline(0, '--', 'LineWidth', 1)
+hold off
+xlabel('Frequency [Hz]');
+ylabel('Amplitude [dB]');
+legend('\beta^e_{tilt}', '\beta^e_{yaw}')
+title('Input PSD')
+
+[M1,F1] = pwelch(ys(1, :),[],[],[],1/Ts_prbn);
+[M2,F2] = pwelch(ys(2, :),[],[],[],1/Ts_prbn);
+figure
+semilogx(F1,mag2db(M1),'k','LineWidth',1)
+hold on
+semilogx(F2,mag2db(M2),'r','LineWidth',1)
+yline(0, '--', 'LineWidth', 1)
+hold off
+xlabel('Frequency [Hz]');
+ylabel('Amplitude [dB]');
+legend('z_f', 'y_f')
+title('Output PSD')
 
 %% PBSID-varx
-n_varx = 4;     % 4
+n_varx = 10;
 f_varx = 30;    
 p_varx = 30;
 
-[S,X] = dordvarx(u_train,y_train,f_varx,p_varx,'tikh','gcv');
-figure, semilogy(S,'*');
-title('Singular Value PBSID-varx')
+[S,X] = dordvarx(us,ys,f_varx,p_varx,'tikh','gcv');
+% figure, semilogy(S,'*');
+% title('Singular Value PBSID-varx')
 x = dmodx(X,n_varx);
-[Ai,Bi,Ci,Di,Ki] = dx2abcdk(x,u_train,y_train,f_varx,p_varx);
-% State-space model
+
+% system IDE
+[Ai,Bi,Ci,Di,Ki] = dx2abcdk(x,us,ys,f_varx,p_varx);
 OLi = ss(Ai,Bi,Ci,Di,1);
 OLi.InputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
 OLi.OutputName = {'z_e','y_e'};
 
-%% PBSID-varmax
-n_varmax = 4;
-f_varmax = 30;
-p_varmax = 30;
-
-[S,X] = dordvarmax(u_train,y_train,f_varmax,p_varmax,'els',1e-6,'tikh','gcv');
-figure, semilogy(S,'*');
-title('Singular Value PBSID-varmax')
-x = dmodx(X,n_varmax);
-[Av,Bv,Cv,Dv,Kv] = dx2abcdk(x,u_train,y_train,f_varmax,p_varmax);
-% State-space model
-OLv = ss(Av,Bv,Cv,Dv,1);
-OLv.InputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
-OLv.OutputName = {'z_e','y_e'};
-
-%% SystemIDE Results Verification
-% ====== trainset 
-% frequency respond
-[Ga,ws] = spa_avf(u_train,y_train,1,25,[],[],'hamming');
+% Validation (Frequency domain)
+[Ga,ws] = spa_avf(us,ys,1,25,[],[],'hamming');
 Ga = frd(Ga,ws);
 figure 
-bodemag(OLi, 'c', OLv, 'g', Ga, 'm');
-legend('PBSID-varx', 'PBSID-varmax', 'Real spa avf');
-% VAF
-yi = lsim(OLi,u_train,t_train); 
-yv = lsim(OLv,u_train,t_train);
+bodemag(OLi, 'c', Ga, 'm');
+legend('PBSID-varx', 'SPA');
+yi = lsim(OLi,us,t_train); 
 disp('[Training] VAF with PBSID-varx (open loop)')
-vaf(y_train, yi)            
-disp('[Training] VAF with PBSID-varmax (open loop)')
-vaf(y_train, yv)  
+vaf(ys, yi)   
 
-% ====== testset
-% % frequency respond
-% [Ga,ws] = spa_avf(u_test,y_test,1,25,[],[],'hamming');
-% Ga = frd(Ga,ws);
-% figure 
-% bodemag(OLi, 'c', OLv, 'g', Ga, 'm');
-% legend('PBSID-varx', 'PBSID-varmax', 'Real spa avf');
-% VAF
-yi_test = lsim(OLi,u_test,t_test); 
-yv_test = lsim(OLv,u_test,t_test);
-disp('================================================')
-disp('[Testing] VAF with PBSID-varx (open loop)')
-vaf(y_test, yi_test)         
-disp('[Testing] VAF with PBSID-varmax (open loop)')
-vaf(y_test, yv_test)   
+% yi_test = lsim(OLi,u_test,t_test);
+% disp('[Testing] VAF with PBSID-varx (open loop)')
+% vaf(y_test, yi_test)  
+
+% Validation (Time domain)
+yi2 = lsim(OLi,us,t_train); % training set
+figure()
+subplot(2,1,1)
+plot(yi2(:, 1))
+hold on
+plot(ys(1, :))
+hold off
+legend('predict', 'real')
+subplot(2,1,2)
+plot(yi2(:, 2))
+hold on
+plot(ys(2, :))
+hold off
+legend('predict', 'real')
+
+yi2 = lsim(OLi,us2,t_test); % testing set
+figure()
+subplot(2,1,1)
+plot(yi2(:, 1))
+hold on
+plot(ys2(1, :))
+hold off
+legend('predict', 'real')
+subplot(2,1,2)
+plot(yi2(:, 2))
+hold on
+plot(ys2(2, :))
+hold off
+legend('predict', 'real')
+
+%% % PBSID-opt
+n_opt = 10;
+f_opt = 30;
+p_opt = 30;
+
+[S,x] = dordvarx(us,ys,f_opt,p_opt,'tikh','gcv');
+% figure, semilogy(S,'x');
+% title('Singular values')
+x = dmodx(x,n_opt);
+
+[Ai,Bi,Ci,Di,Ki] = dx2abcdk(x,us,ys,f_opt,p_opt);
+%[Ai,Bi,Ci,Di,Ki] = dx2abcdk(x,us,ys,f,p,'stable'); % forces stability
+Dat = iddata(ys',us',n_opt);
+Mi = abcdk2idss(Dat,Ai,Bi,Ci,Di,Ki);
+set(Mi,'SSParameterization','Free','DisturbanceModel','Estimate','nk',zeros(1,2));
+Mp = pem(Dat,Mi);
+OLi = ss(Mi);   % prediction error method
+% OLi2 = Dy*OLi*inv(Du);   % Y=DY*YS U=DU*US
+OLp = ss(Mp);   % prediction error method optimization
+% OLp2 = Dy*OLp*inv(Du);   % Y=DY*YS U=DU*US
+OLi.InputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
+OLi.OutputName = {'z_e','y_e'};
+OLp.InputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
+OLp.OutputName = {'z_e','y_e'};
+
+% Variance-accounted-for (by Kalman filter)
+yest = predict(Mi,Dat);
+x0 = findstates(Mi,Dat);
+disp('VAF of identified system')
+vaf(ys,yest.y)
+
+yest = predict(Mp,Dat);
+x0 = findstates(Mp,Dat);
+disp('VAF of optimized system')
+vaf(ys,yest.y)
+
+% Frequency response
+[Ga,ws] = spa_avf(us,ys,1,25,[],[],'hamming');
+OLa = frd(Ga,ws);
+figure, bodemag(OLi,'c', OLp, 'g', OLa,'m');
+legend('PBSID-opt', 'PEM', 'SPA');   
+
+% Validation (Time domain)
+yi2 = lsim(OLi,us,t_train);
+figure()
+subplot(2,1,1)
+plot(yi2(:, 1))
+hold on
+plot(ys(1, :))
+hold off
+legend('predict', 'real')
+subplot(2,1,2)
+plot(yi2(:, 2))
+hold on
+plot(ys(2, :))
+hold off
+legend('predict', 'real')
+
+yi2 = lsim(OLi,us2,t_test);
+figure()
+subplot(2,1,1)
+plot(yi2(:, 1))
+hold on
+plot(ys2(1, :))
+hold off
+legend('predict', 'real')
+subplot(2,1,2)
+plot(yi2(:, 2))
+hold on
+plot(ys2(2, :))
+hold off
+legend('predict', 'real')
