@@ -3,12 +3,13 @@ close all
 addpath('.\Functions');
 
 %% Get Training data and Testing data
-trainData = 'train_30min_1bw.mat';       % train set
-testData = 'stepResponse.mat';            % test set
+trainData = 'train_120min_1bw_noise2.mat';       % train set
+testData = 'stepResponse3.mat';                % test set
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 IDEdata_train = load([turbineName caseName trainData]);
 IDEdata_test = load([turbineName caseName testData]);
+timeStep = 0.1;
 
 u_train = IDEdata_train.HF_beta;
 y_train = IDEdata_train.HF_helixCenter_filtered;
@@ -27,12 +28,12 @@ DeadtimeDelay = 110;
 u_train = u_train(1:end-DeadtimeDelay, :);
 y_train = y_train(DeadtimeDelay+1:end, :);
 N_train = length(u_train);
-t_train = (0:N_train-1);
+t_train = (0:N_train-1) * timeStep;
 
 u_test = u_test(1:end-DeadtimeDelay, :);
 y_test = y_test(DeadtimeDelay+1:end, :);
 N_test = length(u_test);
-t_test = (0:N_test-1);
+t_test = (0:N_test-1) * timeStep;
 
 % Detrend data
 u_train = detrend(u_train, 'constant');
@@ -43,9 +44,13 @@ y_test = detrend(y_test, 'constant');
 % Signal scaling
 [us,Du,ys,Dy] = sigscale(u_train, y_train);
 [us2,Du2,ys2,Dy2] = sigscale(u_test, y_test);
+us = u_train';  % 2*N
+ys = y_train';  % 2*N
+us2 = u_test';  % 2*N
+ys2 = y_test';  % 2*N
 
 %% Power Spectrum Density
-Ts_prbn = 0.1;
+Ts_prbn = timeStep;
 [M1,F1] = pwelch(us(1, :),[],[],[],1/Ts_prbn);
 [M2,F2] = pwelch(us(2, :),[],[],[],1/Ts_prbn);
 figure
@@ -72,10 +77,10 @@ ylabel('Amplitude [dB]');
 legend('z_f', 'y_f')
 title('Output PSD')
 
-%% PBSID-varx
-n_varx = 10;
-f_varx = 30;    
-p_varx = 30;
+%% PBSID-varx   
+n_varx = 4; % 20 9 4 
+f_varx = 200;    
+p_varx = 200;
 
 [S,X] = dordvarx(us,ys,f_varx,p_varx,'tikh','gcv');
 % figure, semilogy(S,'*');
@@ -84,124 +89,192 @@ x = dmodx(X,n_varx);
 
 % system IDE
 [Ai,Bi,Ci,Di,Ki] = dx2abcdk(x,us,ys,f_varx,p_varx);
-OLi = ss(Ai,Bi,Ci,Di,1);
+OLi = ss(Ai,Bi,Ci,Di,timeStep);
 OLi.InputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
 OLi.OutputName = {'z_e','y_e'};
 
 % Validation (Frequency domain)
-[Ga,ws] = spa_avf(us,ys,1,25,[],[],'hamming');
+[Ga,ws] = spa_avf(us,ys,timeStep,6,[],[],'hamming');
 Ga = frd(Ga,ws);
 figure 
-bodemag(OLi, 'c', Ga, 'm');
+bodemag(OLi, Ga);
 legend('PBSID-varx', 'SPA');
-yi = lsim(OLi,us,t_train); 
+
+% Validation (VAF)
+yi = lsim(OLi,us,t_train);
+disp('=================================================')
 disp('[Training] VAF with PBSID-varx (open loop)')
 vaf(ys, yi)   
-
-% yi_test = lsim(OLi,u_test,t_test);
-% disp('[Testing] VAF with PBSID-varx (open loop)')
-% vaf(y_test, yi_test)  
+yi_test = lsim(OLi,us2,t_test);
+disp('[Testing] VAF with PBSID-varx (open loop)')
+vaf(y_test, yi_test)  
 
 % Validation (Time domain)
 yi2 = lsim(OLi,us,t_train); % training set
 figure()
-subplot(2,1,1)
+subplot(2,2,1)
 plot(yi2(:, 1))
 hold on
 plot(ys(1, :))
 hold off
 legend('predict', 'real')
-subplot(2,1,2)
+xlabel('Time steps')
+ylabel('z^e')
+title('Training Set z^e')
+subplot(2,2,3)
 plot(yi2(:, 2))
 hold on
 plot(ys(2, :))
 hold off
 legend('predict', 'real')
+xlabel('Time steps')
+ylabel('y^e')
+title('Training Set y^e')
 
 yi2 = lsim(OLi,us2,t_test); % testing set
-figure()
-subplot(2,1,1)
+subplot(2,2,2)
 plot(yi2(:, 1))
 hold on
 plot(ys2(1, :))
 hold off
 legend('predict', 'real')
-subplot(2,1,2)
+xlabel('Time steps')
+ylabel('z^e')
+title('Testing Set z^e')
+subplot(2,2,4)
 plot(yi2(:, 2))
 hold on
 plot(ys2(2, :))
 hold off
 legend('predict', 'real')
+xlabel('Time steps')
+ylabel('y^e')
+title('Testing Set y^e')
 
-%% % PBSID-opt
-n_opt = 10;
-f_opt = 30;
-p_opt = 30;
+%% save model 
+% save('ModelOrder20.mat', 'OLi');
 
-[S,x] = dordvarx(us,ys,f_opt,p_opt,'tikh','gcv');
-% figure, semilogy(S,'x');
-% title('Singular values')
-x = dmodx(x,n_opt);
+%% PBSID-opt
+% n_opt = 10;
+% f_opt = 30;
+% p_opt = 30;
+% 
+% [S,x] = dordvarx(us,ys,f_opt,p_opt,'tikh','gcv');
+% % figure, semilogy(S,'x');
+% % title('Singular values')
+% x = dmodx(x,n_opt);
+% 
+% [Ai,Bi,Ci,Di,Ki] = dx2abcdk(x,us,ys,f_opt,p_opt);
+% %[Ai,Bi,Ci,Di,Ki] = dx2abcdk(x,us,ys,f,p,'stable'); % forces stability
+% Dat = iddata(ys',us',n_opt);
+% Mi = abcdk2idss(Dat,Ai,Bi,Ci,Di,Ki);
+% set(Mi,'SSParameterization','Free','DisturbanceModel','Estimate','nk',zeros(1,2));
+% Mp = pem(Dat,Mi);
+% OLi = ss(Mi);   % prediction error method
+% % OLi2 = Dy*OLi*inv(Du);   % Y=DY*YS U=DU*US
+% OLp = ss(Mp);   % prediction error method optimization
+% % OLp2 = Dy*OLp*inv(Du);   % Y=DY*YS U=DU*US
+% OLi.InputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
+% OLi.OutputName = {'z_e','y_e'};
+% OLp.InputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
+% OLp.OutputName = {'z_e','y_e'};
+% 
+% % Variance-accounted-for (by Kalman filter)
+% yest = predict(Mi,Dat);
+% x0 = findstates(Mi,Dat);
+% disp('VAF of identified system')
+% vaf(ys,yest.y)
+% 
+% yest = predict(Mp,Dat);
+% x0 = findstates(Mp,Dat);
+% disp('VAF of optimized system')
+% vaf(ys,yest.y)
+% 
+% % Frequency response
+% [Ga,ws] = spa_avf(us,ys,1,25,[],[],'hamming');
+% OLa = frd(Ga,ws);
+% figure, bodemag(OLi,'c', OLp, 'g', OLa,'m');
+% legend('PBSID-opt', 'PEM', 'SPA');   
+% 
+% % Validation (Time domain)
+% yi2 = lsim(OLi,us,t_train);
+% figure()
+% subplot(2,1,1)
+% plot(yi2(:, 1))
+% hold on
+% plot(ys(1, :))
+% hold off
+% legend('predict', 'real')
+% subplot(2,1,2)
+% plot(yi2(:, 2))
+% hold on
+% plot(ys(2, :))
+% hold off
+% legend('predict', 'real')
+% 
+% yi2 = lsim(OLi,us2,t_test);
+% figure()
+% subplot(2,1,1)
+% plot(yi2(:, 1))
+% hold on
+% plot(ys2(1, :))
+% hold off
+% legend('predict', 'real')
+% subplot(2,1,2)
+% plot(yi2(:, 2))
+% hold on
+% plot(ys2(2, :))
+% hold off
+% legend('predict', 'real')
 
-[Ai,Bi,Ci,Di,Ki] = dx2abcdk(x,us,ys,f_opt,p_opt);
-%[Ai,Bi,Ci,Di,Ki] = dx2abcdk(x,us,ys,f,p,'stable'); % forces stability
-Dat = iddata(ys',us',n_opt);
-Mi = abcdk2idss(Dat,Ai,Bi,Ci,Di,Ki);
-set(Mi,'SSParameterization','Free','DisturbanceModel','Estimate','nk',zeros(1,2));
-Mp = pem(Dat,Mi);
-OLi = ss(Mi);   % prediction error method
-% OLi2 = Dy*OLi*inv(Du);   % Y=DY*YS U=DU*US
-OLp = ss(Mp);   % prediction error method optimization
-% OLp2 = Dy*OLp*inv(Du);   % Y=DY*YS U=DU*US
-OLi.InputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
-OLi.OutputName = {'z_e','y_e'};
-OLp.InputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
-OLp.OutputName = {'z_e','y_e'};
-
-% Variance-accounted-for (by Kalman filter)
-yest = predict(Mi,Dat);
-x0 = findstates(Mi,Dat);
-disp('VAF of identified system')
-vaf(ys,yest.y)
-
-yest = predict(Mp,Dat);
-x0 = findstates(Mp,Dat);
-disp('VAF of optimized system')
-vaf(ys,yest.y)
-
-% Frequency response
-[Ga,ws] = spa_avf(us,ys,1,25,[],[],'hamming');
-OLa = frd(Ga,ws);
-figure, bodemag(OLi,'c', OLp, 'g', OLa,'m');
-legend('PBSID-opt', 'PEM', 'SPA');   
-
-% Validation (Time domain)
-yi2 = lsim(OLi,us,t_train);
-figure()
-subplot(2,1,1)
-plot(yi2(:, 1))
-hold on
-plot(ys(1, :))
-hold off
-legend('predict', 'real')
-subplot(2,1,2)
-plot(yi2(:, 2))
-hold on
-plot(ys(2, :))
-hold off
-legend('predict', 'real')
-
-yi2 = lsim(OLi,us2,t_test);
-figure()
-subplot(2,1,1)
-plot(yi2(:, 1))
-hold on
-plot(ys2(1, :))
-hold off
-legend('predict', 'real')
-subplot(2,1,2)
-plot(yi2(:, 2))
-hold on
-plot(ys2(2, :))
-hold off
-legend('predict', 'real')
+%% PBSID-opt debug
+% n_opt = 9;
+% f_opt = 30;
+% p_opt = 30;
+% 
+% [S,x] = dordvarx(us,ys,f_opt,p_opt,'tikh','gcv');
+% % figure, semilogy(S,'x');
+% % title('Singular values')
+% x = dmodx(x,n_opt);
+% 
+% [Ai,Bi,Ci,Di,Ki] = dx2abcdk(x,us,ys,f_opt,p_opt);
+% OLi = ss(Ai,Bi,Ci,Di,1);   % prediction error method
+% OLi.InputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
+% OLi.OutputName = {'z_e','y_e'};
+% 
+% % Frequency response
+% [Ga,ws] = spa_avf(us,ys,1,25,[],[],'hamming');
+% OLa = frd(Ga,ws);
+% bodemag(OLi, Ga);
+% legend('PBSID-opt', 'SPA');   
+% 
+% % Validation (Time domain)
+% yi2 = lsim(OLi,us,t_train);
+% figure()
+% subplot(2,1,1)
+% plot(yi2(:, 1))
+% hold on
+% plot(ys(1, :))
+% hold off
+% legend('predict', 'real')
+% subplot(2,1,2)
+% plot(yi2(:, 2))
+% hold on
+% plot(ys(2, :))
+% hold off
+% legend('predict', 'real')
+% 
+% yi2 = lsim(OLi,us2,t_test);
+% figure()
+% subplot(2,1,1)
+% plot(yi2(:, 1))
+% hold on
+% plot(ys2(1, :))
+% hold off
+% legend('predict', 'real')
+% subplot(2,1,2)
+% plot(yi2(:, 2))
+% hold on
+% plot(ys2(2, :))
+% hold off
+% legend('predict', 'real')
