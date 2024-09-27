@@ -77,6 +77,7 @@ ys2 = y_test';  % 2*N
 z = tf('z', timeStep);
 G = tf(decoupled_sys.decouple_sys);
 delayed_sys = z^(-DeadtimeDelay) .* G;
+delayed_sys = ss(delayed_sys);
 
 %% Performance comparison 
 yi2 = lsim(tf(original_sys.OLi),us2,t_test); % orignal system

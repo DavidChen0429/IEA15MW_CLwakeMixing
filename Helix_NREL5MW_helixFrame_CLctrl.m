@@ -46,12 +46,9 @@ Pit3 = 'Pitch Angle Blade 3 [deg]';
 
 %% Load internal model
 buf_sys = load('ModelOrder4_decoupled.mat');
-sys = buf_sys.decouple_sys;
-G = tf(sys);        % transfer matrix 
-A = sys.A;
-B = sys.B;
-C = sys.C;
-D = sys.D;
+buf_sys2 = load('ModelOrder4_decoupled_delayed.mat');
+decoupled_sys = buf_sys.decouple_sys;
+decoupled_delayed_sys = buf_sys2.delayed_sys;
 
 %% Set Turbulent Wind
 U_inflow = 10;        % Inflow wind speed, same with the Q-blade setting
@@ -77,31 +74,40 @@ K = 2.24;
 N = 97;          % Gearbox ratio
 
 %% Defining Helix Control Setting
-% Str = 0.3;                          % Strouhal number
-% Helix_amplitude = 1;                % Helix amplitude                
-% Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
-% omega_e = Freq*2*pi;
-% 
-% t = linspace(1, simLen, simTime);
-% % sigTilt_e = Helix_amplitude * ones(simTime, 1);                 % basic
-% % sigYaw_e = 0 * ones(simTime, 1);   % basic
-% 
+Str = 0.3;                          % Strouhal number
+Helix_amplitude = 1;                % Helix amplitude                
+Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
+omega_e = Freq*2*pi;
+
+t = linspace(1, simLen, simTime);
+sigTilt_e = Helix_amplitude * ones(simTime, 1);  % basic
+sigYaw_e = 0 * ones(simTime, 1);                 % basic
+
 % % Step input to test basic properties
 % steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5)];
 % % steps = [0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 2*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10)];
 % sigTilt_e = 0 * ones(simTime, 1);                  % 0 * ones(simTime, 1)
 % sigYaw_e = steps;    % 0 * ones(simTime, 1)
-% 
-% % figure;
-% % plot(t, sigTilt_e);
-% % hold on
-% % plot(t, sigYaw_e);
-% % hold off
-% % legend('\beta_{tilt,e}', '\beta_{yaw,e}')
 
-%% Define Helix Reference Setting
-Tilt_r = 1 * ones(simTime, 1);
-Yaw_r = 0 * ones(simTime, 1);
+% figure;
+% plot(t, sigTilt_e);
+% hold on
+% plot(t, sigYaw_e);
+% hold off
+% legend('\beta_{tilt,e}', '\beta_{yaw,e}')
+
+%% Define CL Ctrl setting
+Ctrlers = [1 0 ; 0 1];      % very simple SISO controller
+Trigger = simTime / 2;      % Time that CL ctrl is triggered
+Tilt_r = 2 * ones(simTime, 1);
+Yaw_r = 1 * ones(simTime, 1);
+r = [Tilt_r Yaw_r];         % reference signal
+e = zeros(simTime, 2);      % error
+u = zeros(simTime, 2);      % control input
+y = zeros(simTime, 2);      % internal model output
+ym = zeros(simTime, 2);     % WT measurement
+ytilda = zeros(simTime, 2); % delayed sys output
+yc = zeros(simTime, 2);     % combined output
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat
@@ -162,34 +168,8 @@ for i = 1:1:simTime
     Pitch1 = calllib('QBladeDLL','getCustomData_at_num', Pit1, 0, 0);
     Pitch2 = calllib('QBladeDLL','getCustomData_at_num', Pit2, 0, 0);
     Pitch3 = calllib('QBladeDLL','getCustomData_at_num', Pit3, 0, 0);
-    
-    % Control
-    % Torque control to maintain optimal TSR of 9 
-    omega_g = omega*N;                      % rotor to generator
-    genTorque = K.*(omega_g*(2*pi/60))^2;
-
-    % Helix control
-    % 1. Get tilt and yaw signals
-    beta_tilt_e = sigTilt_e(i);
-    beta_yaw_e = sigYaw_e(i);
-    % 2. Inverse MBC 
-    invMBC = [1 cosd(Azimuth1) sind(Azimuth1);
-              1 cosd(Azimuth2) sind(Azimuth2);
-              1 cosd(Azimuth3) sind(Azimuth3)];
-    invR_helix = [cos(omega_e*t(i)) -sin(omega_e*t(i)); 
-                  sin(omega_e*t(i)) cos(omega_e*t(i))];
-    % 3. Blade pitch signal
-    betaTiltYaw = invR_helix * [beta_tilt_e; 
-                                beta_yaw_e];    
-    betaBlade_Helix = invMBC * [0; 
-                                betaTiltYaw(1); 
-                                betaTiltYaw(2)];    
-
-    % Send control signal to qblade
-    calllib('QBladeDLL','setControlVars_at_num',[genTorque 0 ...
-        betaBlade_Helix(1) betaBlade_Helix(2) betaBlade_Helix(3)],0)
-
-    % LiDAR data sampling (Ring) 
+        
+    % ==================== LiDAR data sampling (Ring) 
     windspeed = Circle_LiDAR_Parallel(LiDAR_x, LiDAR_y, LiDAR_z, D_NREL5MW, LiDAR_num_sample); 
     wakeCenter = HelixCenter(windspeed, U_inflow, D_NREL5MW);
     FF_helixCenter(i, :) = [wakeCenter(1) wakeCenter(2)]; % Z(tilt), Y(yaw)
@@ -214,6 +194,46 @@ for i = 1:1:simTime
     center_e = invR_helix * [centerZ; centerY];
     [HF_helixCenter_filtered(i, 1), filterState3] = filter(b_fir, 1, center_e(1), filterState3);
     [HF_helixCenter_filtered(i, 2), filterState4] = filter(b_fir, 1, center_e(2), filterState4);
+
+    % ====================  Control
+    % Torque control to maintain optimal TSR of 9 
+    omega_g = omega*N;                      % rotor to generator
+    genTorque = K.*(omega_g*(2*pi/60))^2;
+
+    % Wake mixing
+    if i < Trigger
+    % Normal Helix Control
+    % 1. Get tilt and yaw signals
+    beta_tilt_e = sigTilt_e(i);
+    beta_yaw_e = sigYaw_e(i);
+    % 2. Inverse MBC 
+    invMBC = [1 cosd(Azimuth1) sind(Azimuth1);
+              1 cosd(Azimuth2) sind(Azimuth2);
+              1 cosd(Azimuth3) sind(Azimuth3)];
+    invR_helix = [cos(omega_e*t(i)) -sin(omega_e*t(i)); 
+                  sin(omega_e*t(i)) cos(omega_e*t(i))];
+    % 3. Blade pitch signal
+    betaTiltYaw = invR_helix * [beta_tilt_e; 
+                                beta_yaw_e];    
+    betaBlade_Helix = invMBC * [0; 
+                                betaTiltYaw(1); 
+                                betaTiltYaw(2)];
+    % Send control signal to qblade
+    calllib('QBladeDLL','setControlVars_at_num',[genTorque 0 ...
+        betaBlade_Helix(1) betaBlade_Helix(2) betaBlade_Helix(3)],0)
+
+    else
+    % Activate CL control
+    % 1. Measure current wake center location & Get the error
+    ref = r(i, :);
+    ym_curr = [center_e(1) center_e(2)];
+    % 2. Get control input u based on error signal
+    % 3. Feed input to wind turbine and internal model
+    % 4. Get different output ym, ytilda, y
+    % 5. Adaptive filter & Combine different outpus for things 
+    end
+     
+     
 
     % Store values 
 %     omega_store(i,:) = omega;
