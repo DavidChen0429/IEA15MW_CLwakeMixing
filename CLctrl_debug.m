@@ -98,10 +98,10 @@ sigYaw_e = 0 * ones(simTime, 1);                 % basic
 
 %% Define CL Ctrl setting
 Ctrlers = [1 0 ; 0 1];      % very simple SISO controller
-Trigger = 1;      % Time that CL ctrl is triggered
-Tilt_r = 2 * ones(simTime, 1);
-Yaw_r = 1 * ones(simTime, 1);
-r = [Tilt_r Yaw_r];         % reference signal
+Trigger = simTime/2;      % Time that CL ctrl is triggered
+r = zeros(simTime, 2);      % reference signal
+r(Trigger:end, 1) = 1*ones(simTime+1-Trigger, 1);
+r(Trigger:end, 2) = 0*ones(simTime+1-Trigger, 1);
 e = zeros(simTime, 2);      % error
 u = zeros(simTime, 2);      % control input
 y = zeros(simTime, 2);      % internal model output
@@ -222,10 +222,20 @@ for i = 1:1:simTime
     genTorque = K.*(omega_g*(2*pi/60))^2;
 
     % II. Wake mixing
-    % Normal Helix Control
+    if i < Trigger
+        % Normal Helix Control
+        u(i, :) = [sigTilt_e(i) sigYaw_e(i)];
+    else
+        % Activate CL Control
+        % Working on !!!!!!! (Activate controller
+        e(i, :) = r(i, :) - yc(i-1, :);
+%         u(i, :) = e(i, :) * Ctrlers;
+        u(i, :) = [sigTilt_e(i) sigYaw_e(i)];
+    end
+
     % 1. Get tilt and yaw signals
-    beta_tilt_e = sigTilt_e(i);
-    beta_yaw_e = sigYaw_e(i);
+    beta_tilt_e = u(i, 1);
+    beta_yaw_e = u(i, 2);
     % 2. Inverse MBC & Blade pitch signal
     betaTiltYaw = invR_helix * [beta_tilt_e; 
                                 beta_yaw_e];    
@@ -235,8 +245,8 @@ for i = 1:1:simTime
     % Send control signal to qblade
     calllib('QBladeDLL','setControlVars_at_num',[genTorque 0 ...
         betaBlade_Helix(1) betaBlade_Helix(2) betaBlade_Helix(3)],0)
-
-    % Working on !!!!!!! (Activate controller
+    
+    % Building Smith Predictor
     % Internal Model
     u_curr = [beta_tilt_e beta_yaw_e];
     xM_curr = xM(i, :); % 1*4
@@ -258,9 +268,6 @@ for i = 1:1:simTime
     [ybuf_fir(i, :), filterState_adpFIR] = filter(SP_adpFIR, 1, bufy_error, filterState_adpFIR);
     % Combine output
     yc(i, :) = ybuf_fir(i, :) + y(i, :);
-    % Controller activate 
-    e(i, :) = r(i, :) - yc(i, :);
-    u(i, :) = e(i, :) * Ctrlers;
 
     % ==================== Store values 
 %     omega_store(i,:) = omega;
@@ -405,13 +412,28 @@ title('Model Percision Check')
 legend('y_{Delay1}','y_{Delay1}','y_{WTm1}','y_{WTm2}')
 
 figure
-plot(ybuf_fir)
-hold on 
-plot(e)
-plot(u)
+plot((1:length(e)) * timeStep, e(:, 1))
+hold on
+plot((1:length(e)) * timeStep, e(:, 2))
+plot((1:length(u)) * timeStep, u(:, 1))
+plot((1:length(u)) * timeStep, u(:, 2))
 yline(0, '--', 'LineWidth', 1)
 hold off
+xlabel('Time [s]')
+ylabel('Magnitude')
 title('Error check')
+legend('e_{z}','e_{y}','u_{z}','u_{y}')
+
+figure
+plot((1:length(ym)) * timeStep, ym(:, 1))
+hold on
+plot((1:length(ym)) * timeStep, ym(:, 2))
+plot((1:length(r)) * timeStep, r(:, 1), 'k--')
+plot((1:length(r)) * timeStep, r(:, 2), 'k--')
+yline(0, '--', 'LineWidth', 1)
+hold off
+title('Controller Performance Check')
+legend('y_{WTm1}','y_{WTm2}','r_z','r_y')
 
 % figure;
 % subplot(2, 2, 1)
