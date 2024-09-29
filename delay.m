@@ -3,8 +3,8 @@ close all
 addpath('.\Functions');
 
 %% Load model
-original_sys = load('ModelOrder4.mat');
-decoupled_sys = load('ModelOrder4_decoupled.mat');
+original_sys = load('Model\ModelOrder4.mat');
+decoupled_sys = load('Model\ModelOrder4_decoupled.mat');
 
 %% Basic system property
 eig(decoupled_sys.decouple_sys.A)
@@ -120,4 +120,4 @@ legend('tilt_{dcpl}','yaw_{dcpl}','tilt_{dly}','yaw_{dly}')
 title('Decouple Result -- Output')
 
 %% Save model
-% save('ModelOrder4_decoupled_delayed.mat', 'delayed_sys');
+% save('Model\ModelOrder4_decoupled_delayed.mat', 'delayed_sys');

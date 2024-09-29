@@ -29,7 +29,7 @@ calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime = 5000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 2000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 
@@ -98,7 +98,7 @@ sigYaw_e = 0 * ones(simTime, 1);                 % basic
 
 %% Define CL Ctrl setting
 Ctrlers = [1 0 ; 0 1];      % very simple SISO controller
-Trigger =100;      % Time that CL ctrl is triggered
+Trigger = 1;      % Time that CL ctrl is triggered
 Tilt_r = 2 * ones(simTime, 1);
 Yaw_r = 1 * ones(simTime, 1);
 r = [Tilt_r Yaw_r];         % reference signal
@@ -113,6 +113,10 @@ yc = zeros(simTime, 2);     % combined output
 % state space variables (add 1 due to the loop simulation)
 xM = zeros(simTime+1, size(decoupled_sys.A, 1));
 xMd = zeros(simTime+1, size(decoupled_delayed_sys.A, 1));
+
+% For testing
+ss_compensator = [-0.1408   -0.0972;
+                  -0.0961    0.1396];
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat
@@ -181,7 +185,14 @@ for i = 1:1:simTime
     Pitch1 = calllib('QBladeDLL','getCustomData_at_num', Pit1, 0, 0);
     Pitch2 = calllib('QBladeDLL','getCustomData_at_num', Pit2, 0, 0);
     Pitch3 = calllib('QBladeDLL','getCustomData_at_num', Pit3, 0, 0);
-        
+    
+    % Define transform matrix 
+    invMBC = [1 cosd(Azimuth1) sind(Azimuth1);
+              1 cosd(Azimuth2) sind(Azimuth2);
+              1 cosd(Azimuth3) sind(Azimuth3)];
+    invR_helix = [cos(omega_e*t(i)) -sin(omega_e*t(i)); 
+                  sin(omega_e*t(i)) cos(omega_e*t(i))];
+
     % ==================== LiDAR data sampling (Circle) 
     windspeed = Circle_LiDAR_Parallel(LiDAR_x, LiDAR_y, LiDAR_z, D_NREL5MW, LiDAR_num_sample); 
     wakeCenter = HelixCenter(windspeed, U_inflow, D_NREL5MW);
@@ -205,24 +216,17 @@ for i = 1:1:simTime
     [HF_helixCenter_filtered(i, 1), filterState3] = filter(b_fir, 1, center_e(1), filterState3);
     [HF_helixCenter_filtered(i, 2), filterState4] = filter(b_fir, 1, center_e(2), filterState4);
 
-    % ====================  Control
+    % ==================== Control
     % I. Torque control to maintain optimal TSR of 9 
     omega_g = omega*N;                      % rotor to generator
     genTorque = K.*(omega_g*(2*pi/60))^2;
 
     % II. Wake mixing
-    if i < Trigger
     % Normal Helix Control
     % 1. Get tilt and yaw signals
     beta_tilt_e = sigTilt_e(i);
     beta_yaw_e = sigYaw_e(i);
-    % 2. Inverse MBC 
-    invMBC = [1 cosd(Azimuth1) sind(Azimuth1);
-              1 cosd(Azimuth2) sind(Azimuth2);
-              1 cosd(Azimuth3) sind(Azimuth3)];
-    invR_helix = [cos(omega_e*t(i)) -sin(omega_e*t(i)); 
-                  sin(omega_e*t(i)) cos(omega_e*t(i))];
-    % 3. Blade pitch signal
+    % 2. Inverse MBC & Blade pitch signal
     betaTiltYaw = invR_helix * [beta_tilt_e; 
                                 beta_yaw_e];    
     betaBlade_Helix = invMBC * [0; 
@@ -232,69 +236,33 @@ for i = 1:1:simTime
     calllib('QBladeDLL','setControlVars_at_num',[genTorque 0 ...
         betaBlade_Helix(1) betaBlade_Helix(2) betaBlade_Helix(3)],0)
 
-    else
-    % Activate CL control
-    % 1. Get the error
-    r_curr = r(i, :);
-    yc_curr = yc(i, :);
-    e_curr = r_curr - yc_curr;
-
-    % 2. Get control input u based on error signal
-    u_curr = e_curr * Ctrlers;  % 1*2
-
-    % 3. Feed input to wind turbine and internal model
-    % Internal Model 
+    % Working on !!!!!!! (Activate controller
+    % Internal Model
+    u_curr = [beta_tilt_e beta_yaw_e];
     xM_curr = xM(i, :); % 1*4
     yM_curr = (decoupled_sys.C * xM_curr' + decoupled_sys.D * u_curr')'; % 1*2
     xM_next = (decoupled_sys.A * xM_curr' + decoupled_sys.B * u_curr')'; % 1*4
     xM(i+1, :) = xM_next;
+    y(i, :) = yM_curr;
     % Delayed Model 
     xMd_curr = xMd(i, :); % 1*n
     yMd_curr = (decoupled_delayed_sys.C * xMd_curr' + decoupled_delayed_sys.D * u_curr')'; % 1*2
     xMd_next = (decoupled_delayed_sys.A * xMd_curr' + decoupled_delayed_sys.B * u_curr')'; % 1*n
-    xMd(i+1, :) = xMd_next;
-    % Actual Wind Turbine
-    % 1). Get tilt and yaw signal
-    beta_tilt_e = u(1);
-    beta_yaw_e = u(2);
-    % 2). Inverse MBC 
-    invMBC = [1 cosd(Azimuth1) sind(Azimuth1);
-              1 cosd(Azimuth2) sind(Azimuth2);
-              1 cosd(Azimuth3) sind(Azimuth3)];
-    invR_helix = [cos(omega_e*t(i)) -sin(omega_e*t(i)); 
-                  sin(omega_e*t(i)) cos(omega_e*t(i))];
-    % 3). Blade pitch signal
-    betaTiltYaw = invR_helix * [beta_tilt_e; 
-                                beta_yaw_e];    
-    betaBlade_Helix = invMBC * [0; 
-                                betaTiltYaw(1); 
-                                betaTiltYaw(2)];
-    % Send control signal to qblade
-    calllib('QBladeDLL','setControlVars_at_num',[genTorque 0 ...
-        betaBlade_Helix(1) betaBlade_Helix(2) betaBlade_Helix(3)],0)
+    xMd(i+1, :) = xMd_next;  
+    ytilda(i, :) = yMd_curr;
+    % Wind turbine activation 
+    ym(i, :) = [HF_helixCenter_filtered(i, 1) HF_helixCenter_filtered(i, 2)] * ss_compensator;
     
-    % 4. Get different output ym, ytilda, y
-    y_curr = yM_curr; % 1*2
-    ytilda_curr = yMd_curr; % 1*2
-    ym_curr = [center_e(1) center_e(2)]; % 1*2  MEASUREMENT!!!!!!!!!
+    % Adaptive filter check
+    bufy_error = ym(i, :) - ytilda(i, :);
+    [ybuf_fir(i, :), filterState_adpFIR] = filter(SP_adpFIR, 1, bufy_error, filterState_adpFIR);
+    % Combine output
+    yc(i, :) = ybuf_fir(i, :) + y(i, :);
+    % Controller activate 
+    e(i, :) = r(i, :) - yc(i, :);
+    u(i, :) = e(i, :) * Ctrlers;
 
-    % 5. Adaptive filter & Combine outputs
-    buf_y_curr = ym_curr - ytilda_curr;
-    [ybuf_fir(i, 1), filterState_adpFIR] = filter(SP_adpFIR, 1, buf_y_curr, filterState_adpFIR);
-    yc_curr2 = ybuf_fir + y_curr;
-
-    % 6. Update variables array
-    xM(i+1, :) = xM_next;
-    xMd(i+1, :) = xMd_next;
-    yc(i+1, :) = yc_curr2;
-    y(i+1,:) = y_curr;              % Should it be i or i+1??????
-    ytilda(i+1,:) = ytilda_curr;
-
-    end
-     
-     
-
-    % Store values 
+    % ==================== Store values 
 %     omega_store(i,:) = omega;
 %     genTorqueQB_store(i,:) = genTorqueQB;
 %     genTorque_store(i,:) = genTorque;
@@ -374,37 +342,76 @@ toc
 
 figure;
 subplot(2, 2, 1)
-plot(FF_beta(:, 1));
+plot((1:length(FF_beta)) * timeStep, FF_beta(:, 1));
 hold on;
-plot(FF_beta(:, 2));
+plot((1:length(FF_beta)) * timeStep, FF_beta(:, 2));
 hold off;
+xlabel('Time [s]')
 title('\beta FF')
 legend('\beta_{tilt}', '\beta_{yaw}')
 subplot(2, 2, 3);
-plot(HF_beta(:, 1));
+plot((1:length(HF_beta)) * timeStep, HF_beta(:, 1));
 hold on;
-plot(HF_beta(: ,2));
+plot((1:length(HF_beta)) * timeStep, HF_beta(: ,2));
 hold off;
+xlabel('Time [s]')
 title('\beta_e HF')
 legend('\beta^e_{tilt}', '\beta^e_{yaw}')
 subplot(2, 2, 2)
-plot(FF_helixCenter(:, 1));
+plot((1:length(HF_beta)) * timeStep, FF_helixCenter(:, 1));
 hold on;
-plot(FF_helixCenter(:, 2));
-plot(FF_helixCenter_filtered(:, 1));
-plot(FF_helixCenter_filtered(:, 2));
+plot((1:length(HF_beta)) * timeStep, FF_helixCenter(:, 2));
+plot((1:length(HF_beta)) * timeStep, FF_helixCenter_filtered(:, 1));
+plot((1:length(HF_beta)) * timeStep, FF_helixCenter_filtered(:, 2));
 hold off;
+xlabel('Time [s]')
 title('Center FF')
 legend('z', 'y', 'z2', 'y2')
 subplot(2, 2, 4)
-plot(HF_helixCenter(:, 1));
+plot((1:length(HF_beta)) * timeStep, HF_helixCenter(:, 1));
 hold on;
-plot(HF_helixCenter(:, 2));
-plot(HF_helixCenter_filtered(:, 1));
-plot(HF_helixCenter_filtered(:, 2));
+plot((1:length(HF_beta)) * timeStep, HF_helixCenter(:, 2));
+plot((1:length(HF_beta)) * timeStep, HF_helixCenter_filtered(:, 1));
+plot((1:length(HF_beta)) * timeStep, HF_helixCenter_filtered(:, 2));
 hold off;
+xlabel('Time [s]')
 title('Center HF')
 legend('z_e', 'y_e', 'z_e2', 'y_e2')
+
+figure
+plot((1:length(y)) * timeStep, y(:, 1))
+hold on
+plot((1:length(y)) * timeStep, y(:, 2))
+plot((1:length(y)) * timeStep, ytilda(:, 1))
+plot((1:length(y)) * timeStep, ytilda(:, 2))
+yline(0, '--', 'LineWidth', 1)
+hold off;
+xlabel('Time [s]')
+ylabel('Magnitude')
+title('Model Propogation Check')
+legend('y_{IM1}','y_{IM2}','y_{Delay1}','y_{Delay1}')
+
+figure
+plot((1:length(y)) * timeStep, ytilda(:, 1))
+hold on
+plot((1:length(y)) * timeStep, ytilda(:, 2))
+plot((1:length(ym)) * timeStep, ym(:, 1))
+plot((1:length(ym)) * timeStep, ym(:, 2))
+yline(0, '--', 'LineWidth', 1)
+hold off;
+xlabel('Time [s]')
+ylabel('Magnitude')
+title('Model Percision Check')
+legend('y_{Delay1}','y_{Delay1}','y_{WTm1}','y_{WTm2}')
+
+figure
+plot(ybuf_fir)
+hold on 
+plot(e)
+plot(u)
+yline(0, '--', 'LineWidth', 1)
+hold off
+title('Error check')
 
 % figure;
 % subplot(2, 2, 1)

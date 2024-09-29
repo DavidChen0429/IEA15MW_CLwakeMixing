@@ -3,7 +3,7 @@ close all
 addpath('.\Functions');
 
 %% Load model
-buf_sys = load('ModelOrder4.mat');
+buf_sys = load('Model\ModelOrder4.mat');
 A = buf_sys.OLi.A;
 B = buf_sys.OLi.B;
 C = buf_sys.OLi.C;
@@ -100,10 +100,15 @@ subplot(2, 1, 2)
 plot(yi2)
 hold on
 plot(yi2d)
+plot(yi2 * ss_compensator)
 yline(0, '--', 'LineWidth', 1)
 hold off
-legend('tilt','yaw','tilt_{dcpl}','yaw_{dcpl}')
+legend('tilt','yaw','tilt_{dcpl}','yaw_{dcpl}','tilt_{dcpl2}','yaw_{dcpl2}')
 title('Decouple Result -- Output')
+
+% ss_compensator = [-0.1408   -0.0972;
+%                   -0.0961    0.1396];
+
 
 %% Save model
 % save('ModelOrder4_decoupled.mat', 'decouple_sys');
