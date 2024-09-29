@@ -98,7 +98,7 @@ sigYaw_e = 0 * ones(simTime, 1);                 % basic
 
 %% Define CL Ctrl setting
 Ctrlers = [1 0 ; 0 1];      % very simple SISO controller
-Trigger = simTime / 2;      % Time that CL ctrl is triggered
+Trigger =100;      % Time that CL ctrl is triggered
 Tilt_r = 2 * ones(simTime, 1);
 Yaw_r = 1 * ones(simTime, 1);
 r = [Tilt_r Yaw_r];         % reference signal
@@ -107,7 +107,12 @@ u = zeros(simTime, 2);      % control input
 y = zeros(simTime, 2);      % internal model output
 ym = zeros(simTime, 2);     % WT measurement
 ytilda = zeros(simTime, 2); % delayed sys output
+ybuf_fir = zeros(simTime, 2);
 yc = zeros(simTime, 2);     % combined output
+
+% state space variables (add 1 due to the loop simulation)
+xM = zeros(simTime+1, size(decoupled_sys.A, 1));
+xMd = zeros(simTime+1, size(decoupled_delayed_sys.A, 1));
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat
@@ -151,6 +156,14 @@ filterState2 = zeros(n, 1);
 filterState3 = zeros(n, 1);
 filterState4 = zeros(n, 1);
 
+%% Adaptive filter for Smith Predictor
+filter_order_adpFIR = 10;
+DeadtimeDelay = 110;
+omega_adpFIR = pi / (8 * DeadtimeDelay);
+Wn_adpFIR = omega_adpFIR / (Fs / 2);
+SP_adpFIR = fir1(filter_order_adpFIR, Wn_adpFIR, 'low');
+filterState_adpFIR = zeros(filter_order_adpFIR, 1);
+
 %% Simulation
 % start simulation
 tic
@@ -169,16 +182,14 @@ for i = 1:1:simTime
     Pitch2 = calllib('QBladeDLL','getCustomData_at_num', Pit2, 0, 0);
     Pitch3 = calllib('QBladeDLL','getCustomData_at_num', Pit3, 0, 0);
         
-    % ==================== LiDAR data sampling (Ring) 
+    % ==================== LiDAR data sampling (Circle) 
     windspeed = Circle_LiDAR_Parallel(LiDAR_x, LiDAR_y, LiDAR_z, D_NREL5MW, LiDAR_num_sample); 
     wakeCenter = HelixCenter(windspeed, U_inflow, D_NREL5MW);
     FF_helixCenter(i, :) = [wakeCenter(1) wakeCenter(2)]; % Z(tilt), Y(yaw)
-
     % Get the helix center from the helix frame
     % LPF the single element
     [FF_helixCenter_filtered(i, 1), filterState1] = filter(b_fir, 1, FF_helixCenter(i, 1), filterState1);
     [FF_helixCenter_filtered(i, 2), filterState2] = filter(b_fir, 1, FF_helixCenter(i, 2), filterState2);
-
     % Get the mean
     meanZ = Hub_NREL5MW;
     meanY = 0;
@@ -186,7 +197,6 @@ for i = 1:1:simTime
         meanZ = mean(FF_helixCenter(i-ws_centering:i, 1));
         meanY = mean(FF_helixCenter(i-ws_centering:i, 2));
     end
-    
     % Low pass filter
     % Centering
     centerZ = wakeCenter(1) - meanZ;  % 91.9411
@@ -196,11 +206,11 @@ for i = 1:1:simTime
     [HF_helixCenter_filtered(i, 2), filterState4] = filter(b_fir, 1, center_e(2), filterState4);
 
     % ====================  Control
-    % Torque control to maintain optimal TSR of 9 
+    % I. Torque control to maintain optimal TSR of 9 
     omega_g = omega*N;                      % rotor to generator
     genTorque = K.*(omega_g*(2*pi/60))^2;
 
-    % Wake mixing
+    % II. Wake mixing
     if i < Trigger
     % Normal Helix Control
     % 1. Get tilt and yaw signals
@@ -224,13 +234,62 @@ for i = 1:1:simTime
 
     else
     % Activate CL control
-    % 1. Measure current wake center location & Get the error
-    ref = r(i, :);
-    ym_curr = [center_e(1) center_e(2)];
+    % 1. Get the error
+    r_curr = r(i, :);
+    yc_curr = yc(i, :);
+    e_curr = r_curr - yc_curr;
+
     % 2. Get control input u based on error signal
+    u_curr = e_curr * Ctrlers;  % 1*2
+
     % 3. Feed input to wind turbine and internal model
+    % Internal Model 
+    xM_curr = xM(i, :); % 1*4
+    yM_curr = (decoupled_sys.C * xM_curr' + decoupled_sys.D * u_curr')'; % 1*2
+    xM_next = (decoupled_sys.A * xM_curr' + decoupled_sys.B * u_curr')'; % 1*4
+    xM(i+1, :) = xM_next;
+    % Delayed Model 
+    xMd_curr = xMd(i, :); % 1*n
+    yMd_curr = (decoupled_delayed_sys.C * xM_curr' + decoupled_delayed_sys.D * u_curr')'; % 1*2
+    xMd_next = (decoupled_delayed_sys.A * xM_curr' + decoupled_delayed_sys.B * u_curr')'; % 1*n
+    xMd(i+1, :) = xMd_next;
+    % Actual Wind Turbine
+    % 1). Get tilt and yaw signal
+    beta_tilt_e = u(1);
+    beta_yaw_e = u(2);
+    % 2). Inverse MBC 
+    invMBC = [1 cosd(Azimuth1) sind(Azimuth1);
+              1 cosd(Azimuth2) sind(Azimuth2);
+              1 cosd(Azimuth3) sind(Azimuth3)];
+    invR_helix = [cos(omega_e*t(i)) -sin(omega_e*t(i)); 
+                  sin(omega_e*t(i)) cos(omega_e*t(i))];
+    % 3). Blade pitch signal
+    betaTiltYaw = invR_helix * [beta_tilt_e; 
+                                beta_yaw_e];    
+    betaBlade_Helix = invMBC * [0; 
+                                betaTiltYaw(1); 
+                                betaTiltYaw(2)];
+    % Send control signal to qblade
+    calllib('QBladeDLL','setControlVars_at_num',[genTorque 0 ...
+        betaBlade_Helix(1) betaBlade_Helix(2) betaBlade_Helix(3)],0)
+    
     % 4. Get different output ym, ytilda, y
-    % 5. Adaptive filter & Combine different outpus for things 
+    y_curr = yM_curr; % 1*2
+    ytilda_curr = yMd_curr; % 1*2
+    ym_curr = [center_e(1) center_e(2)]; % 1*2  MEASUREMENT!!!!!!!!!
+
+    % 5. Adaptive filter & Combine outputs
+    buf_y_curr = ym_curr - ytilda_curr;
+    [ybuf_fir(i, 1), filterState_adpFIR] = filter(SP_adpFIR, 1, buf_y_curr, filterState_adpFIR);
+    yc_curr2 = ybuf_fir + y_curr;
+
+    % 6. Update variables array
+    xM(i+1, :) = xM_next;
+    xMd(i+1, :) = xMd_next;
+    yc(i+1, :) = yc_curr2;
+    y(i+1,:) = y_curr;              % Should it be i or i+1??????
+    ytilda(i+1,:) = ytilda_curr;
+
     end
      
      
