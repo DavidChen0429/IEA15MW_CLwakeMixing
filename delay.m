@@ -14,7 +14,7 @@ rank(obsv(decoupled_sys.decouple_sys.A, decoupled_sys.decouple_sys.C))
 
 %% Load data
 % trainData = 'train_120min_1bw_noise2.mat';       % train set
-testData = 'stepResponse3.mat';                % test set
+testData = 'stepResponse2.mat';                % test set
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 % IDEdata_train = load([turbineName caseName trainData]);
@@ -79,6 +79,10 @@ G = tf(decoupled_sys.decouple_sys);
 delayed_sys = z^(-DeadtimeDelay) .* G;
 delayed_sys = ss(delayed_sys);
 
+G2 = tf(original_sys.OLi);
+delayed_sys_original = z^(-DeadtimeDelay) .* G2;
+delayed_sys_original = ss(delayed_sys_original);
+
 %% Performance comparison 
 yi2 = lsim(tf(original_sys.OLi),us2,t_test); % orignal system
 yi2d = lsim(tf(decoupled_sys.decouple_sys),us2,t_test); % ss decouple 
@@ -121,3 +125,4 @@ title('Decouple Result -- Output')
 
 %% Save model
 % save('Model\ModelOrder4_decoupled_delayed.mat', 'delayed_sys');
+% save('Model\ModelOrder4_delayed.mat', 'delayed_sys_original');

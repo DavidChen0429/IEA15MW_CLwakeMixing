@@ -29,7 +29,7 @@ calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime = 2000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 3000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 
@@ -46,9 +46,11 @@ Pit3 = 'Pitch Angle Blade 3 [deg]';
 
 %% Load internal model
 buf_sys = load('Model\ModelOrder4_decoupled.mat');
-buf_sys2 = load('Model\ModelOrder4_decoupled_delayed.mat');
+% buf_sys2 = load('Model\ModelOrder4_decoupled_delayed.mat');
+buf_sys2 = load('Model\ModelOrder4_delayed.mat');
 decoupled_sys = buf_sys.decouple_sys;
-decoupled_delayed_sys = buf_sys2.delayed_sys;
+% decoupled_delayed_sys = buf_sys2.delayed_sys;
+decoupled_delayed_sys = buf_sys2.delayed_sys_original;
 
 %% Set Turbulent Wind
 U_inflow = 10;        % Inflow wind speed, same with the Q-blade setting
@@ -80,14 +82,14 @@ Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
 omega_e = Freq*2*pi;
 
 t = linspace(1, simLen, simTime);
-sigTilt_e = Helix_amplitude * ones(simTime, 1);  % basic
-sigYaw_e = 0 * ones(simTime, 1);                 % basic
+% sigTilt_e = Helix_amplitude * ones(simTime, 1);  % basic
+% sigYaw_e = 0 * ones(simTime, 1);                 % basic
 
 % % Step input to test basic properties
-% steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5)];
-% % steps = [0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 2*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10)];
-% sigTilt_e = 0 * ones(simTime, 1);                  % 0 * ones(simTime, 1)
-% sigYaw_e = steps;    % 0 * ones(simTime, 1)
+steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5)];
+% steps = [0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 2*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10)];
+sigTilt_e = 0 * ones(simTime, 1);                  % 0 * ones(simTime, 1)
+sigYaw_e = steps;    % 0 * ones(simTime, 1)
 
 % figure;
 % plot(t, sigTilt_e);
@@ -97,10 +99,9 @@ sigYaw_e = 0 * ones(simTime, 1);                 % basic
 % legend('\beta_{tilt,e}', '\beta_{yaw,e}')
 
 %% Define CL Ctrl setting
-Ctrlers = [1 0 ; 0 1];      % very simple SISO controller
 Trigger = simTime/2;      % Time that CL ctrl is triggered
 r = zeros(simTime, 2);      % reference signal
-r(Trigger:end, 1) = 1*ones(simTime+1-Trigger, 1);
+r(Trigger:end, 1) = 5*ones(simTime+1-Trigger, 1);
 r(Trigger:end, 2) = 0*ones(simTime+1-Trigger, 1);
 e = zeros(simTime, 2);      % error
 u = zeros(simTime, 2);      % control input
@@ -108,6 +109,7 @@ y = zeros(simTime, 2);      % internal model output
 ym = zeros(simTime, 2);     % WT measurement
 ytilda = zeros(simTime, 2); % delayed sys output
 ybuf_fir = zeros(simTime, 2);
+bufy_error = zeros(simTime, 2);
 yc = zeros(simTime, 2);     % combined output
 
 % state space variables (add 1 due to the loop simulation)
@@ -115,8 +117,15 @@ xM = zeros(simTime+1, size(decoupled_sys.A, 1));
 xMd = zeros(simTime+1, size(decoupled_delayed_sys.A, 1));
 
 % For testing
-ss_compensator = [-0.1408   -0.0972;
-                  -0.0961    0.1396];
+ss_compensator = [-0.7039   -0.4862;
+                  -0.4806    0.6978];
+
+% Controller Design
+Kp = 0.5;
+Ki = 0;
+integral_term = 0;
+Ctrlers = [Kp 0 ; 
+           0 Kp];      % very simple SISO controller
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat
@@ -161,12 +170,14 @@ filterState3 = zeros(n, 1);
 filterState4 = zeros(n, 1);
 
 %% Adaptive filter for Smith Predictor
-filter_order_adpFIR = 10;
+filter_order_adpFIR = 3;
 DeadtimeDelay = 110;
 omega_adpFIR = pi / (8 * DeadtimeDelay);
 Wn_adpFIR = omega_adpFIR / (Fs / 2);
 SP_adpFIR = fir1(filter_order_adpFIR, Wn_adpFIR, 'low');
-filterState_adpFIR = zeros(filter_order_adpFIR, 1);
+filterState_adpFIR1 = zeros(filter_order_adpFIR, 1);
+filterState_adpFIR2 = zeros(filter_order_adpFIR, 1);
+% freqz(SP_adpFIR, 1, 1024, Fs);
 
 %% Simulation
 % start simulation
@@ -229,8 +240,9 @@ for i = 1:1:simTime
         % Activate CL Control
         % Working on !!!!!!! (Activate controller
         e(i, :) = r(i, :) - yc(i-1, :);
-%         u(i, :) = e(i, :) * Ctrlers;
+%         u(i, :) = u(i-1, :) + e(i, :) * Ctrlers;
         u(i, :) = [sigTilt_e(i) sigYaw_e(i)];
+%         u(i, :) = r(i, :) - y(i-1, :);
     end
 
     % 1. Get tilt and yaw signals
@@ -261,11 +273,13 @@ for i = 1:1:simTime
     xMd(i+1, :) = xMd_next;  
     ytilda(i, :) = yMd_curr;
     % Wind turbine activation 
-    ym(i, :) = [HF_helixCenter_filtered(i, 1) HF_helixCenter_filtered(i, 2)] * ss_compensator;
-    
+%     ym(i, :) = [HF_helixCenter_filtered(i, 1) HF_helixCenter_filtered(i, 2)] * ss_compensator;
+    ym(i, :) = [HF_helixCenter_filtered(i, 1) HF_helixCenter_filtered(i, 2)];
+
     % Adaptive filter check
-    bufy_error = ym(i, :) - ytilda(i, :);
-    [ybuf_fir(i, :), filterState_adpFIR] = filter(SP_adpFIR, 1, bufy_error, filterState_adpFIR);
+    bufy_error(i, :) = ym(i, :) - ytilda(i, :);
+    [ybuf_fir(i, 1), filterState_adpFIR1] = filter(SP_adpFIR, 1, bufy_error(i, 1), filterState_adpFIR1);
+    [ybuf_fir(i, 2), filterState_adpFIR2] = filter(SP_adpFIR, 1, bufy_error(i, 2), filterState_adpFIR2);
     % Combine output
     yc(i, :) = ybuf_fir(i, :) + y(i, :);
 
@@ -411,18 +425,19 @@ ylabel('Magnitude')
 title('Model Percision Check')
 legend('y_{Delay1}','y_{Delay1}','y_{WTm1}','y_{WTm2}')
 
+% Check errors
 figure
-plot((1:length(e)) * timeStep, e(:, 1))
+plot((1:length(e)) * timeStep, r(:, 1)-yc(:, 1),'b')
 hold on
-plot((1:length(e)) * timeStep, e(:, 2))
-plot((1:length(u)) * timeStep, u(:, 1))
-plot((1:length(u)) * timeStep, u(:, 2))
+plot((1:length(e)) * timeStep, r(:, 2)-yc(:, 2),'r')
+plot((1:length(u)) * timeStep, r(:, 1)-y(:, 1),'b--')
+plot((1:length(u)) * timeStep, r(:, 2)-y(:, 2),'r--')
 yline(0, '--', 'LineWidth', 1)
 hold off
 xlabel('Time [s]')
 ylabel('Magnitude')
 title('Error check')
-legend('e_{z}','e_{y}','u_{z}','u_{y}')
+legend('e_{1z}','e_{1y}','e_{2z}','e_{2y}')
 
 figure
 plot((1:length(ym)) * timeStep, ym(:, 1))
@@ -434,6 +449,30 @@ yline(0, '--', 'LineWidth', 1)
 hold off
 title('Controller Performance Check')
 legend('y_{WTm1}','y_{WTm2}','r_z','r_y')
+
+% Adaptive filter check
+figure
+plot((1:length(bufy_error)) * timeStep, bufy_error(:, 1))
+hold on
+plot((1:length(bufy_error)) * timeStep, bufy_error(:, 2))
+plot((1:length(ybuf_fir)) * timeStep, ybuf_fir(:, 1))
+plot((1:length(ybuf_fir)) * timeStep, ybuf_fir(:, 2))
+yline(0, '--', 'LineWidth', 1)
+hold off
+title('Adaptive Filter Check')
+legend('preFir_1','preFir_1','aftFir1','aftFir2')
+
+% See which output is dominate
+figure
+plot((1:length(y)) * timeStep, yc(:, 1), 'r')
+hold on
+plot((1:length(y)) * timeStep, yc(:, 2), 'b')
+plot((1:length(y)) * timeStep, y(:, 1), 'k--')
+plot((1:length(y)) * timeStep, y(:, 2), 'r--')
+yline(0, '--', 'LineWidth', 1)
+hold off
+title('Ouput Component Check')
+legend('y_{c1}','y_{c2}','y_{1}','y_{2}')
 
 % figure;
 % subplot(2, 2, 1)
