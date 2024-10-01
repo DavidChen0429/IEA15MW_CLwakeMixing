@@ -80,6 +80,7 @@ Str = 0.3;                          % Strouhal number
 Helix_amplitude = 1;                % Helix amplitude                
 Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
 omega_e = Freq*2*pi;
+AzimuthOffset = -35; % -35 is the optimal
 
 t = linspace(1, simLen, simTime);
 % sigTilt_e = Helix_amplitude * ones(simTime, 1);  % basic
@@ -198,9 +199,12 @@ for i = 1:1:simTime
     Pitch3 = calllib('QBladeDLL','getCustomData_at_num', Pit3, 0, 0);
     
     % Define transform matrix 
-    invMBC = [1 cosd(Azimuth1) sind(Azimuth1);
-              1 cosd(Azimuth2) sind(Azimuth2);
-              1 cosd(Azimuth3) sind(Azimuth3)];
+%     invMBC = [1 cosd(Azimuth1) sind(Azimuth1);
+%               1 cosd(Azimuth2) sind(Azimuth2);
+%               1 cosd(Azimuth3) sind(Azimuth3)];
+    invMBC = [1 cosd(Azimuth1+AzimuthOffset) sind(Azimuth1+AzimuthOffset);
+              1 cosd(Azimuth2+AzimuthOffset) sind(Azimuth2+AzimuthOffset);
+              1 cosd(Azimuth3+AzimuthOffset) sind(Azimuth3+AzimuthOffset)];
     invR_helix = [cos(omega_e*t(i)) -sin(omega_e*t(i)); 
                   sin(omega_e*t(i)) cos(omega_e*t(i))];
 

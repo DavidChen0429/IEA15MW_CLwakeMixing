@@ -92,26 +92,19 @@ figure;
 bode(sys);
 title('Bode Diagram of Open-Loop System')
 
-figure
-margin(G(1, 1));
-figure
-margin(G(1, 2));
-figure
-margin(G(2, 1));
-figure
-margin(G(2, 2));
-
 %% PID Controller Design
 % func: pidtune
-% C11 = pidtune(G(1,1), 'PI');
-% C22 = pidtune(G(2,2), 'PI');
-C11 = pid(1,0,0,0,timeStep);
-C22 = pid(1,0,0,0,timeStep);
-C_mimo = [C11, 0;
-          0, C22];
+C11 = pidtune(G(1,1), 'PI');
+C22 = pidtune(G(2,2), 'PI');
+% C12 = pidtune(G(1,2), 'PI');
+% C21 = pidtune(G(2,1), 'PI');
+C12 = 0;
+C21 = 0;
+C_mimo = [C11, C12;
+          C21, C22];
 
 closed_loop_sys = feedback(C_mimo * G, eye(2));
-t = 0:timeStep:10;  % Time vector for simulation
+t = 0:timeStep:200;  % Time vector for simulation
 step(closed_loop_sys, t);
 title('Closed-Loop Response with Diagonal MIMO PID Controller');
 grid on;

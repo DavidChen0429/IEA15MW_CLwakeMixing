@@ -3,8 +3,8 @@ close all
 addpath('.\Functions');
 
 %% Get Training data and Testing data
-trainData = 'train_120min_1bw_noise2.mat';       % train set
-testData = 'stepResponse3.mat';                % test set
+trainData = 'train_120min_1bw_noise3%_AzimuthOffset.mat';       % train set
+testData = 'stepResponse_tiltOnly_AzimuthOffset.mat';                % test set
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 IDEdata_train = load([turbineName caseName trainData]);
@@ -50,32 +50,32 @@ us2 = u_test';  % 2*N
 ys2 = y_test';  % 2*N
 
 %% Power Spectrum Density
-Ts_prbn = timeStep;
-[M1,F1] = pwelch(us(1, :),[],[],[],1/Ts_prbn);
-[M2,F2] = pwelch(us(2, :),[],[],[],1/Ts_prbn);
-figure
-semilogx(F1,mag2db(M1),'k','LineWidth',1)
-hold on
-semilogx(F2,mag2db(M2),'r','LineWidth',1)
-yline(0, '--', 'LineWidth', 1)
-hold off
-xlabel('Frequency [Hz]');
-ylabel('Amplitude [dB]');
-legend('\beta^e_{tilt}', '\beta^e_{yaw}')
-title('Input PSD')
-
-[M1,F1] = pwelch(ys(1, :),[],[],[],1/Ts_prbn);
-[M2,F2] = pwelch(ys(2, :),[],[],[],1/Ts_prbn);
-figure
-semilogx(F1,mag2db(M1),'k','LineWidth',1)
-hold on
-semilogx(F2,mag2db(M2),'r','LineWidth',1)
-yline(0, '--', 'LineWidth', 1)
-hold off
-xlabel('Frequency [Hz]');
-ylabel('Amplitude [dB]');
-legend('z_f', 'y_f')
-title('Output PSD')
+% Ts_prbn = timeStep;
+% [M1,F1] = pwelch(us(1, :),[],[],[],1/Ts_prbn);
+% [M2,F2] = pwelch(us(2, :),[],[],[],1/Ts_prbn);
+% figure
+% semilogx(F1,mag2db(M1),'k','LineWidth',1)
+% hold on
+% semilogx(F2,mag2db(M2),'r','LineWidth',1)
+% yline(0, '--', 'LineWidth', 1)
+% hold off
+% xlabel('Frequency [Hz]');
+% ylabel('Amplitude [dB]');
+% legend('\beta^e_{tilt}', '\beta^e_{yaw}')
+% title('Input PSD')
+% 
+% [M1,F1] = pwelch(ys(1, :),[],[],[],1/Ts_prbn);
+% [M2,F2] = pwelch(ys(2, :),[],[],[],1/Ts_prbn);
+% figure
+% semilogx(F1,mag2db(M1),'k','LineWidth',1)
+% hold on
+% semilogx(F2,mag2db(M2),'r','LineWidth',1)
+% yline(0, '--', 'LineWidth', 1)
+% hold off
+% xlabel('Frequency [Hz]');
+% ylabel('Amplitude [dB]');
+% legend('z_f', 'y_f')
+% title('Output PSD')
 
 %% PBSID-varx   
 n_varx = 4; % 20 9 4 
@@ -113,46 +113,50 @@ vaf(y_test, yi_test)
 yi2 = lsim(OLi,us,t_train); % training set
 figure()
 subplot(2,2,1)
-plot(yi2(:, 1))
+plot((1:length(yi2)) * timeStep, yi2(:, 1))
 hold on
-plot(ys(1, :))
+plot((1:length(yi2)) * timeStep, ys(1, :))
+yline(0, '--', 'LineWidth', 1)
 hold off
 legend('predict', 'real')
-xlabel('Time steps')
+xlabel('Time [s]')
 ylabel('z^e')
 title('Training Set z^e')
 subplot(2,2,3)
-plot(yi2(:, 2))
+plot((1:length(yi2)) * timeStep, yi2(:, 2))
 hold on
-plot(ys(2, :))
+plot((1:length(yi2)) * timeStep, ys(2, :))
+yline(0, '--', 'LineWidth', 1)
 hold off
 legend('predict', 'real')
-xlabel('Time steps')
+xlabel('Time [s]')
 ylabel('y^e')
 title('Training Set y^e')
 
 yi2 = lsim(OLi,us2,t_test); % testing set
 subplot(2,2,2)
-plot(yi2(:, 1))
+plot((1:length(yi2)) * timeStep, yi2(:, 1))
 hold on
-plot(ys2(1, :))
+plot((1:length(yi2)) * timeStep, ys2(1, :))
+yline(0, '--', 'LineWidth', 1)
 hold off
 legend('predict', 'real')
-xlabel('Time steps')
+xlabel('Time [s]')
 ylabel('z^e')
 title('Testing Set z^e')
 subplot(2,2,4)
-plot(yi2(:, 2))
+plot((1:length(yi2)) * timeStep, yi2(:, 2))
 hold on
-plot(ys2(2, :))
+plot((1:length(yi2)) * timeStep, ys2(2, :))
+yline(0, '--', 'LineWidth', 1)
 hold off
 legend('predict', 'real')
-xlabel('Time steps')
+xlabel('Time [s]')
 ylabel('y^e')
 title('Testing Set y^e')
 
 %% save model 
-% save('Model/ModelOrder20.mat', 'OLi');
+% save('Model/ModelOrder4.mat', 'OLi');
 
 %% PBSID-opt
 % n_opt = 10;
