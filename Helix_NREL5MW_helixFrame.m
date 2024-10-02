@@ -29,7 +29,7 @@ calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime = 12000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 10000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 
@@ -80,9 +80,9 @@ t = linspace(1, simLen, simTime);
 
 % Step input to test basic properties
 % steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5)];
-steps = [0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 2*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10)];
+steps = [0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -Helix_amplitude*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 2*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10)];
 sigTilt_e = steps;                  % 0 * ones(simTime, 1)
-sigYaw_e = steps;                   % 0 * ones(simTime, 1)
+sigYaw_e = 0 * ones(simTime, 1);                   % 0 * ones(simTime, 1)
 
 % figure;
 % plot(t, sigTilt_e);
@@ -232,12 +232,12 @@ calllib('QBladeDLL','closeInstance')
 %                                       'HF_helixCenter_filtered', ...
 %                                       'FF_beta', ...
 %                                       'HF_beta');
-save([turbineName caseName fileName], 'FF_helixCenter', ...
-                                      'FF_helixCenter_filtered', ...
-                                      'HF_helixCenter', ...
-                                      'HF_helixCenter_filtered', ...
-                                      'FF_beta', ...
-                                      'HF_beta');
+% save([turbineName caseName fileName], 'FF_helixCenter', ...
+%                                       'FF_helixCenter_filtered', ...
+%                                       'HF_helixCenter', ...
+%                                       'HF_helixCenter_filtered', ...
+%                                       'FF_beta', ...
+%                                       'HF_beta');
 toc 
 
 %% Visualization
@@ -286,40 +286,47 @@ toc
 
 figure;
 subplot(2, 2, 1)
-plot(FF_beta(:, 1));
+plot((1:length(FF_beta)) * timeStep, FF_beta(:, 1));
 hold on;
-plot(FF_beta(:, 2));
+plot((1:length(FF_beta)) * timeStep, FF_beta(:, 2));
+yline(0, '--', 'LineWidth', 1)
 hold off;
+xlabel('Time [s]')
 title('\beta FF')
 legend('\beta_{tilt}', '\beta_{yaw}')
 subplot(2, 2, 3);
-plot(HF_beta(:, 1));
+plot((1:length(FF_beta)) * timeStep, HF_beta(:, 1));
 hold on;
-plot(HF_beta(: ,2));
+plot((1:length(FF_beta)) * timeStep, HF_beta(: ,2));
+yline(0, '--', 'LineWidth', 1)
 hold off;
+xlabel('Time [s]')
 title('\beta_e HF')
 legend('\beta^e_{tilt}', '\beta^e_{yaw}')
 subplot(2, 2, 2)
-plot(FF_helixCenter(:, 1));
+plot((1:length(FF_beta)) * timeStep, FF_helixCenter(:, 1));
 hold on;
-plot(FF_helixCenter(:, 2));
-plot(FF_helixCenter_filtered(:, 1));
-plot(FF_helixCenter_filtered(:, 2));
+plot((1:length(FF_beta)) * timeStep, FF_helixCenter(:, 2));
+plot((1:length(FF_beta)) * timeStep, FF_helixCenter_filtered(:, 1));
+plot((1:length(FF_beta)) * timeStep, FF_helixCenter_filtered(:, 2));
+yline(0, '--', 'LineWidth', 1)
 hold off;
+xlabel('Time [s]')
 title('Center FF')
 legend('z', 'y', 'z2', 'y2')
 subplot(2, 2, 4)
-% plot(HF_helixCenter(:, 1));
-% hold on;
-% plot(HF_helixCenter(:, 2));
-plot(HF_helixCenter_filtered(:, 1));
+plot((1:length(FF_beta)) * timeStep, HF_helixCenter(:, 1));
+hold on;
+plot((1:length(FF_beta)) * timeStep, HF_helixCenter(:, 2));
+plot((1:length(FF_beta)) * timeStep, HF_helixCenter_filtered(:, 1));
 hold on
-plot(HF_helixCenter_filtered(:, 2));
+plot((1:length(FF_beta)) * timeStep, HF_helixCenter_filtered(:, 2));
 yline(0, '--', 'LineWidth', 1)
 hold off;
+xlabel('Time [s]')
 title('Center HF')
-% legend('z_e', 'y_e', 'z_e2', 'y_e2')
-legend('z_{e2}', 'y_{e2}')
+legend('z_e', 'y_e', 'z_{ef}', 'y_{ef}')
+% legend('z_{e2}', 'y_{e2}')
 
 % figure;
 % subplot(2, 2, 1)

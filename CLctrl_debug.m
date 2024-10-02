@@ -29,7 +29,7 @@ calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime = 3000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 5000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 
@@ -45,12 +45,12 @@ Pit2 = 'Pitch Angle Blade 2 [deg]';
 Pit3 = 'Pitch Angle Blade 3 [deg]';
 
 %% Load internal model
-buf_sys = load('Model\ModelOrder4_decoupled.mat');
+buf_sys = load('Model\ModelOrder4_AzimuthOffset.mat');
 % buf_sys2 = load('Model\ModelOrder4_decoupled_delayed.mat');
-buf_sys2 = load('Model\ModelOrder4_delayed.mat');
-decoupled_sys = buf_sys.decouple_sys;
+buf_sys2 = load('Model\ModelOrder4_AzimuthOffset_delayed.mat');
+decoupled_sys = buf_sys.OLi;
 % decoupled_delayed_sys = buf_sys2.delayed_sys;
-decoupled_delayed_sys = buf_sys2.delayed_sys_original;
+decoupled_delayed_sys = buf_sys2.OLi;
 
 %% Set Turbulent Wind
 U_inflow = 10;        % Inflow wind speed, same with the Q-blade setting
@@ -116,10 +116,6 @@ yc = zeros(simTime, 2);     % combined output
 % state space variables (add 1 due to the loop simulation)
 xM = zeros(simTime+1, size(decoupled_sys.A, 1));
 xMd = zeros(simTime+1, size(decoupled_delayed_sys.A, 1));
-
-% For testing
-ss_compensator = [-0.7039   -0.4862;
-                  -0.4806    0.6978];
 
 % Controller Design
 Kp = 0.5;
@@ -277,7 +273,6 @@ for i = 1:1:simTime
     xMd(i+1, :) = xMd_next;  
     ytilda(i, :) = yMd_curr;
     % Wind turbine activation 
-%     ym(i, :) = [HF_helixCenter_filtered(i, 1) HF_helixCenter_filtered(i, 2)] * ss_compensator;
     ym(i, :) = [HF_helixCenter_filtered(i, 1) HF_helixCenter_filtered(i, 2)];
 
     % Adaptive filter check
@@ -365,6 +360,7 @@ toc
 % ylabel("Angle (deg)");
 % legend('Blade 1','Blade 2','Blade 3')
 
+% Overall input and output
 figure;
 subplot(2, 2, 1)
 plot((1:length(FF_beta)) * timeStep, FF_beta(:, 1));
@@ -391,7 +387,7 @@ plot((1:length(HF_beta)) * timeStep, FF_helixCenter_filtered(:, 2));
 hold off;
 xlabel('Time [s]')
 title('Center FF')
-legend('z', 'y', 'z2', 'y2')
+legend('z', 'y', 'z_f', 'y_f')
 subplot(2, 2, 4)
 plot((1:length(HF_beta)) * timeStep, HF_helixCenter(:, 1));
 hold on;
@@ -401,27 +397,15 @@ plot((1:length(HF_beta)) * timeStep, HF_helixCenter_filtered(:, 2));
 hold off;
 xlabel('Time [s]')
 title('Center HF')
-legend('z_e', 'y_e', 'z_e2', 'y_e2')
+legend('z_e', 'y_e', 'z_{e,f}', 'y_{e,f}')
 
+% Comparison between Delayed Model and Wind Turbine Real Output
 figure
-plot((1:length(y)) * timeStep, y(:, 1))
+plot((1:length(ytilda)) * timeStep, ytilda(:, 1),'m','LineWidth', 1)
 hold on
-plot((1:length(y)) * timeStep, y(:, 2))
-plot((1:length(y)) * timeStep, ytilda(:, 1))
-plot((1:length(y)) * timeStep, ytilda(:, 2))
-yline(0, '--', 'LineWidth', 1)
-hold off;
-xlabel('Time [s]')
-ylabel('Magnitude')
-title('Model Propogation Check')
-legend('y_{IM1}','y_{IM2}','y_{Delay1}','y_{Delay1}')
-
-figure
-plot((1:length(y)) * timeStep, ytilda(:, 1))
-hold on
-plot((1:length(y)) * timeStep, ytilda(:, 2))
-plot((1:length(ym)) * timeStep, ym(:, 1))
-plot((1:length(ym)) * timeStep, ym(:, 2))
+plot((1:length(ytilda)) * timeStep, ytilda(:, 2),'b', 'LineWidth', 1)
+plot((1:length(ym)) * timeStep, ym(:, 1),'m--', 'LineWidth', 1)
+plot((1:length(ym)) * timeStep, ym(:, 2),'b--', 'LineWidth', 1)
 yline(0, '--', 'LineWidth', 1)
 hold off;
 xlabel('Time [s]')
@@ -429,13 +413,13 @@ ylabel('Magnitude')
 title('Model Percision Check')
 legend('y_{Delay1}','y_{Delay1}','y_{WTm1}','y_{WTm2}')
 
-% Check errors
+% check different errors
 figure
-plot((1:length(e)) * timeStep, r(:, 1)-yc(:, 1),'b')
+plot((1:length(e)) * timeStep, r(:, 1)-yc(:, 1),'m','LineWidth', 1)
 hold on
-plot((1:length(e)) * timeStep, r(:, 2)-yc(:, 2),'r')
-plot((1:length(u)) * timeStep, r(:, 1)-y(:, 1),'b--')
-plot((1:length(u)) * timeStep, r(:, 2)-y(:, 2),'r--')
+plot((1:length(e)) * timeStep, r(:, 2)-yc(:, 2),'b','LineWidth', 1)
+plot((1:length(u)) * timeStep, r(:, 1)-y(:, 1),'m--','LineWidth', 1)
+plot((1:length(u)) * timeStep, r(:, 2)-y(:, 2),'b--','LineWidth', 1)
 yline(0, '--', 'LineWidth', 1)
 hold off
 xlabel('Time [s]')
@@ -443,6 +427,7 @@ ylabel('Magnitude')
 title('Error check')
 legend('e_{1z}','e_{1y}','e_{2z}','e_{2y}')
 
+% Compare wind turbine real output to the reference
 figure
 plot((1:length(ym)) * timeStep, ym(:, 1))
 hold on
@@ -451,28 +436,32 @@ plot((1:length(r)) * timeStep, r(:, 1), 'k--')
 plot((1:length(r)) * timeStep, r(:, 2), 'k--')
 yline(0, '--', 'LineWidth', 1)
 hold off
+xlabel('Time [s]')
+ylabel('Magnitude')
 title('Controller Performance Check')
 legend('y_{WTm1}','y_{WTm2}','r_z','r_y')
 
 % Adaptive filter check
 figure
-plot((1:length(bufy_error)) * timeStep, bufy_error(:, 1))
+plot((1:length(bufy_error)) * timeStep, bufy_error(:, 1),'m','LineWidth', 1)
 hold on
-plot((1:length(bufy_error)) * timeStep, bufy_error(:, 2))
-plot((1:length(ybuf_fir)) * timeStep, ybuf_fir(:, 1))
-plot((1:length(ybuf_fir)) * timeStep, ybuf_fir(:, 2))
+plot((1:length(bufy_error)) * timeStep, bufy_error(:, 2),'b','LineWidth', 1)
+plot((1:length(ybuf_fir)) * timeStep, ybuf_fir(:, 1),'m--','LineWidth', 1)
+plot((1:length(ybuf_fir)) * timeStep, ybuf_fir(:, 2),'b--','LineWidth', 1)
 yline(0, '--', 'LineWidth', 1)
 hold off
+xlabel('Time [s]')
+ylabel('Magnitude')
 title('Adaptive Filter Check')
-legend('preFir_1','preFir_1','aftFir1','aftFir2')
+legend('preFir_1','preFir_1','aftFir_1','aftFir_2')
 
 % See which output is dominate
 figure
-plot((1:length(y)) * timeStep, yc(:, 1), 'r')
+plot((1:length(y)) * timeStep, yc(:, 1), 'm','LineWidth', 1)
 hold on
-plot((1:length(y)) * timeStep, yc(:, 2), 'b')
-plot((1:length(y)) * timeStep, y(:, 1), 'k--')
-plot((1:length(y)) * timeStep, y(:, 2), 'r--')
+plot((1:length(y)) * timeStep, yc(:, 2), 'b','LineWidth', 1)
+plot((1:length(y)) * timeStep, y(:, 1), 'm--','LineWidth', 1)
+plot((1:length(y)) * timeStep, y(:, 2), 'b--','LineWidth', 1)
 yline(0, '--', 'LineWidth', 1)
 hold off
 title('Ouput Component Check')

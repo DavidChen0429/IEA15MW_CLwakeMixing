@@ -4,6 +4,7 @@ addpath('.\Functions');
 
 %% Load model
 buf_sys = load('Model\ModelOrder4.mat');
+decouple_sys = load('Model\ModelOrder4_AzimuthOffset.mat');
 A = buf_sys.OLi.A;
 B = buf_sys.OLi.B;
 C = buf_sys.OLi.C;
@@ -19,8 +20,8 @@ rank(ctrb(A, B))
 rank(obsv(A, C))
 
 %% Load data
-trainData = 'train_120min_1bw_noise2.mat';       % train set
-testData = 'stepResponse_tiltOnly.mat';                % test set
+trainData = 'train_120min_1bw_noise3%_AzimuthOffset.mat';       % train set
+testData = 'stepResponse_tiltOnly_AzimuthOffset.mat';                % test set
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 IDEdata_train = load([turbineName caseName trainData]);
@@ -64,14 +65,16 @@ us2 = u_test';  % 2*N
 ys2 = y_test';  % 2*N
 
 %% Decouple 
-% 1. steady-state decoupling
+% Original system's RGA
 G_ss = dcgain(G);   % steady-state gain matrix
 RGA = G_ss .* (inv(G_ss))';
 eigG = eig(G_ss);
-ss_compensator = eye(2)/(G_ss) * 5; % calibrated for gain *5
-decouple_sys = series(ss_compensator, buf_sys.OLi);
-G_ss_dcpl = dcgain(decouple_sys);
-RGA_ssdcpl = G_ss_dcpl .* (inv(G_ss_dcpl))';
+
+% % 1. steady-state decoupling
+% ss_compensator = eye(2)/(G_ss) * 5; % calibrated for gain *5
+% decouple_sys = series(ss_compensator, buf_sys.OLi);
+% G_ss_dcpl = dcgain(decouple_sys);
+% RGA_ssdcpl = G_ss_dcpl .* (inv(G_ss_dcpl))';
 
 % % 2. dynamic decoupling
 % % This currently has the issue of not being a non-minimal phase system
@@ -83,7 +86,7 @@ RGA_ssdcpl = G_ss_dcpl .* (inv(G_ss_dcpl))';
 % RGA2 = G_ss2 .* (inv(G_ss2))';
 
 yi2 = lsim(buf_sys.OLi,us2,t_test); % testing set
-yi2d = lsim(decouple_sys,us2,t_test); % ss decouple 
+yi2d = lsim(decouple_sys.OLi,us2,t_test); % ss decouple 
 % yi2d2 = lsim(decouple_sys2,us2,t_test); % dyn decouple 
 
 % yi2 = lsim(buf_sys.OLi,us,t_train); % training set
@@ -92,24 +95,44 @@ yi2d = lsim(decouple_sys,us2,t_test); % ss decouple
 
 figure()
 subplot(2, 1, 1)
-plot(us2(1, :))
+plot((1:length(us2)) * timeStep, us2(1, :), 'm', 'LineWidth', 1)
 hold on 
-plot(us2(2, :))
+plot((1:length(us2)) * timeStep, us2(2, :), 'b', 'LineWidth', 1)
 yline(0, '--', 'LineWidth', 1)
 hold off
-legend('\beta_{tilt}', '\beta_{yaw}')
+xlabel('Time [s]')
+ylabel('Magnitude')
+legend('\beta^e_{tilt}', '\beta^e_{yaw}')
 title('Decouple Result -- Input')
 
+% For already decoupled system
 subplot(2, 1, 2)
-plot(yi2)
+plot((1:length(yi2d)) * timeStep, yi2d(:, 1),'m', 'LineWidth', 1)
 hold on
-plot(yi2d)
-% plot(yi2d2)
+plot((1:length(yi2d)) * timeStep, yi2d(:, 2),'b', 'LineWidth', 1)
 yline(0, '--', 'LineWidth', 1)
 hold off
-legend('tilt','yaw','tilt_{dcpl}','yaw_{dcpl}')
+xlabel('Time [s]')
+ylabel('Magnitude')
+legend('z_e - tilt','y_e - yaw')
 % legend('tilt','yaw','tilt_{dcpl}','yaw_{dcpl}','tilt_{dcpl2}','yaw_{dcpl2}')
 title('Decouple Result -- Output')
+
+% When you actually decouple
+% subplot(2, 1, 2)
+% plot((1:length(yi2)) * timeStep, yi2(:, 1),'m')
+% hold on
+% plot((1:length(yi2)) * timeStep, yi2(:, 2),'b')
+% plot((1:length(yi2d)) * timeStep, yi2d(:, 1),'r--', 'LineWidth', 1)
+% plot((1:length(yi2d)) * timeStep, yi2d(:, 2),'b--', 'LineWidth', 1)
+% % plot(yi2d2)
+% yline(0, '--', 'LineWidth', 1)
+% hold off
+% xlabel('Time [s]')
+% ylabel('Magnitude')
+% legend('tilt','yaw','tilt_{dcpl}','yaw_{dcpl}')
+% % legend('tilt','yaw','tilt_{dcpl}','yaw_{dcpl}','tilt_{dcpl2}','yaw_{dcpl2}')
+% title('Decouple Result -- Output')
 
 % ss_compensator = [-0.7039   -0.4862;
 %                   -0.4806    0.6978];

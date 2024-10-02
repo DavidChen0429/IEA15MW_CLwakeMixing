@@ -19,7 +19,7 @@ if isempty(m)
 end
 
 %% Data file 
-fileName = 'train_120min_10bw_noise3%_AzimuthOffset.mat';   % Fixed Frame 'train_30min_1bw.mat'
+fileName = 'train_120min_1bw_noise5%_AzimuthOffset.mat';   % Fixed Frame 'train_30min_1bw.mat'
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 
@@ -73,8 +73,8 @@ N_prbn = simTime;       % signal length [s] simLen
 AMPL_prbn = 1;          % amplitude
 Ts_prbn = timeStep;     % sampling time [s] timeStep
 bw = 0.0175;            % estimated bandwidth
-F_prbn = 10*bw;          % cutoff frequency [Hz] 2*bandwidth (0.0175)
-Fstop_prbn = 10*bw;      % band-stop filtered around this frequency
+F_prbn = 1*bw;          % cutoff frequency [Hz] 2*bandwidth (0.0175)
+Fstop_prbn = 1*bw;      % band-stop filtered around this frequency
 T0_prbn = 0;            % starting time [s]
 P_prbn = 2;             % number of channels
 IDEsig = idprbs(N_prbn,AMPL_prbn,Ts_prbn,F_prbn,Fstop_prbn,T0_prbn,P_prbn);
@@ -83,7 +83,7 @@ sigTilt_e = IDEsig(ns_prbn+1:N_prbn+ns_prbn,1);   % tailor length
 sigYaw_e = IDEsig(ns_prbn+1:N_prbn+ns_prbn,2);    % tailor length
 % Add disturbances (Gaussian noise)
 disturbance = randn(N_prbn, 2);                   % noise
-noise_level = AMPL_prbn * 0.03; % Adjust the noise level as needed
+noise_level = AMPL_prbn * 0.05; % Adjust the noise level as needed
 noise_tilt = noise_level * randn(size(sigTilt_e));
 noise_yaw = noise_level * randn(size(sigYaw_e));
 sigTilt_e = sigTilt_e + noise_tilt;

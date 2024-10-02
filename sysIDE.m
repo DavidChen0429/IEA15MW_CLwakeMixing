@@ -3,8 +3,8 @@ close all
 addpath('.\Functions');
 
 %% Get Training data and Testing data
-trainData = 'train_120min_1bw_noise3%_AzimuthOffset.mat';       % train set
-testData = 'stepResponse_tiltOnly_AzimuthOffset.mat';                % test set
+trainData = 'train_120min_1bw_noise5%_AzimuthOffset.mat';       % train set
+testData = 'stepResponse_both_AzimuthOffset.mat';                % test set
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 IDEdata_train = load([turbineName caseName trainData]);
@@ -120,8 +120,8 @@ yline(0, '--', 'LineWidth', 1)
 hold off
 legend('predict', 'real')
 xlabel('Time [s]')
-ylabel('z^e')
-title('Training Set z^e')
+ylabel('z_e')
+title('Training Set z_e')
 subplot(2,2,3)
 plot((1:length(yi2)) * timeStep, yi2(:, 2))
 hold on
@@ -130,8 +130,8 @@ yline(0, '--', 'LineWidth', 1)
 hold off
 legend('predict', 'real')
 xlabel('Time [s]')
-ylabel('y^e')
-title('Training Set y^e')
+ylabel('y_e')
+title('Training Set y_e')
 
 yi2 = lsim(OLi,us2,t_test); % testing set
 subplot(2,2,2)
@@ -142,8 +142,8 @@ yline(0, '--', 'LineWidth', 1)
 hold off
 legend('predict', 'real')
 xlabel('Time [s]')
-ylabel('z^e')
-title('Testing Set z^e')
+ylabel('z_e')
+title('Testing Set z_e')
 subplot(2,2,4)
 plot((1:length(yi2)) * timeStep, yi2(:, 2))
 hold on
@@ -152,11 +152,12 @@ yline(0, '--', 'LineWidth', 1)
 hold off
 legend('predict', 'real')
 xlabel('Time [s]')
-ylabel('y^e')
-title('Testing Set y^e')
+ylabel('y_e')
+title('Testing Set y_e')
 
 %% save model 
 % save('Model/ModelOrder4.mat', 'OLi');
+% save('Model/ModelOrder4_AzimuthOffset.mat', 'OLi');
 
 %% PBSID-opt
 % n_opt = 10;

@@ -4,17 +4,17 @@ addpath('.\Functions');
 
 %% Load model
 original_sys = load('Model\ModelOrder4.mat');
-decoupled_sys = load('Model\ModelOrder4_decoupled.mat');
+decoupled_sys = load('Model\ModelOrder4_AzimuthOffset.mat');
 
 %% Basic system property
-eig(decoupled_sys.decouple_sys.A)
-length(decoupled_sys.decouple_sys.A)
-rank(ctrb(decoupled_sys.decouple_sys.A, decoupled_sys.decouple_sys.B))    
-rank(obsv(decoupled_sys.decouple_sys.A, decoupled_sys.decouple_sys.C))
+eig(decoupled_sys.OLi.A)
+length(decoupled_sys.OLi.A)
+rank(ctrb(decoupled_sys.OLi.A, decoupled_sys.OLi.B))    
+rank(obsv(decoupled_sys.OLi.A, decoupled_sys.OLi.C))
 
 %% Load data
 % trainData = 'train_120min_1bw_noise2.mat';       % train set
-testData = 'stepResponse2.mat';                % test set
+testData = 'stepResponse_both_AzimuthOffset.mat';                % test set
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 % IDEdata_train = load([turbineName caseName trainData]);
@@ -75,9 +75,9 @@ ys2 = y_test';  % 2*N
 % delayed_sys_ss = ss(A_aug, B_aug, C_aug, D_aug);
 
 z = tf('z', timeStep);
-G = tf(decoupled_sys.decouple_sys);
-delayed_sys = z^(-DeadtimeDelay) .* G;
-delayed_sys = ss(delayed_sys);
+G = tf(decoupled_sys.OLi);
+OLi = z^(-DeadtimeDelay) .* G;
+OLi = ss(OLi);
 
 G2 = tf(original_sys.OLi);
 delayed_sys_original = z^(-DeadtimeDelay) .* G2;
@@ -85,44 +85,35 @@ delayed_sys_original = ss(delayed_sys_original);
 
 %% Performance comparison 
 yi2 = lsim(tf(original_sys.OLi),us2,t_test); % orignal system
-yi2d = lsim(tf(decoupled_sys.decouple_sys),us2,t_test); % ss decouple 
-yi2dl = lsim(delayed_sys,us2,t_test); % ss decouple 
+yi2d = lsim(tf(decoupled_sys.OLi),us2,t_test); % ss decouple 
+yi2dl = lsim(OLi,us2,t_test); % ss decouple 
 
 figure()
-subplot(3, 1, 1)
-plot((1:length(us2)) * timeStep, us2(1, :))
+subplot(2, 1, 1)
+plot((1:length(us2)) * timeStep, us2(1, :), 'm', 'LineWidth', 1)
 hold on 
-plot((1:length(us2)) * timeStep, us2(2, :))
+plot((1:length(us2)) * timeStep, us2(2, :), 'b', 'LineWidth', 1)
 yline(0, '--', 'LineWidth', 1)
 hold off
 xlabel('Time [s]')
 ylabel('Magnitude')
-legend('\beta_{tilt}', '\beta_{yaw}')
-title('Decouple Result -- Input')
+legend('\beta^e_{tilt}', '\beta^e_{yaw}')
+title('Input')
 
-subplot(3, 1, 2)
-plot((1:length(yi2)) * timeStep, yi2)
+subplot(2, 1, 2)
+plot((1:length(yi2d)) * timeStep, yi2d(:, 1), 'm', 'LineWidth', 1)
 hold on
-plot((1:length(yi2d)) * timeStep, yi2d)
-yline(0, '--', 'LineWidth', 1)
-hold off
-xlabel('Time [s]')
-ylabel('Magnitude')
-legend('tilt','yaw','tilt_{dcpl}','yaw_{dcpl}')
-title('Decouple Result -- Output')
-
-subplot(3, 1, 3)
-plot((1:length(yi2d)) * timeStep, yi2d)
-hold on
-plot((1:length(yi2dl)) * timeStep, yi2dl)
+plot((1:length(yi2d)) * timeStep, yi2d(:, 2), 'b', 'LineWidth', 1)
+plot((1:length(yi2dl)) * timeStep, yi2dl(:, 1), 'm--', 'LineWidth', 1)
+plot((1:length(yi2dl)) * timeStep, yi2dl(:, 2), 'b--', 'LineWidth', 1)
 % plot(delayseq(yi2d, DeadtimeDelay))
 yline(0, '--', 'LineWidth', 1)
 hold off
 xlabel('Time [s]')
 ylabel('Magnitude')
-legend('tilt_{dcpl}','yaw_{dcpl}','tilt_{dly}','yaw_{dly}')
-title('Decouple Result -- Output')
+legend('z_e','y_e','z_{e,d}','y_{e,d}')
+title('Delayed Result -- Output')
 
 %% Save model
-% save('Model\ModelOrder4_decoupled_delayed.mat', 'delayed_sys');
+% save('Model\ModelOrder4_AzimuthOffset_delayed.mat', 'OLi');
 % save('Model\ModelOrder4_delayed.mat', 'delayed_sys_original');
