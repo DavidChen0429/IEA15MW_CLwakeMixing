@@ -7,16 +7,16 @@ close all
 addpath('.\Functions');
 
 %% Load model
-buf_sys = load('Model\ModelOrder4_decoupled.mat');
-A = buf_sys.decouple_sys.A;
-B = buf_sys.decouple_sys.B;
-C = buf_sys.decouple_sys.C;
-D = buf_sys.decouple_sys.D;
+buf_sys = load('Model\ModelOrder4_AzimuthOffset.mat');
+A = buf_sys.OLi.A;
+B = buf_sys.OLi.B;
+C = buf_sys.OLi.C;
+D = buf_sys.OLi.D;
 
-sys = buf_sys.decouple_sys;
+sys = buf_sys.OLi;
 sys.InputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
 sys.OutputName = {'z_e','y_e'};
-G = tf(buf_sys.decouple_sys);        % transfer matrix 
+G = tf(buf_sys.OLi);        % transfer matrix 
 
 %% Basic system property
 eig(A)
