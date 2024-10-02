@@ -25,8 +25,8 @@ rank(ctrb(A, B))
 rank(obsv(A, C))
 
 %% Load data
-trainData = 'train_120min_1bw_noise2.mat';       % train set
-testData = 'stepResponse3.mat';                % test set
+trainData = 'train_120min_1bw_noise3%_AzimuthOffset.mat';       % train set
+testData = 'stepResponse_tiltOnly_AzimuthOffset.mat';                % test set
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 IDEdata_train = load([turbineName caseName trainData]);
@@ -72,91 +72,61 @@ us2 = u_test';  % 2*N
 ys2 = y_test';  % 2*N
 
 %% C11
-% open loop (stable)
-figure;
-step(G(1, 1));
-title('Step Response of the OL System');
-xlabel('Time (seconds)');
-ylabel('Response');
-
-% closed loop (unstable)
-figure
-CL_noControl = feedback(G(1, 1), 1);
-step(feedback(G(1, 1), 1))
-title('Step Response of the CL System');
-xlabel('Time (seconds)');
-ylabel('Response');
-
 % Bode diagram (Frequency domain response)
 figure
 margin(G(1, 1));
-
 % PID Controller Design
 % func: pidtune
 C11 = pidtune(G(1, 1), 'PI');
+closed_loop_sysG11 = feedback(C11*G(1, 1), 1);
 
-closed_loop_sys = feedback(C11*G(1, 1), 1);
-t = 0:timeStep:200;  % Time vector for simulation
-step(closed_loop_sys, t);
-title('Closed-Loop Response with Diagonal MIMO PID Controller');
-grid on;
-
-%% C11
 % open loop (stable)
 figure;
+subplot(1, 3, 1)
 step(G(1, 1));
-title('Step Response of the OL System');
-xlabel('Time (seconds)');
-ylabel('Response');
-
+title('OL System');
+xlabel('Time');
+ylabel('Amplitude');
+grid on
 % closed loop (unstable)
-figure
-CL_noControl = feedback(G(2, 1), 1);
-step(feedback(G(2, 1), 1))
-title('Step Response of the CL System');
-xlabel('Time (seconds)');
-ylabel('Response');
-
-% Bode diagram (Frequency domain response)
-figure
-margin(G(2, 1));
-
-% PID Controller Design
-% func: pidtune
-C21 = pidtune(G(2, 1), 'PI');
-
-closed_loop_sys = feedback(C21*G(2, 1), 1);
+subplot(1, 3, 2)
+CL_noControl = feedback(G(2, 2), 1);
+step(feedback(G(1, 1), 1))
+title('Uncontrolled CL System');
+xlabel('Time');
+ylabel('Amplitude');
+subplot(1, 3, 3)
 t = 0:timeStep:200;  % Time vector for simulation
-step(closed_loop_sys, t);
-title('Closed-Loop Response with Diagonal MIMO PID Controller');
+step(closed_loop_sysG11, t);
+title('Controlled CL System');
 grid on;
 
 %% C22
-% open loop (stable)
-figure;
-step(G(2, 2));
-title('Step Response of the OL System');
-xlabel('Time (seconds)');
-ylabel('Response');
-
-% closed loop (unstable)
-figure
-CL_noControl = feedback(G(2, 2), 1);
-step(feedback(G(2, 2), 1))
-title('Step Response of the CL System');
-xlabel('Time (seconds)');
-ylabel('Response');
-
 % Bode diagram (Frequency domain response)
 figure
 margin(G(2, 2));
-
 % PID Controller Design
 % func: pidtune
 C22 = pidtune(G(2, 2), 'PI');
+closed_loop_sysG22 = feedback(C22*G(2, 2), 1);
 
-closed_loop_sys = feedback(C22*G(2, 2), 1);
+% open loop (stable)
+figure;
+subplot(1, 3, 1)
+step(G(2, 2));
+title('OL System');
+xlabel('Time');
+ylabel('Amplitude');
+grid on
+% closed loop (unstable)
+subplot(1, 3, 2)
+CL_noControl = feedback(G(2, 2), 1);
+step(feedback(G(2, 2), 1))
+title('Uncontrolled CL System');
+xlabel('Time');
+ylabel('Amplitude');
+subplot(1, 3, 3)
 t = 0:timeStep:200;  % Time vector for simulation
-step(closed_loop_sys, t);
-title('Closed-Loop Response with Diagonal MIMO PID Controller');
+step(closed_loop_sysG22, t);
+title('Controlled CL System');
 grid on;

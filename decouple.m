@@ -71,10 +71,10 @@ RGA = G_ss .* (inv(G_ss))';
 eigG = eig(G_ss);
 
 % % 1. steady-state decoupling
-% ss_compensator = eye(2)/(G_ss) * 5; % calibrated for gain *5
-% decouple_sys = series(ss_compensator, buf_sys.OLi);
-% G_ss_dcpl = dcgain(decouple_sys);
-% RGA_ssdcpl = G_ss_dcpl .* (inv(G_ss_dcpl))';
+ss_compensator = eye(2)/(G_ss) * 5; % calibrated for gain *5
+OLi = series(ss_compensator, buf_sys.OLi);
+G_ss_dcpl = dcgain(OLi);
+RGA_ssdcpl = G_ss_dcpl .* (inv(G_ss_dcpl))';
 
 % % 2. dynamic decoupling
 % % This currently has the issue of not being a non-minimal phase system
