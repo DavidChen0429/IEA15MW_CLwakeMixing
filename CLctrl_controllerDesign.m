@@ -147,7 +147,7 @@ title('Controlled CL System');
 grid on;
 
 %% Faster tuning
-close all
+% close all
 Kp = 1; % 0.175 0.0005
 Ki = 0.0005;
 Ts = timeStep;

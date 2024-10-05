@@ -29,7 +29,7 @@ calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime = 5000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 10000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 
@@ -429,11 +429,11 @@ legend('e_{1z}','e_{1y}','e_{2z}','e_{2y}')
 
 % Compare wind turbine real output to the reference
 figure
-plot((1:length(ym)) * timeStep, ym(:, 1))
+plot((1:length(ym)) * timeStep, ym(:, 1),'m','LineWidth', 1)
 hold on
-plot((1:length(ym)) * timeStep, ym(:, 2))
-plot((1:length(r)) * timeStep, r(:, 1), 'k--')
-plot((1:length(r)) * timeStep, r(:, 2), 'k--')
+plot((1:length(ym)) * timeStep, ym(:, 2),'b','LineWidth', 1)
+plot((1:length(r)) * timeStep, r(:, 1),'m--','LineWidth', 1)
+plot((1:length(r)) * timeStep, r(:, 2),'k--','LineWidth', 1)
 yline(0, '--', 'LineWidth', 1)
 hold off
 xlabel('Time [s]')
