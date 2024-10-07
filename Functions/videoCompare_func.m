@@ -22,9 +22,9 @@ y_1Dref = 0 + D/2 * cos(theta);
 z_1Dref = 90 + D/2 * sin(theta);
 
 % ====== Uncomment if save video
-videoFile = fileName; % ".\Data\NTM-B.avi"
-v = VideoWriter(videoFile);
-open(v);
+% videoFile = fileName; % ".\Data\NTM-B.avi"
+% v = VideoWriter(videoFile);
+% open(v);
 
 figure('Position', [10, 10, 800, 310]);
 for counter = 1:interval:data_length(1)  
@@ -35,7 +35,7 @@ for counter = 1:interval:data_length(1)
     scatter(y, z, 10, snapshot.u_los, 'filled');
     hold on
 %     scatter(wakeCenterY1(counter), wakeCenterZ1(counter), 'red');
-    plot(y_1Dref, z_1Dref, "k-", 'LineWidth',2);
+    plot(y_1Dref, z_1Dref, "k:", 'LineWidth',1);
 %     plot(wakeCenterY1_f, wakeCenterZ1_f, "r-", 'LineWidth',0.5);
     hold off;
     xlabel('Y [m]')
@@ -51,7 +51,7 @@ for counter = 1:interval:data_length(1)
     scatter(y, z, 10, snapshot2.u_los, 'filled');
     hold on
 %     scatter(wakeCenterY2(counter), wakeCenterZ2(counter), 'red');
-    plot(y_1Dref, z_1Dref, "k-", 'LineWidth',2);
+    plot(y_1Dref, z_1Dref, "k:", 'LineWidth',1);
 %     plot(wakeCenterY2_f, wakeCenterZ2_f, "r-", 'LineWidth',0.5);
     hold off;
     xlabel('Y [m]')
@@ -62,8 +62,7 @@ for counter = 1:interval:data_length(1)
     pause(0.1);
 
 % ====== Uncomment if save video
-    frame = getframe(gcf);
-    writeVideo(v, frame);
+%     frame = getframe(gcf);
+%     writeVideo(v, frame);
 end 
 end
-

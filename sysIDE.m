@@ -3,7 +3,7 @@ close all
 addpath('.\Functions');
 
 %% Get Training data and Testing data
-trainData = 'train_120min_1bw_noise5%_AzimuthOffset.mat';       % train set
+trainData = 'train_120min_chirp_1bw_noise5%_AzimuthOffset.mat';       % train set
 testData = 'stepResponse_both_AzimuthOffset.mat';                % test set
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';

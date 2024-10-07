@@ -6,36 +6,64 @@ addpath('.\Functions');
 %% Load data
 Fs = 10;  % sampling frequency Hz
 Fc = 0.02;  % cutoff frequency Hz
-fileName = '600s_Center_FF_VerticalShear10deg.mat'; 
-dataPath = '.\Data\MAT\LiDAR_sampling\';
-caseName = 'Uni\Str0.3_U8_1Dd_10Hz_CCW\';
-windspeed = load([dataPath caseName fileName]);
+fileName = 'CircleLiDAR.mat';   % Fixed Frame
+turbineName = '.\Data\NREL5MW\';
+caseName = 'Str0.3_U10_1Dd_10Hz_CCW\LiDAR_Look\';
+windspeed = load([turbineName caseName fileName]);
+fileName2 = 'ForMarion_R.mat';   % Fixed Frame
+turbineName = '.\Data\NREL5MW\';
+caseName = 'Str0.3_U10_1Dd_10Hz_CCW\LiDAR_Look\';
+windspeed2 = load([turbineName caseName fileName2]);
 
 dataLiDAR= windspeed.LiDAR_data;
 data_length = size(dataLiDAR);        % length of snapshot
 lengthPoint = length(dataLiDAR(1).x);
-measurementPos = 240;
-Uin = 8;
+measurementPos = 126;
+Hub_NREL5MW = 90;   % Hub height
+Uin = 10;
 Str = 0.3;           % Strouhal number 
-DIEA15 = 240;
+DIEA15 = 126;
 Freq = Str*Uin/DIEA15;      % From Str, in Hz
 
-% Reference signal
-timeWakeTravel0 = round(measurementPos/Uin);
-t = linspace(0, data_length(1)-timeWakeTravel0, data_length(1)-timeWakeTravel0);
-refSine1 = 2 * sin(2*pi*Freq*t);
-bufferSine = zeros(1, timeWakeTravel0);
-refSine = [bufferSine, refSine1] + 6.5;
+% % Reference signal
+% timeWakeTravel0 = round(measurementPos/Uin);
+% t = linspace(0, data_length(1)-timeWakeTravel0, data_length(1)-timeWakeTravel0);
+% refSine1 = 2 * sin(2*pi*Freq*t);
+% bufferSine = zeros(1, timeWakeTravel0);
+% refSine = [bufferSine, refSine1] + 6.5;
 
 % snapshot variables: 
 %   Position info:          x,y,z
 %   Streamwise speed info:  u_x,u_y,u_z
 %   LOS speed info:         u_los
 
+%% Pure snapshot visualization
+theta = linspace(0, 2*pi, 20);
+y_1Dref = 0 + DIEA15/2 * cos(theta);
+z_1Dref = Hub_NREL5MW + DIEA15/2 * sin(theta);
+
+% Visualization
+figure;
+counter = 500; 
+snapshot = dataLiDAR(counter);
+u_los = snapshot.u_los;
+y = snapshot.y;
+z = snapshot.z;
+scatter(y, z, 10, u_los, 'filled');
+
+hold on
+plot(y_1Dref, z_1Dref, "k:", 'LineWidth',1);
+hold off;
+xlabel('Y [m]')
+ylabel('Z [m]')
+title('LiDAR Wind Speed', counter)
+colorbar;
+clim([4 10])
+
 %% Pure visualization
 theta = linspace(0, 2*pi, 20);
-y_1Dref = 0 + 100 * cos(theta);
-z_1Dref = 150 + 100 * sin(theta);
+y_1Dref = 0 + DIEA15/2 * cos(theta);
+z_1Dref = Hub_NREL5MW + DIEA15/2 * sin(theta);
 
 % Visualization
 figure;
@@ -47,38 +75,53 @@ for counter = 1:10:data_length(1)
     scatter(y, z, 10, u_los, 'filled');
 
     hold on
-    plot(y_1Dref, z_1Dref, "k-", 'LineWidth',2);
+    plot(y_1Dref, z_1Dref, "k:", 'LineWidth',1);
     hold off;
     xlabel('Y [m]')
     ylabel('Z [m]')
     title('LiDAR Wind Speed', counter)
     colorbar;
-    clim([4 9])
+    clim([4 10])
     pause(0.1);
 end
 
-%% Pure snapshot visualization
+%% Save as video
+% Reference 1D ring
 theta = linspace(0, 2*pi, 20);
-y_1Dref = 0 + 120 * cos(theta);
-z_1Dref = 150 + 120 * sin(theta);
+y_1Dref = 0 + DIEA15/2 * cos(theta);
+z_1Dref = Hub_NREL5MW + DIEA15/2 * sin(theta);
 
-% Visualization
+videoFile = ".\Data\HelixCircle.avi";
+v = VideoWriter(videoFile);
+open(v);
+
 figure;
-counter = 2011; 
-snapshot = dataLiDAR(counter);
-u_los = snapshot.u_los;
-y = snapshot.y;
-z = snapshot.z;
-scatter(y, z, 10, u_los, 'filled');
+for counter = 1:10:data_length(1)
+    snapshot = dataLiDAR(counter);
+    u_los = snapshot.u_los;
+    y = snapshot.y;
+    z = snapshot.z;
+%     wakeCenter = HelixCenter(snapshot, Uin);
+    scatter(y, z, 10, u_los, 'filled');
+    hold on
+%     scatter(wakeCenter(1), wakeCenter(2),'red');
+    plot(y_1Dref, z_1Dref, "k:", 'LineWidth',1);
+    hold off;
+    xlabel('Y [m]')
+    ylabel('Z [m]')
+    title('LiDAR Wind Speed', counter)
+    colorbar;
+    clim([4 10])
+%     pause(0.1);
 
-hold on
-plot(y_1Dref, z_1Dref, "k-", 'LineWidth',2);
-hold off;
-xlabel('Y [m]')
-ylabel('Z [m]')
-title('LiDAR Wind Speed', counter)
-colorbar;
-clim([4 8])
+    frame = getframe(gcf);
+    writeVideo(v, frame);
+end 
+
+close(v);
+
+%% Save video comparison
+videoCompare_func(windspeed, windspeed2, Fs, Fc, DIEA15, '.\Data\Circle_vs_Ring0.5R.avi');
 
 %% Calculate the Helix center
 wake_center = [];
@@ -168,41 +211,6 @@ legend('offline', 'online')
 ylim([30 270]);
 xlabel('Time [s]')
 ylabel('Z [m]')
-
-%% Save as video
-% Reference 1D ring
-theta = linspace(0, 2*pi, 50);
-y_1Dref = 0 + 120 * cos(theta);
-z_1Dref = 150 + 120 * sin(theta);
-
-videoFile = ".\Data\Helix_basic.avi";
-v = VideoWriter(videoFile);
-open(v);
-
-figure;
-for counter = 1:1:data_length(1)
-    snapshot = dataLiDAR(counter);
-    u_los = snapshot.u_los;
-    y = snapshot.y;
-    z = snapshot.z;
-    wakeCenter = HelixCenter(snapshot, Uin);
-    scatter(y, z, 10, u_los, 'filled');
-    hold on
-    scatter(wakeCenter(1), wakeCenter(2),'red');
-    plot(y_1Dref, z_1Dref, "k-", 'LineWidth',2);
-    hold off;
-    xlabel('Y [m]')
-    ylabel('Z [m]')
-    title('LiDAR Wind Speed', counter)
-    colorbar;
-    clim([4 8])
-%     pause(0.1);
-
-    frame = getframe(gcf);
-    writeVideo(v, frame);
-end 
-
-close(v);
 
 %% Compare two methods
 a = load(".\Data\MAT\Helix_wake_center\300sThreshold1874.mat");

@@ -19,7 +19,7 @@ if isempty(m)
 end
 
 %% Data file 
-fileName = 'train_120min_1bw_noise5%_AzimuthOffset.mat';   % Fixed Frame 'train_30min_1bw.mat'
+fileName = 'train_120min_chirp_1bw_noise5%_AzimuthOffset.mat';   % Fixed Frame 'train_30min_1bw.mat'
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 
@@ -69,21 +69,33 @@ N = 97;          % Gearbox ratio
 
 %% Signals for system IDE
 % ======== Train data
-N_prbn = simTime;       % signal length [s] simLen
-AMPL_prbn = 1;          % amplitude
-Ts_prbn = timeStep;     % sampling time [s] timeStep
 bw = 0.0175;            % estimated bandwidth
-F_prbn = 1*bw;          % cutoff frequency [Hz] 2*bandwidth (0.0175)
-Fstop_prbn = 1*bw;      % band-stop filtered around this frequency
-T0_prbn = 0;            % starting time [s]
-P_prbn = 2;             % number of channels
-IDEsig = idprbs(N_prbn,AMPL_prbn,Ts_prbn,F_prbn,Fstop_prbn,T0_prbn,P_prbn);
-ns_prbn = floor((length(IDEsig)-N_prbn)/2);
-sigTilt_e = IDEsig(ns_prbn+1:N_prbn+ns_prbn,1);   % tailor length
-sigYaw_e = IDEsig(ns_prbn+1:N_prbn+ns_prbn,2);    % tailor length
-% Add disturbances (Gaussian noise)
-disturbance = randn(N_prbn, 2);                   % noise
-noise_level = AMPL_prbn * 0.05; % Adjust the noise level as needed
+N_signal = simTime;     % signal length [s] simLen
+AMPL_signal = 1;        % amplitude
+% === Pseudoradom Binary
+% N_prbn = simTime;       % signal length [s] simLen
+% AMPL_prbn = 1;          % amplitude
+% Ts_prbn = timeStep;     % sampling time [s] timeStep
+% F_prbn = 1*bw;          % cutoff frequency [Hz] 2*bandwidth (0.0175)
+% Fstop_prbn = 1*bw;      % band-stop filtered around this frequency
+% T0_prbn = 0;            % starting time [s]
+% P_prbn = 2;             % number of channels
+% IDEsig = idprbs(N_prbn,AMPL_prbn,Ts_prbn,F_prbn,Fstop_prbn,T0_prbn,P_prbn);
+% ns_prbn = floor((length(IDEsig)-N_prbn)/2);
+% sigTilt_e = IDEsig(ns_prbn+1:N_prbn+ns_prbn,1);   % tailor length
+% sigYaw_e = IDEsig(ns_prbn+1:N_prbn+ns_prbn,2);    % tailor length
+
+% === Chirp
+signal_length = simTime;      
+t = 0:timeStep:simLen;  
+f0 = 0.5*bw;                   
+f1 = 1.5*bw;                  
+sigTilt_e = chirp(t, f0, simLen, f1) * AMPL_signal;
+sigYaw_e = chirp(t, f0, simLen, f1) * AMPL_signal;
+
+% === Add disturbances (Gaussian noise)
+disturbance = randn(N_signal, 2);                   % noise
+noise_level = AMPL_signal * 0.05; % Adjust the noise level as needed
 noise_tilt = noise_level * randn(size(sigTilt_e));
 noise_yaw = noise_level * randn(size(sigYaw_e));
 sigTilt_e = sigTilt_e + noise_tilt;
@@ -108,8 +120,8 @@ sigYaw_e = sigYaw_e + noise_yaw;
 % sigYaw_e = 0 * ones(simTime, 1);    % 0 * ones(simTime, 1)
 
 % Power Spectrum Density
-[M1,F1] = pwelch(sigTilt_e,[],[],[],1/Ts_prbn);
-[M2,F2] = pwelch(sigYaw_e,[],[],[],1/Ts_prbn);
+[M1,F1] = pwelch(sigTilt_e,[],[],[],1/timeStep);
+[M2,F2] = pwelch(sigYaw_e,[],[],[],1/timeStep);
 figure
 semilogx(F1,mag2db(M1),'k','LineWidth',1)
 hold on
