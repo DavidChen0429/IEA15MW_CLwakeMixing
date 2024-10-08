@@ -201,8 +201,8 @@ for i = 1:1:simTime
     invMBC = [1 cosd(Azimuth1+AzimuthOffset) sind(Azimuth1+AzimuthOffset);
               1 cosd(Azimuth2+AzimuthOffset) sind(Azimuth2+AzimuthOffset);
               1 cosd(Azimuth3+AzimuthOffset) sind(Azimuth3+AzimuthOffset)];
-    invR_helix = [cos(omega_e*t(i)) -sin(omega_e*t(i)); 
-                  sin(omega_e*t(i)) cos(omega_e*t(i))];
+    invR_helix = [cos(omega_e*t(i)) sin(omega_e*t(i)); 
+                  -sin(omega_e*t(i)) cos(omega_e*t(i))];
 
     % ==================== LiDAR data sampling (Circle) 
     windspeed = Circle_LiDAR_Parallel(LiDAR_x, LiDAR_y, LiDAR_z, D_NREL5MW, LiDAR_num_sample); 

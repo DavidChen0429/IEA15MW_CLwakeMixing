@@ -19,7 +19,7 @@ if isempty(m)
 end
 
 %% Data file 
-fileName = 'train_120min_chirp_1bw_noise5%_AzimuthOffset.mat';   % Fixed Frame 'train_30min_1bw.mat'
+fileName = 'train_120min_1bw_noise5%.mat';   % Fixed Frame 'train_30min_1bw.mat'
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 
@@ -73,25 +73,25 @@ bw = 0.0175;            % estimated bandwidth
 N_signal = simTime;     % signal length [s] simLen
 AMPL_signal = 1;        % amplitude
 % === Pseudoradom Binary
-% N_prbn = simTime;       % signal length [s] simLen
-% AMPL_prbn = 1;          % amplitude
-% Ts_prbn = timeStep;     % sampling time [s] timeStep
-% F_prbn = 1*bw;          % cutoff frequency [Hz] 2*bandwidth (0.0175)
-% Fstop_prbn = 1*bw;      % band-stop filtered around this frequency
-% T0_prbn = 0;            % starting time [s]
-% P_prbn = 2;             % number of channels
-% IDEsig = idprbs(N_prbn,AMPL_prbn,Ts_prbn,F_prbn,Fstop_prbn,T0_prbn,P_prbn);
-% ns_prbn = floor((length(IDEsig)-N_prbn)/2);
-% sigTilt_e = IDEsig(ns_prbn+1:N_prbn+ns_prbn,1);   % tailor length
-% sigYaw_e = IDEsig(ns_prbn+1:N_prbn+ns_prbn,2);    % tailor length
+N_prbn = simTime;       % signal length [s] simLen
+AMPL_prbn = 1;          % amplitude
+Ts_prbn = timeStep;     % sampling time [s] timeStep
+F_prbn = 1*bw;          % cutoff frequency [Hz] 2*bandwidth (0.0175)
+Fstop_prbn = 1*bw;      % band-stop filtered around this frequency
+T0_prbn = 0;            % starting time [s]
+P_prbn = 2;             % number of channels
+IDEsig = idprbs(N_prbn,AMPL_prbn,Ts_prbn,F_prbn,Fstop_prbn,T0_prbn,P_prbn);
+ns_prbn = floor((length(IDEsig)-N_prbn)/2);
+sigTilt_e = IDEsig(ns_prbn+1:N_prbn+ns_prbn,1);   % tailor length
+sigYaw_e = IDEsig(ns_prbn+1:N_prbn+ns_prbn,2);    % tailor length
 
 % === Chirp
-signal_length = simTime;      
-t = 0:timeStep:simLen;  
-f0 = 0.5*bw;                   
-f1 = 1.5*bw;                  
-sigTilt_e = chirp(t, f0, simLen, f1) * AMPL_signal;
-sigYaw_e = chirp(t, f0, simLen, f1) * AMPL_signal;
+% signal_length = simTime;      
+% t = 0:timeStep:simLen;  
+% f0 = 0.5*bw;                   
+% f1 = 1.5*bw;                  
+% sigTilt_e = chirp(t, f0, simLen, f1) * AMPL_signal;
+% sigYaw_e = chirp(t, f0, simLen, f1) * AMPL_signal;
 
 % === Add disturbances (Gaussian noise)
 disturbance = randn(N_signal, 2);                   % noise
@@ -139,7 +139,7 @@ Helix_amplitude = 1;                % Helix amplitude
 Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
 omega_e = Freq*2*pi;
 t = linspace(1, simLen, simTime);
-AzimuthOffset = -35; % -35 is the optimal
+AzimuthOffset = 0; % optimal 8 but with wrong relation
 
 % !!! If input signals has been generated from 'idprbs', then note below
 % line 
@@ -222,8 +222,8 @@ for i = 1:1:simTime
     invMBC = [1 cosd(Azimuth1+AzimuthOffset) sind(Azimuth1+AzimuthOffset);
               1 cosd(Azimuth2+AzimuthOffset) sind(Azimuth2+AzimuthOffset);
               1 cosd(Azimuth3+AzimuthOffset) sind(Azimuth3+AzimuthOffset)];
-    invR_helix = [cos(omega_e*t(i)) -sin(omega_e*t(i)); 
-                  sin(omega_e*t(i)) cos(omega_e*t(i))];
+    invR_helix = [cos(omega_e*t(i)) sin(omega_e*t(i)); 
+                  -sin(omega_e*t(i)) cos(omega_e*t(i))];
     % 3. Blade pitch signal
     betaTiltYaw = invR_helix * [beta_tilt_e; 
                                 beta_yaw_e];    

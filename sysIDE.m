@@ -3,8 +3,8 @@ close all
 addpath('.\Functions');
 
 %% Get Training data and Testing data
-trainData = 'train_120min_chirp_1bw_noise5%_AzimuthOffset.mat';       % train set
-testData = 'stepResponse_both_AzimuthOffset.mat';                % test set
+trainData = 'train_120min_1bw_noise3%.mat';       % train set
+testData = 'stepResponse_both.mat';                % test set
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 IDEdata_train = load([turbineName caseName trainData]);
@@ -154,6 +154,13 @@ legend('predict', 'real')
 xlabel('Time [s]')
 ylabel('y_e')
 title('Testing Set y_e')
+
+
+%% See coupling 
+G = tf(OLi);
+G_ss = dcgain(G);   % steady-state gain matrix
+RGA = G_ss .* (inv(G_ss))';
+disp(RGA);
 
 %% save model 
 % save('Model/ModelOrder4.mat', 'OLi');

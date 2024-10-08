@@ -19,7 +19,7 @@ if isempty(m)
 end
 
 %% Data file 
-fileName = 'ForMarion_0.5R.mat';   % Fixed Frame
+fileName = 'ForMarion_R.mat';   % Fixed Frame
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\LiDAR_Look\';
 
@@ -72,7 +72,7 @@ Str = 0.3;                          % Strouhal number
 Helix_amplitude = 1;                % Helix amplitude                
 Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
 omega_e = Freq*2*pi;
-AzimuthOffset = -35; % -35 is the optimal
+AzimuthOffset = 6;
 
 t = linspace(1, simLen, simTime);
 sigTilt_e = Helix_amplitude * ones(simTime, 1);                 % basic
@@ -108,7 +108,7 @@ HF_helixCenter_filtered = zeros(simTime, 2);
 PitchAngles = zeros(simTime, 3);
 FF_helixCenter = zeros(simTime, 2);
 HF_helixCenter = zeros(simTime, 2);
-templateStruct = struct('x', [], 'y', [], 'z', [], 'u_x', [], 'u_y', [], 'u_z', [], 'u_norm', [], 'u_los', []);
+templateStruct = struct('x', [], 'y', [], 'z', [], 'theta', [], 'u_x', [], 'u_y', [], 'u_z', [], 'u_norm', [], 'u_los', []);
 LiDAR_data(simTime, 1) = templateStruct;
 
 % Sliding window
@@ -167,8 +167,8 @@ for i = 1:1:simTime
     invMBC = [1 cosd(Azimuth1+AzimuthOffset) sind(Azimuth1+AzimuthOffset);
               1 cosd(Azimuth2+AzimuthOffset) sind(Azimuth2+AzimuthOffset);
               1 cosd(Azimuth3+AzimuthOffset) sind(Azimuth3+AzimuthOffset)];
-    invR_helix = [cos(omega_e*t(i)) -sin(omega_e*t(i)); 
-                  sin(omega_e*t(i)) cos(omega_e*t(i))];
+    invR_helix = [cos(omega_e*t(i)) sin(omega_e*t(i)); 
+                  -sin(omega_e*t(i)) cos(omega_e*t(i))];
     % 3. Blade pitch signal
     betaTiltYaw = invR_helix * [beta_tilt_e; 
                                 beta_yaw_e];    
@@ -181,7 +181,7 @@ for i = 1:1:simTime
         betaBlade_Helix(1) betaBlade_Helix(2) betaBlade_Helix(3)],0)
 
     % LiDAR data sampling (Ring) 
-    windspeed = ZXTM_LiDAR_Parallel(LiDAR_x, LiDAR_y, LiDAR_z, D_NREL5MW/4, 51);
+    windspeed = ZXTM_LiDAR_Parallel(LiDAR_x, LiDAR_y, LiDAR_z, D_NREL5MW/2, 51);
 %     windspeed = Circle_LiDAR_Parallel(LiDAR_x, LiDAR_y, LiDAR_z, D_NREL5MW, LiDAR_num_sample); 
 %     wakeCenter = HelixCenter(windspeed, U_inflow, D_NREL5MW);
     wakeCenter = [LiDAR_y LiDAR_z];

@@ -10,13 +10,15 @@ fileName = 'ForMarion_0.5R.mat';   % Fixed Frame
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\LiDAR_Look\';
 windspeed = load([turbineName caseName fileName]);
-fileName2 = 'ForMarion_0.5R.mat';   % Fixed Frame
+fileName2 = 'ForMarion_0.5R_baseline.mat';   % Fixed Frame
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\LiDAR_Look\';
 windspeed2 = load([turbineName caseName fileName2]);
 
 dataLiDAR= windspeed.LiDAR_data;
-data_length = size(dataLiDAR);        % length of snapshot
+dataLiDAR2 = windspeed2.LiDAR_data;
+data_length = size(dataLiDAR);      
+% length of snapshot
 lengthPoint = length(dataLiDAR(1).x);
 measurementPos = 126;
 Hub_NREL5MW = 90;   % Hub height
@@ -36,6 +38,31 @@ Freq = Str*Uin/DIEA15;      % From Str, in Hz
 %   Position info:          x,y,z
 %   Streamwise speed info:  u_x,u_y,u_z
 %   LOS speed info:         u_los
+
+%% For Marion Figure
+snapshotBaseline = dataLiDAR2(400);
+snapshot000T = dataLiDAR(400);
+snapshot025T = dataLiDAR(600);
+snapshot050T = dataLiDAR(800);
+snapshot075T = dataLiDAR(1000);
+
+figure('Name', 'What Marion wants to see');
+scatter(snapshotBaseline.theta, snapshotBaseline.u_los,'.')
+hold on
+scatter(snapshot000T.theta, snapshot000T.u_los,'o')
+scatter(snapshot025T.theta, snapshot025T.u_los,'+')
+scatter(snapshot050T.theta, snapshot050T.u_los,'x')
+scatter(snapshot075T.theta, snapshot075T.u_los,'*')
+hold off
+% plot(snapshotBaseline.theta, snapshotBaseline.u_los)
+title('Static Plot')
+xlabel('\theta [rad]')
+ylabel('u_{los} [m/s]')
+legend('base', 't/T=0', 't/T=1/4', 't/T=2/4', 't/T=3/4')
+xticks([0 pi/2 pi 3*pi/2 2*pi])    
+xticklabels({'0', '\pi/2', '\pi', '3\pi/2', '2\pi'})  
+xlim([0 2*pi])
+grid on
 
 %% Pure snapshot visualization
 theta = linspace(0, 2*pi, 20);

@@ -111,13 +111,13 @@ C_mimo = [C11, 0;
 
 % Before control
 % C11 in charge of below
-figure
+figure('Name', 'Before Control C11', 'NumberTitle', 'off');
 subplot(1,2,1)
 margin(G(1, 1));
 subplot(1,2,2)
 margin(G(1, 2)); % Fucked
 % C22 in charge of below
-figure
+figure('Name', 'Before Control C22', 'NumberTitle', 'off');
 subplot(1,2,1)
 margin(G(2, 1));
 subplot(1,2,2)
@@ -127,13 +127,13 @@ margin(G(2, 2));
 OL_ctrl = C_mimo * G;
 % bode(OL_ctrl);
 % C11 in charge of below
-figure
+figure('Name', 'After Control C11', 'NumberTitle', 'off');
 subplot(1,2,1)
 margin(OL_ctrl(1, 1));
 subplot(1,2,2)
 margin(OL_ctrl(1, 2)); % Fucked
 % C22 in charge of below
-figure
+figure('Name', 'After Control C22', 'NumberTitle', 'off');
 subplot(1,2,1)
 margin(OL_ctrl(2, 1));
 subplot(1,2,2)
@@ -141,15 +141,15 @@ margin(OL_ctrl(2, 2));
 
 closed_loop_sys = feedback(OL_ctrl, eye(2));
 t = 0:timeStep:50;  % Time vector for simulation
-figure
+figure('Name', 'After Control CL Step', 'NumberTitle', 'off');
 step(closed_loop_sys, t);
 title('Controlled CL System');
 grid on;
 
 %% Faster tuning
 % close all
-Kp = 1; % 0.175 0.0005
-Ki = 0.0005;
+Kp = 0.25; % 0.175 0.0005
+Ki = 1.0000; % 0.0005
 Ts = timeStep;
 C11 = pid(Kp, Ki, 0, 0, Ts);
 % C11 = pidtune(G(1,1), 'PID')
@@ -166,7 +166,7 @@ OL_ctrl = C_mimo * G;
 % margin(G(1, 2)); % Fucked
 
 % C11 in charge of below
-figure('Position', [100, 100, 1000, 600])
+figure('Name', 'After Control C11', 'NumberTitle', 'off','Position', [100, 100, 1000, 600]);
 subplot(1,2,1)
 margin(OL_ctrl(1, 1));
 subplot(1,2,2)

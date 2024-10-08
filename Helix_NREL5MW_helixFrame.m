@@ -19,9 +19,9 @@ if isempty(m)
 end
 
 %% Data file 
-fileName = 'ForMarion_R.mat';   % Fixed Frame
+fileName = 'stepResponse_both.mat';   % Fixed Frame
 turbineName = '.\Data\NREL5MW\';
-caseName = 'Str0.3_U10_1Dd_10Hz_CCW\LiDAR_Look\';
+caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
@@ -69,20 +69,20 @@ N = 97;          % Gearbox ratio
 
 %% Defining Helix Control Setting
 Str = 0.3;                          % Strouhal number
-Helix_amplitude = 1;                % Helix amplitude                
+Helix_amplitude = 3;                % Helix amplitude                
 Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
 omega_e = Freq*2*pi;
-AzimuthOffset = -35; % -35 is the optimal
+AzimuthOffset = 6; % 6 for pi/2 shift ; 96 for pi shift 
 
 t = linspace(1, simLen, simTime);
-sigTilt_e = Helix_amplitude * ones(simTime, 1);                 % basic
+sigTilt_e = 0 * ones(simTime, 1);                 % basic
 sigYaw_e = Helix_amplitude * ones(simTime, 1);   % basic
 
 % Step input to test basic properties
 % steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5)];
 % steps = [0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -Helix_amplitude*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 2*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10)];
 % sigTilt_e = steps;                  % 0 * ones(simTime, 1)
-% sigYaw_e = 0 * ones(simTime, 1);                   % 0 * ones(simTime, 1)
+% sigYaw_e = steps;                   % 0 * ones(simTime, 1)
 
 % figure;
 % plot(t, sigTilt_e);
@@ -93,7 +93,7 @@ sigYaw_e = Helix_amplitude * ones(simTime, 1);   % basic
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat
-LiDAR_x = 1*D_NREL5MW;   % Definition of x is pointing downwind
+LiDAR_x = 1*D_NREL5MW;   % Definition of x is pointing downwind 1*D_NREL5MW
 LiDAR_y = 0;
 LiDAR_z = Hub_NREL5MW;   % Wind height
 LiDAR_num_sample = 80;   % 5(ring) to speed up sampling, only 4 valid points
@@ -167,8 +167,8 @@ for i = 1:1:simTime
     invMBC = [1 cosd(Azimuth1+AzimuthOffset) sind(Azimuth1+AzimuthOffset);
               1 cosd(Azimuth2+AzimuthOffset) sind(Azimuth2+AzimuthOffset);
               1 cosd(Azimuth3+AzimuthOffset) sind(Azimuth3+AzimuthOffset)];
-    invR_helix = [cos(omega_e*t(i)) -sin(omega_e*t(i)); 
-                  sin(omega_e*t(i)) cos(omega_e*t(i))];
+    invR_helix = [cos(omega_e*t(i)) sin(omega_e*t(i)); 
+                  -sin(omega_e*t(i)) cos(omega_e*t(i))];
     % 3. Blade pitch signal
     betaTiltYaw = invR_helix * [beta_tilt_e; 
                                 beta_yaw_e];    
@@ -181,7 +181,6 @@ for i = 1:1:simTime
         betaBlade_Helix(1) betaBlade_Helix(2) betaBlade_Helix(3)],0)
 
     % LiDAR data sampling (Ring) 
-%     windspeed = ZXTM_LiDAR_Parallel(LiDAR_x, LiDAR_y, LiDAR_z, D_NREL5MW/2, 50);
     windspeed = Circle_LiDAR_Parallel(LiDAR_x, LiDAR_y, LiDAR_z, D_NREL5MW, LiDAR_num_sample); 
     wakeCenter = HelixCenter(windspeed, U_inflow, D_NREL5MW);
     FF_helixCenter(i, :) = [wakeCenter(1) wakeCenter(2)]; % Z(tilt), Y(yaw)
@@ -316,9 +315,9 @@ xlabel('Time [s]')
 title('Center FF')
 legend('z', 'y', 'z2', 'y2')
 subplot(2, 2, 4)
-plot((1:length(FF_beta)) * timeStep, HF_helixCenter(:, 1));
-hold on;
-plot((1:length(FF_beta)) * timeStep, HF_helixCenter(:, 2));
+% plot((1:length(FF_beta)) * timeStep, HF_helixCenter(:, 1));
+% hold on;
+% plot((1:length(FF_beta)) * timeStep, HF_helixCenter(:, 2));
 plot((1:length(FF_beta)) * timeStep, HF_helixCenter_filtered(:, 1));
 hold on
 plot((1:length(FF_beta)) * timeStep, HF_helixCenter_filtered(:, 2));
@@ -326,8 +325,8 @@ yline(0, '--', 'LineWidth', 1)
 hold off;
 xlabel('Time [s]')
 title('Center HF')
-legend('z_e', 'y_e', 'z_{ef}', 'y_{ef}')
-% legend('z_{e2}', 'y_{e2}')
+% legend('z_e', 'y_e', 'z_{ef}', 'y_{ef}')
+legend('z_{e2}', 'y_{e2}')
 
 % figure;
 % subplot(2, 2, 1)
