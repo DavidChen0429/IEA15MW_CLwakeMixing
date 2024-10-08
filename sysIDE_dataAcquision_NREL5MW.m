@@ -19,7 +19,7 @@ if isempty(m)
 end
 
 %% Data file 
-fileName = 'train_120min_1bw_noise5%.mat';   % Fixed Frame 'train_30min_1bw.mat'
+fileName = 'train_120min_1bw_noise5%_AzimuthOffset.mat';   % Fixed Frame 'train_30min_1bw.mat'
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 

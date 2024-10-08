@@ -19,7 +19,7 @@ if isempty(m)
 end
 
 %% Data file 
-fileName = 'stepResponse_both.mat';   % Fixed Frame
+fileName = 'stepResponse_both_AzimuthOffset.mat';   % Fixed Frame
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 
@@ -29,7 +29,7 @@ calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime = 2000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 1000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 
@@ -75,14 +75,14 @@ omega_e = Freq*2*pi;
 AzimuthOffset = 6; % 6 for pi/2 shift ; 96 for pi shift 
 
 t = linspace(1, simLen, simTime);
-sigTilt_e = 0 * ones(simTime, 1);                 % basic
-sigYaw_e = Helix_amplitude * ones(simTime, 1);   % basic
+sigTilt_e = Helix_amplitude*ones(simTime, 1);  % basic
+sigYaw_e = 0*ones(simTime, 1);   % basic
 
 % Step input to test basic properties
 % steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5)];
 % steps = [0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -Helix_amplitude*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 2*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10)];
-% sigTilt_e = steps;                  % 0 * ones(simTime, 1)
-% sigYaw_e = steps;                   % 0 * ones(simTime, 1)
+% sigTilt_e = steps;                  % 0*ones(simTime, 1)
+% sigYaw_e = 0*ones(simTime, 1);                   % 0*ones(simTime, 1)
 
 % figure;
 % plot(t, sigTilt_e);
