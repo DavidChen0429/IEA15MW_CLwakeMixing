@@ -3,8 +3,8 @@ close all
 addpath('.\Functions');
 
 %% Load model
-buf_sys = load('Model\ModelOrder4.mat');
-decouple_sys = load('Model\ModelOrder4_AzimuthOffset.mat');
+buf_sys = load('Model/RightTransform/ModelOrder4_AzimuthOffset.mat');
+% decouple_sys = load('Model\ModelOrder4_AzimuthOffset.mat');
 A = buf_sys.OLi.A;
 B = buf_sys.OLi.B;
 C = buf_sys.OLi.C;
@@ -12,6 +12,7 @@ D = buf_sys.OLi.D;
 
 sys = buf_sys.OLi;
 G = tf(buf_sys.OLi);        % transfer matrix 
+% G = G([2, 1], :);           % Switch row because of control relation
 
 %% Basic system property
 eig(A)
@@ -20,8 +21,8 @@ rank(ctrb(A, B))
 rank(obsv(A, C))
 
 %% Load data
-trainData = 'train_120min_1bw_noise3%_AzimuthOffset.mat';       % train set
-testData = 'stepResponse_tiltOnly_AzimuthOffset.mat';                % test set
+trainData = 'train_120min_1bw_noise1%_AzimuthOffset.mat';       % train set
+testData = 'stepResponse_yawOnly_AzimuthOffset.mat';                % test set
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 IDEdata_train = load([turbineName caseName trainData]);
@@ -64,15 +65,17 @@ ys = y_train';  % 2*N
 us2 = u_test';  % 2*N
 ys2 = y_test';  % 2*N
 
-%% Decouple 
+% Decouple 
 % Original system's RGA
 G_ss = dcgain(G);   % steady-state gain matrix
 RGA = G_ss .* (inv(G_ss))';
 eigG = eig(G_ss);
 
 % % 1. steady-state decoupling
-ss_compensator = eye(2)/(G_ss) * 5; % calibrated for gain *5
+ss_compensator = eye(2)/(G_ss); 
 OLi = series(ss_compensator, buf_sys.OLi);
+OLi.InputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
+OLi.OutputName = {'z_e','y_e'};
 G_ss_dcpl = dcgain(OLi);
 RGA_ssdcpl = G_ss_dcpl .* (inv(G_ss_dcpl))';
 
@@ -85,13 +88,19 @@ RGA_ssdcpl = G_ss_dcpl .* (inv(G_ss_dcpl))';
 % G_ss2 = dcgain(decouple_sys2);
 % RGA2 = G_ss2 .* (inv(G_ss2))';
 
-yi2 = lsim(buf_sys.OLi,us2,t_test); % testing set
-yi2d = lsim(decouple_sys.OLi,us2,t_test); % ss decouple 
+% yi2 = lsim(buf_sys.OLi,us2,t_test); % testing set
+yi2d = lsim(OLi,us2,t_test); % ss decouple 
 % yi2d2 = lsim(decouple_sys2,us2,t_test); % dyn decouple 
 
 % yi2 = lsim(buf_sys.OLi,us,t_train); % training set
 % yi2d = lsim(decouple_sys,us,t_train); % ss decouple 
 % yi2d = lsim(decouple_sys2,us2,t_test); % dyn decouple 
+
+% Frequency response
+figure('Name', 'Original System', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+bode(G)
+figure('Name', 'Decoupled System', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+bode(OLi)
 
 figure()
 subplot(2, 1, 1)

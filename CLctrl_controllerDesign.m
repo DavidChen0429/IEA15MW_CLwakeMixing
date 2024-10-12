@@ -7,8 +7,7 @@ close all
 addpath('.\Functions');
 
 %% Load model
-buf_sys = load('Model\ModelOrder4_AzimuthOffset.mat');
-% buf_sys = load('Model\ModelOrder4_decoupled.mat');
+buf_sys = load('Model\RightTransform_Azimuth6\ModelOrder4_noise1p.mat');
 A = buf_sys.OLi.A;
 B = buf_sys.OLi.B;
 C = buf_sys.OLi.C;
@@ -17,17 +16,19 @@ D = buf_sys.OLi.D;
 sys = buf_sys.OLi;
 sys.InputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
 sys.OutputName = {'z_e','y_e'};
+% G = tf(buf_sys.OLi);        % transfer matrix 
 G = tf(buf_sys.OLi);        % transfer matrix 
+G = G([2, 1], :);
 
-%% Basic system property
+% Basic system property
 eig(A)
 size(A, 1)
 rank(ctrb(A, B))    
 rank(obsv(A, C))
 
-%% Load data
-trainData = 'train_120min_1bw_noise3%_AzimuthOffset.mat';       % train set
-testData = 'stepResponse_tiltOnly_AzimuthOffset.mat';                % test set
+% Load data
+trainData = 'train_120min_1bw_noise5%_AzimuthOffset6.mat';       % train set
+testData = 'stepResponse_both_AzimuthOffset6.mat';                % test set
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 IDEdata_train = load([turbineName caseName trainData]);
@@ -40,7 +41,7 @@ u_test = IDEdata_test.HF_beta;
 y_test = IDEdata_test.HF_helixCenter_filtered;
 
 % Remove first few data
-shiftNum = 800;
+shiftNum = 999;
 u_train = u_train(shiftNum:end, :);
 y_train = y_train(shiftNum:end, :);
 u_test = u_test(shiftNum:end, :);
@@ -72,75 +73,82 @@ ys = y_train';  % 2*N
 us2 = u_test';  % 2*N
 ys2 = y_test';  % 2*N
 
-%% Bode diagram (Frequency domain response)
-figure;
-bode(sys);
+% Bode diagram (Frequency domain response)
+figure('Name', 'Bode Diagram OL System', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+bode(G);
+% bode(G_swapped)
 title('Bode Diagram of Open-Loop System')
 
-%% Step response (Time domain response)
-% open loop (stable)
-figure;
-step(sys);
-title('OL System');
-xlabel('Time');
-ylabel('Response');
-grid on;
+% %% Step response (Time domain response)
+% % open loop (stable)
+% figure('Name', 'OL Step Response', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+% step(G);
+% title('OL System');
+% xlabel('Time');
+% ylabel('Response');
+% grid on;
+% 
+% % closed loop (unstable)
+% figure('Name', 'CL Step Response', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+% CL_noControl = feedback(G, eye(2));
+% step(feedback(G, eye(2)))
+% title('Uncontrolled CL System');
+% xlabel('Time');
+% ylabel('Response');
+% grid on;
 
-% closed loop (unstable)
-figure
-CL_noControl = feedback(sys, eye(2));
-step(feedback(sys, eye(2)))
-title('Uncontrolled CL System');
-xlabel('Time');
-ylabel('Response');
-grid on;
-
-%% PID Controller Design
+% PID Controller Design
 % func: pidtune
-C11 = pidtune(G(1,1), 'PI');
-C22 = pidtune(G(2,2), 'PI');
+wc = 0.010;
+% C11 = pidtune(G(1,1), 'I', wc);
+C22 = pidtune(G(2,2), 'I', wc);
 C12 = 0;
 C21 = 0;
-% hand tuning 
-Kp = 1;
-Ki = 0;
+Kp = 0; % 0
+Ki = 0.03235; % 0.05
 Ts = timeStep;
 C11 = pid(Kp, Ki, 0, 0, Ts);
 C_mimo = [C11, 0;
           0, C22];
+OL_ctrl = C_mimo * G;
 
-% Before control
-% C11 in charge of below
-figure('Name', 'Before Control C11', 'NumberTitle', 'off');
-subplot(1,2,1)
-margin(G(1, 1));
-subplot(1,2,2)
-margin(G(1, 2)); % Fucked
-% C22 in charge of below
-figure('Name', 'Before Control C22', 'NumberTitle', 'off');
-subplot(1,2,1)
-margin(G(2, 1));
-subplot(1,2,2)
-margin(G(2, 2));
+%%%
+% Open loop transfer matrix becomes
+%   [C11*G11 C11*G12]
+%   [C22*G21 C22*G22]
+%%%
+
+% % Before control
+% % C11 in charge of below
+% figure('Name', 'G11 G12 BeforeCtrl', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+% subplot(1,2,1)
+% margin(G(1, 1));
+% subplot(1,2,2)
+% margin(G(1, 2)); 
+% % C22 in charge of below
+% figure('Name', 'G21 G22 BeforeCtrl', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+% subplot(1,2,1)
+% margin(G(2, 1)); 
+% subplot(1,2,2)
+% margin(G(2, 2));
 
 % Loop shaping
-OL_ctrl = C_mimo * G;
 % bode(OL_ctrl);
 % C11 in charge of below
-figure('Name', 'After Control C11', 'NumberTitle', 'off');
+figure('Name', 'G11 G12 AfterCtrl', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
 subplot(1,2,1)
 margin(OL_ctrl(1, 1));
 subplot(1,2,2)
-margin(OL_ctrl(1, 2)); % Fucked
+margin(OL_ctrl(1, 2)); 
 % C22 in charge of below
-figure('Name', 'After Control C22', 'NumberTitle', 'off');
-subplot(1,2,1)
-margin(OL_ctrl(2, 1));
+figure('Name', 'G21 G22 AfterCtrl', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+subplot(1,2,1) 
+margin(OL_ctrl(2, 1)); 
 subplot(1,2,2)
 margin(OL_ctrl(2, 2));
 
 closed_loop_sys = feedback(OL_ctrl, eye(2));
-t = 0:timeStep:50;  % Time vector for simulation
+t = 0:timeStep:1000;  % Time vector for simulation
 figure('Name', 'After Control CL Step', 'NumberTitle', 'off');
 step(closed_loop_sys, t);
 title('Controlled CL System');
@@ -148,26 +156,31 @@ grid on;
 
 %% Faster tuning
 % close all
-Kp = 0.25; % 0.175 0.0005
-Ki = 1.0000; % 0.0005
+Kp = 0; % 0
+Ki = 0.03235; % 0.03235
 Ts = timeStep;
+C22 = pidtune(G(2,2), 'I', 0.010);
 C11 = pid(Kp, Ki, 0, 0, Ts);
-% C11 = pidtune(G(1,1), 'PID')
-C22 = pidtune(G(2,2), 'PI');
 C_mimo = [C11, 0;
           0, C22];
 OL_ctrl = C_mimo * G;
 
-% % C11 in charge of below
-% figure
-% subplot(1,2,1)
-% margin(G(1, 1));
-% subplot(1,2,2)
-% margin(G(1, 2)); % Fucked
-
 % C11 in charge of below
-figure('Name', 'After Control C11', 'NumberTitle', 'off','Position', [100, 100, 1000, 600]);
-subplot(1,2,1)
-margin(OL_ctrl(1, 1));
+figure('Name', 'G11 G12 AfterCtrl', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+subplot(1,2,1) 
+margin(OL_ctrl(1, 1)); 
 subplot(1,2,2)
 margin(OL_ctrl(1, 2)); % Fucked
+
+% % C22 in charge of below
+% figure('Name', 'G21 G22 AfterCtrl', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+% subplot(1,2,1) 
+% margin(OL_ctrl(2, 1)); % Fucked
+% subplot(1,2,2)
+% margin(OL_ctrl(2, 2));
+
+%% Phase-lead compensator design
+zpk(G(1,1))
+zpk(G(1,2))
+zpk(G(2,1))
+zpk(G(2,2))

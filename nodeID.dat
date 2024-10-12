@@ -24,9 +24,6 @@ Cloud provider      : Provider unknown
 Network adapter [0] : Realtek PCIe GbE Family Controller
      ip address [0-0-0-0]
     mac address [e8:6a:64:31:84:b7]
-Network adapter [0] : Dell Giga Ethernet
-     ip address [0-0-0-0]
-    mac address [c:37:96:6d:82:7b]
 Network adapter [0] : TAP-Windows Adapter V9
      ip address [0-0-0-0]
     mac address [0:ff:8d:f1:c2:3]

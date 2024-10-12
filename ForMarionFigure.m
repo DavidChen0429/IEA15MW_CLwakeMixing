@@ -177,7 +177,7 @@ for counter = 1:10:data_length(1)
     hold off;
     xlabel('Y [m]')
     ylabel('Z [m]')
-    title('LiDAR Wind Speed', counter)
+    title('LiDAR Wind Speed', counter+9)
     colorbar;
     clim([4 10])
     pause(0.1);

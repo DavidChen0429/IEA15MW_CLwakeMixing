@@ -3,8 +3,7 @@ close all
 addpath('.\Functions');
 
 %% Load model
-original_sys = load('Model\ModelOrder4.mat');
-decoupled_sys = load('Model\ModelOrder4_AzimuthOffset.mat');
+decoupled_sys = load('Model\RightTransform\ModelOrder4_AzimuthOffset.mat');
 
 %% Basic system property
 eig(decoupled_sys.OLi.A)
@@ -17,7 +16,6 @@ rank(obsv(decoupled_sys.OLi.A, decoupled_sys.OLi.C))
 testData = 'stepResponse_both_AzimuthOffset.mat';                % test set
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
-% IDEdata_train = load([turbineName caseName trainData]);
 IDEdata_test = load([turbineName caseName testData]);
 timeStep = 0.1;
 
@@ -79,12 +77,7 @@ G = tf(decoupled_sys.OLi);
 OLi = z^(-DeadtimeDelay) .* G;
 OLi = ss(OLi);
 
-G2 = tf(original_sys.OLi);
-delayed_sys_original = z^(-DeadtimeDelay) .* G2;
-delayed_sys_original = ss(delayed_sys_original);
-
 %% Performance comparison 
-yi2 = lsim(tf(original_sys.OLi),us2,t_test); % orignal system
 yi2d = lsim(tf(decoupled_sys.OLi),us2,t_test); % ss decouple 
 yi2dl = lsim(OLi,us2,t_test); % ss decouple 
 
@@ -115,5 +108,5 @@ legend('z_e','y_e','z_{e,d}','y_{e,d}')
 title('Delayed Result -- Output')
 
 %% Save model
-% save('Model\ModelOrder4_AzimuthOffset_delayed.mat', 'OLi');
+% save('Model\RightTransform\ModelOrder4_AzimuthOffset_delayed.mat', 'OLi');
 % save('Model\ModelOrder4_delayed.mat', 'delayed_sys_original');

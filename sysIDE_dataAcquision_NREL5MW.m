@@ -19,7 +19,7 @@ if isempty(m)
 end
 
 %% Data file 
-fileName = 'train_120min_1bw_noise5%_AzimuthOffset.mat';   % Fixed Frame 'train_30min_1bw.mat'
+fileName = 'train_120min_1bw_noise1%_AzimuthOffset96.mat';   % Fixed Frame 'train_30min_1bw.mat'
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 
@@ -69,21 +69,30 @@ N = 97;          % Gearbox ratio
 
 %% Signals for system IDE
 % ======== Train data
-bw = 0.0175;            % estimated bandwidth
+bw_tilt = 0.0175;       % estimated bandwidth [Hz]
+bw_yaw = 0.0175;        % estimated bandwidth [Hz]
 N_signal = simTime;     % signal length [s] simLen
 AMPL_signal = 1;        % amplitude
 % === Pseudoradom Binary
+% Beta_tilt
 N_prbn = simTime;       % signal length [s] simLen
 AMPL_prbn = 1;          % amplitude
 Ts_prbn = timeStep;     % sampling time [s] timeStep
-F_prbn = 1*bw;          % cutoff frequency [Hz] 2*bandwidth (0.0175)
-Fstop_prbn = 1*bw;      % band-stop filtered around this frequency
+F_prbn = 1*bw_tilt;     % cutoff frequency [Hz]
+Fstop_prbn = 1*bw_tilt; % band-stop filtered around this frequency
 T0_prbn = 0;            % starting time [s]
-P_prbn = 2;             % number of channels
-IDEsig = idprbs(N_prbn,AMPL_prbn,Ts_prbn,F_prbn,Fstop_prbn,T0_prbn,P_prbn);
-ns_prbn = floor((length(IDEsig)-N_prbn)/2);
-sigTilt_e = IDEsig(ns_prbn+1:N_prbn+ns_prbn,1);   % tailor length
-sigYaw_e = IDEsig(ns_prbn+1:N_prbn+ns_prbn,2);    % tailor length
+P_prbn = 1;             % number of channels
+IDEsig_tilt = idprbs(N_prbn,AMPL_prbn,Ts_prbn,F_prbn,Fstop_prbn,T0_prbn,P_prbn);
+ns_prbn = floor((length(IDEsig_tilt)-N_prbn)/2);
+sigTilt_e = IDEsig_tilt(ns_prbn+1:N_prbn+ns_prbn,1);   % tailor length
+% Beta_yaw
+F_prbn = 1*bw_yaw;      % cutoff frequency [Hz]
+Fstop_prbn = 1*bw_yaw;  % band-stop filtered around this frequency
+T0_prbn = 0;            % starting time [s]
+P_prbn = 1;             % number of channels
+IDEsig_yaw = idprbs(N_prbn,AMPL_prbn,Ts_prbn,F_prbn,Fstop_prbn,T0_prbn,P_prbn);
+ns_prbn = floor((length(IDEsig_yaw)-N_prbn)/2);
+sigYaw_e = IDEsig_yaw(ns_prbn+1:N_prbn+ns_prbn,1);    % tailor length
 
 % === Chirp
 % signal_length = simTime;      
@@ -95,7 +104,7 @@ sigYaw_e = IDEsig(ns_prbn+1:N_prbn+ns_prbn,2);    % tailor length
 
 % === Add disturbances (Gaussian noise)
 disturbance = randn(N_signal, 2);                   % noise
-noise_level = AMPL_signal * 0.05; % Adjust the noise level as needed
+noise_level = AMPL_signal * 0.001; % Adjust the noise level as needed
 noise_tilt = noise_level * randn(size(sigTilt_e));
 noise_yaw = noise_level * randn(size(sigYaw_e));
 sigTilt_e = sigTilt_e + noise_tilt;
@@ -133,13 +142,23 @@ ylabel('Amplitude [dB]');
 legend('\beta^e_{tilt}', '\beta^e_{yaw}')
 title('Input PSD')
 
+% Calculate the NSR (Noise-Signal-Ratio)
+noise_tilt_power = mean(noise_tilt.^2);
+noise_yaw_power = mean(noise_yaw.^2);
+signal_tilt_power = mean((sigTilt_e - noise_tilt).^2);
+signal_yaw_power = mean((sigYaw_e - noise_yaw).^2);
+NSR_tilt = noise_tilt_power / signal_tilt_power;
+NSR_yaw = noise_yaw_power / signal_yaw_power;
+disp(['Noise-to-Signal Ratio Tilt: ', num2str(NSR_tilt)]);
+disp(['Noise-to-Signal Ratio Yaw: ', num2str(NSR_yaw)]);
+
 %% Helix Setting
 Str = 0.3;                          % Strouhal number
 Helix_amplitude = 1;                % Helix amplitude                
 Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
 omega_e = Freq*2*pi;
 t = linspace(1, simLen, simTime);
-AzimuthOffset = 0; % optimal 8 but with wrong relation
+AzimuthOffset = 96; % 6 for pi/2 shift ;96 for pi shift (right relationship)
 
 % !!! If input signals has been generated from 'idprbs', then note below
 % line 

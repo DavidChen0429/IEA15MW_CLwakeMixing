@@ -3,8 +3,8 @@ close all
 addpath('.\Functions');
 
 %% Get Training data and Testing data
-trainData = 'train_120min_1bw_noise3%.mat';       % train set
-testData = 'stepResponse_both.mat';                % test set
+trainData = 'train_120min_1bw_noise1%_AzimuthOffset.mat';       % train set
+testData = 'stepResponse_both_AzimuthOffset.mat';                % test set
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 IDEdata_train = load([turbineName caseName trainData]);
@@ -17,14 +17,14 @@ u_test = IDEdata_test.HF_beta;
 y_test = IDEdata_test.HF_helixCenter_filtered;
 
 % Remove first few data
-shiftNum = 800;
+shiftNum = 999;
 u_train = u_train(shiftNum:end, :);
 y_train = y_train(shiftNum:end, :);
 u_test = u_test(shiftNum:end, :);
 y_test = y_test(shiftNum:end, :);
 
 % Time shift the signal
-DeadtimeDelay = 110;
+DeadtimeDelay = 110;    % 110 112 This should identified a semi-delayed system
 u_train = u_train(1:end-DeadtimeDelay, :);
 y_train = y_train(DeadtimeDelay+1:end, :);
 N_train = length(u_train);
@@ -42,8 +42,8 @@ u_test = detrend(u_test, 'constant');
 y_test = detrend(y_test, 'constant');
 
 % Signal scaling
-[us,Du,ys,Dy] = sigscale(u_train, y_train);
-[us2,Du2,ys2,Dy2] = sigscale(u_test, y_test);
+% [us,Du,ys,Dy] = sigscale(u_train, y_train);
+% [us2,Du2,ys2,Dy2] = sigscale(u_test, y_test);
 us = u_train';  % 2*N
 ys = y_train';  % 2*N
 us2 = u_test';  % 2*N
@@ -78,7 +78,7 @@ ys2 = y_test';  % 2*N
 % title('Output PSD')
 
 %% PBSID-varx   
-n_varx = 4; % 20 9 4 
+n_varx = 4; % 4 7 10
 f_varx = 200;    
 p_varx = 200;
 
@@ -96,8 +96,14 @@ OLi.OutputName = {'z_e','y_e'};
 % Validation (Frequency domain)
 [Ga,ws] = spa_avf(us,ys,timeStep,6,[],[],'hamming');
 Ga = frd(Ga,ws);
-figure 
+figure('Name', 'Frequence Response', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
 bodemag(OLi, Ga);
+hold on
+axesHandles = findall(gcf, 'Type', 'axes');
+for k = 1:length(axesHandles)
+    yline(axesHandles(k), 0, 'k--', 'LineWidth', 0.5); % '--r' makes it a dashed red line
+end
+hold off;
 legend('PBSID-varx', 'SPA');
 
 % Validation (VAF)
@@ -111,7 +117,7 @@ vaf(y_test, yi_test)
 
 % Validation (Time domain)
 yi2 = lsim(OLi,us,t_train); % training set
-figure()
+figure('Name', 'Time Response', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
 subplot(2,2,1)
 plot((1:length(yi2)) * timeStep, yi2(:, 1))
 hold on
@@ -156,15 +162,35 @@ ylabel('y_e')
 title('Testing Set y_e')
 
 
-%% See coupling 
+%% See result
+% Coupling
 G = tf(OLi);
+% G = G([2, 1], :);
 G_ss = dcgain(G);   % steady-state gain matrix
 RGA = G_ss .* (inv(G_ss))';
 disp(RGA);
 
+% bandwidth
+[mag, phase, w] = bode(G(1, 2));
+mag_dB = 20*log10(squeeze(mag));
+max_mag_dB = max(mag_dB);
+idx_bandwidth = find(mag_dB <= max_mag_dB-3, 1, 'first');
+bandwidth_frequency = w(idx_bandwidth);
+fprintf('G(1,2) bandwidth: %.5f Hz\n', bandwidth_frequency/(2*pi));
+
+[mag, phase, w] = bode(G(2, 1));
+mag_dB = 20*log10(squeeze(mag));
+max_mag_dB = max(mag_dB);
+idx_bandwidth = find(mag_dB <= max_mag_dB-3, 1, 'first');
+bandwidth_frequency = w(idx_bandwidth);
+fprintf('G(2,1) bandwidth: %.5f Hz\n', bandwidth_frequency/(2*pi));
+
+% bode diagram
+figure('Name', 'Original System', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+bode(G)
 %% save model 
 % save('Model/ModelOrder4.mat', 'OLi');
-% save('Model/ModelOrder4_AzimuthOffset.mat', 'OLi');
+% save('Model/RightTransform/ModelOrder4_noise1p_AzimuthOffset.mat', 'OLi');
 
 %% PBSID-opt
 % n_opt = 10;
