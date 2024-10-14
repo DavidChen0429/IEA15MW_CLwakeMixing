@@ -19,7 +19,7 @@ if isempty(m)
 end
 
 %% Data file 
-fileName = 'train_120min_1bw_noise1%_AzimuthOffset96.mat';   % Fixed Frame 'train_30min_1bw.mat'
+fileName = 'train_240min_1bw_noise1%_AzimuthOffset6.mat';   % Fixed Frame 'train_30min_1bw.mat'
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 
@@ -29,7 +29,7 @@ calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime = 72000;   % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 72000*2;   % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 
@@ -81,18 +81,19 @@ Ts_prbn = timeStep;     % sampling time [s] timeStep
 F_prbn = 1*bw_tilt;     % cutoff frequency [Hz]
 Fstop_prbn = 1*bw_tilt; % band-stop filtered around this frequency
 T0_prbn = 0;            % starting time [s]
-P_prbn = 1;             % number of channels
+P_prbn = 2;             % number of channels
 IDEsig_tilt = idprbs(N_prbn,AMPL_prbn,Ts_prbn,F_prbn,Fstop_prbn,T0_prbn,P_prbn);
 ns_prbn = floor((length(IDEsig_tilt)-N_prbn)/2);
 sigTilt_e = IDEsig_tilt(ns_prbn+1:N_prbn+ns_prbn,1);   % tailor length
+sigYaw_e = IDEsig_tilt(ns_prbn+1:N_prbn+ns_prbn,2);    % tailor length
 % Beta_yaw
-F_prbn = 1*bw_yaw;      % cutoff frequency [Hz]
-Fstop_prbn = 1*bw_yaw;  % band-stop filtered around this frequency
-T0_prbn = 0;            % starting time [s]
-P_prbn = 1;             % number of channels
-IDEsig_yaw = idprbs(N_prbn,AMPL_prbn,Ts_prbn,F_prbn,Fstop_prbn,T0_prbn,P_prbn);
-ns_prbn = floor((length(IDEsig_yaw)-N_prbn)/2);
-sigYaw_e = IDEsig_yaw(ns_prbn+1:N_prbn+ns_prbn,1);    % tailor length
+% F_prbn = 1*bw_yaw;      % cutoff frequency [Hz]
+% Fstop_prbn = 1*bw_yaw;  % band-stop filtered around this frequency
+% T0_prbn = 0;            % starting time [s]
+% P_prbn = 1;             % number of channels
+% IDEsig_yaw = idprbs(N_prbn,AMPL_prbn,Ts_prbn,F_prbn,Fstop_prbn,T0_prbn,P_prbn);
+% ns_prbn = floor((length(IDEsig_yaw)-N_prbn)/2);
+% sigYaw_e = IDEsig_yaw(ns_prbn+1:N_prbn+ns_prbn,1);    % tailor length
 
 % === Chirp
 % signal_length = simTime;      
@@ -104,7 +105,7 @@ sigYaw_e = IDEsig_yaw(ns_prbn+1:N_prbn+ns_prbn,1);    % tailor length
 
 % === Add disturbances (Gaussian noise)
 disturbance = randn(N_signal, 2);                   % noise
-noise_level = AMPL_signal * 0.001; % Adjust the noise level as needed
+noise_level = AMPL_signal * 0.01; % Adjust the noise level as needed
 noise_tilt = noise_level * randn(size(sigTilt_e));
 noise_yaw = noise_level * randn(size(sigYaw_e));
 sigTilt_e = sigTilt_e + noise_tilt;
@@ -158,7 +159,7 @@ Helix_amplitude = 1;                % Helix amplitude
 Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
 omega_e = Freq*2*pi;
 t = linspace(1, simLen, simTime);
-AzimuthOffset = 96; % 6 for pi/2 shift ;96 for pi shift (right relationship)
+AzimuthOffset = 6; % 6 for pi/2 shift ;96 for pi shift (right relationship)
 
 % !!! If input signals has been generated from 'idprbs', then note below
 % line 

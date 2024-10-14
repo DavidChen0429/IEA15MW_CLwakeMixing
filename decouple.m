@@ -3,7 +3,7 @@ close all
 addpath('.\Functions');
 
 %% Load model
-buf_sys = load('Model/RightTransform/ModelOrder4_AzimuthOffset.mat');
+buf_sys = load('Model/RightTransform_Azimuth96/ModelOrder4_noise1p_opposite.mat');
 % decouple_sys = load('Model\ModelOrder4_AzimuthOffset.mat');
 A = buf_sys.OLi.A;
 B = buf_sys.OLi.B;
@@ -21,8 +21,8 @@ rank(ctrb(A, B))
 rank(obsv(A, C))
 
 %% Load data
-trainData = 'train_120min_1bw_noise1%_AzimuthOffset.mat';       % train set
-testData = 'stepResponse_yawOnly_AzimuthOffset.mat';                % test set
+trainData = 'train_240min_1bw_noise1%_AzimuthOffset96.mat'; 
+testData = 'stepResponse_yawOnly_AzimuthOffset96.mat';    
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 IDEdata_train = load([turbineName caseName trainData]);
@@ -56,8 +56,8 @@ t_test = (0:N_test-1) * timeStep;
 % Detrend data
 u_train = detrend(u_train, 'constant');
 y_train = detrend(y_train, 'constant');
-u_test = detrend(u_test, 'constant');
-y_test = detrend(y_test, 'constant');
+% u_test = detrend(u_test, 'constant');
+% y_test = detrend(y_test, 'constant');
 
 % Signal scaling
 us = u_train';  % 2*N
@@ -65,19 +65,26 @@ ys = y_train';  % 2*N
 us2 = u_test';  % 2*N
 ys2 = y_test';  % 2*N
 
-% Decouple 
+% for the oppposite system
+ys(1, :) = -1 * ys(1, :);
+ys2(1, :) = -1 * ys2(1, :);
+
+%% Decouple 
 % Original system's RGA
 G_ss = dcgain(G);   % steady-state gain matrix
 RGA = G_ss .* (inv(G_ss))';
 eigG = eig(G_ss);
 
 % % 1. steady-state decoupling
-ss_compensator = eye(2)/(G_ss); 
+ss_compensator = eye(2)/(G_ss) * 3; % match gain
 OLi = series(ss_compensator, buf_sys.OLi);
 OLi.InputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
 OLi.OutputName = {'z_e','y_e'};
 G_ss_dcpl = dcgain(OLi);
 RGA_ssdcpl = G_ss_dcpl .* (inv(G_ss_dcpl))';
+
+disp(RGA)
+disp(RGA_ssdcpl)
 
 % % 2. dynamic decoupling
 % % This currently has the issue of not being a non-minimal phase system
@@ -88,21 +95,44 @@ RGA_ssdcpl = G_ss_dcpl .* (inv(G_ss_dcpl))';
 % G_ss2 = dcgain(decouple_sys2);
 % RGA2 = G_ss2 .* (inv(G_ss2))';
 
-% yi2 = lsim(buf_sys.OLi,us2,t_test); % testing set
-yi2d = lsim(OLi,us2,t_test); % ss decouple 
-% yi2d2 = lsim(decouple_sys2,us2,t_test); % dyn decouple 
+%% Compare result
+yi2_train = lsim(buf_sys.OLi,us,t_train); % testing set
+yi2d_train = lsim(OLi,us,t_train); % ss decouple 
+yi2_test = lsim(buf_sys.OLi,us2,t_test); % testing set
+yi2d_test = lsim(OLi,us2,t_test); % ss decouple 
 
-% yi2 = lsim(buf_sys.OLi,us,t_train); % training set
-% yi2d = lsim(decouple_sys,us,t_train); % ss decouple 
-% yi2d = lsim(decouple_sys2,us2,t_test); % dyn decouple 
+% VAF
+disp('=================================================')
+disp('[Training] VAF with PBSID-varx (open loop)')
+vaf(ys, yi2_train)
+vaf(ys, yi2d_train)
+disp('[Testing] VAF with PBSID-varx (open loop)')
+vaf(ys2, yi2_test)  
+vaf(ys2, yi2d_test)  
 
-% Frequency response
-figure('Name', 'Original System', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-bode(G)
-figure('Name', 'Decoupled System', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-bode(OLi)
+% Validation (Frequency domain)
+[Ga,ws] = spa_avf(us,ys,timeStep,6,[],[],'hamming');
+Ga = frd(Ga,ws);
+figure('Name', 'Frequence Response', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+bodemag(buf_sys.OLi, OLi, Ga);
+hold on
+axesHandles = findall(gcf, 'Type', 'axes');
+for k = 1:length(axesHandles)
+    yline(axesHandles(k), 0, 'k--', 'LineWidth', 0.5); % '--r' makes it a dashed red line
+end
+hold off;
+legend('Original Sys','Decoupled Sys', 'Real');
 
-figure()
+
+
+%% Test Set
+% % Frequency response
+% figure('Name', 'Original System', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+% bode(G)
+% figure('Name', 'Decoupled System', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+% bode(OLi)
+
+figure('Name', 'Time-domain Response', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
 subplot(2, 1, 1)
 plot((1:length(us2)) * timeStep, us2(1, :), 'm', 'LineWidth', 1)
 hold on 
@@ -116,14 +146,16 @@ title('Decouple Result -- Input')
 
 % For already decoupled system
 subplot(2, 1, 2)
-plot((1:length(yi2d)) * timeStep, yi2d(:, 1),'m', 'LineWidth', 1)
+plot((1:length(yi2_test)) * timeStep, yi2_test(:, 1),'m--', 'LineWidth', 1)
 hold on
-plot((1:length(yi2d)) * timeStep, yi2d(:, 2),'b', 'LineWidth', 1)
+plot((1:length(yi2_test)) * timeStep, yi2_test(:, 2),'b--', 'LineWidth', 1)
+plot((1:length(yi2d_test)) * timeStep, yi2d_test(:, 1),'m', 'LineWidth', 1)
+plot((1:length(yi2d_test)) * timeStep, yi2d_test(:, 2),'b', 'LineWidth', 1)
 yline(0, '--', 'LineWidth', 1)
 hold off
 xlabel('Time [s]')
 ylabel('Magnitude')
-legend('z_e - tilt','y_e - yaw')
+legend('z_e - tilt','y_e - yaw','z_{e,d} - tilt','y_{e,d} - yaw')
 % legend('tilt','yaw','tilt_{dcpl}','yaw_{dcpl}','tilt_{dcpl2}','yaw_{dcpl2}')
 title('Decouple Result -- Output')
 
@@ -177,4 +209,4 @@ title('Decouple Result -- Output')
 % legend('SPA','Identified','Decoupled')
 
 %% Save model
-% save('Model\ModelOrder4_decoupled.mat', 'decouple_sys');
+% save('Model/RightTransform_Azimuth96/ModelOrder4_noise1p_opposite_decoupled.mat', 'OLi');

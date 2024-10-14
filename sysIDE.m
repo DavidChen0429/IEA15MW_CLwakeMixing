@@ -3,8 +3,8 @@ close all
 addpath('.\Functions');
 
 %% Get Training data and Testing data
-trainData = 'train_120min_1bw_noise1%_AzimuthOffset.mat';       % train set
-testData = 'stepResponse_both_AzimuthOffset.mat';                % test set
+trainData = 'train_240min_1bw_noise1%_AzimuthOffset96.mat';      
+testData = 'stepResponse_both_AzimuthOffset96.mat';                
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 IDEdata_train = load([turbineName caseName trainData]);
@@ -24,7 +24,7 @@ u_test = u_test(shiftNum:end, :);
 y_test = y_test(shiftNum:end, :);
 
 % Time shift the signal
-DeadtimeDelay = 110;    % 110 112 This should identified a semi-delayed system
+DeadtimeDelay = 110; % 110 112 This should identified a semi-delayed system
 u_train = u_train(1:end-DeadtimeDelay, :);
 y_train = y_train(DeadtimeDelay+1:end, :);
 N_train = length(u_train);
@@ -48,6 +48,9 @@ us = u_train';  % 2*N
 ys = y_train';  % 2*N
 us2 = u_test';  % 2*N
 ys2 = y_test';  % 2*N
+
+ys(1, :) = -1 * ys(1, :);
+ys2(1, :) = -1 * ys2(1, :);
 
 %% Power Spectrum Density
 % Ts_prbn = timeStep;
@@ -113,7 +116,7 @@ disp('[Training] VAF with PBSID-varx (open loop)')
 vaf(ys, yi)   
 yi_test = lsim(OLi,us2,t_test);
 disp('[Testing] VAF with PBSID-varx (open loop)')
-vaf(y_test, yi_test)  
+vaf(ys2, yi_test)  
 
 % Validation (Time domain)
 yi2 = lsim(OLi,us,t_train); % training set
@@ -144,9 +147,10 @@ subplot(2,2,2)
 plot((1:length(yi2)) * timeStep, yi2(:, 1))
 hold on
 plot((1:length(yi2)) * timeStep, ys2(1, :))
+plot((1:length(us2)) * timeStep, us2(1, :), 'k:', 'LineWidth', 1)
 yline(0, '--', 'LineWidth', 1)
 hold off
-legend('predict', 'real')
+legend('predict', 'real','input')
 xlabel('Time [s]')
 ylabel('z_e')
 title('Testing Set z_e')
@@ -154,13 +158,13 @@ subplot(2,2,4)
 plot((1:length(yi2)) * timeStep, yi2(:, 2))
 hold on
 plot((1:length(yi2)) * timeStep, ys2(2, :))
+plot((1:length(us2)) * timeStep, us2(2, :), 'k:', 'LineWidth', 1)
 yline(0, '--', 'LineWidth', 1)
 hold off
-legend('predict', 'real')
+legend('predict', 'real','input')
 xlabel('Time [s]')
 ylabel('y_e')
 title('Testing Set y_e')
-
 
 %% See result
 % Coupling
@@ -171,14 +175,14 @@ RGA = G_ss .* (inv(G_ss))';
 disp(RGA);
 
 % bandwidth
-[mag, phase, w] = bode(G(1, 2));
+[mag, phase, w] = bode(G(1, 1));
 mag_dB = 20*log10(squeeze(mag));
 max_mag_dB = max(mag_dB);
 idx_bandwidth = find(mag_dB <= max_mag_dB-3, 1, 'first');
 bandwidth_frequency = w(idx_bandwidth);
 fprintf('G(1,2) bandwidth: %.5f Hz\n', bandwidth_frequency/(2*pi));
 
-[mag, phase, w] = bode(G(2, 1));
+[mag, phase, w] = bode(G(2, 2));
 mag_dB = 20*log10(squeeze(mag));
 max_mag_dB = max(mag_dB);
 idx_bandwidth = find(mag_dB <= max_mag_dB-3, 1, 'first');
@@ -190,7 +194,7 @@ figure('Name', 'Original System', 'NumberTitle', 'off', 'Position', [100, 100, 1
 bode(G)
 %% save model 
 % save('Model/ModelOrder4.mat', 'OLi');
-% save('Model/RightTransform/ModelOrder4_noise1p_AzimuthOffset.mat', 'OLi');
+% save('Model/RightTransform_Azimuth96/ModelOrder4_noise1p_opposite.mat', 'OLi');
 
 %% PBSID-opt
 % n_opt = 10;

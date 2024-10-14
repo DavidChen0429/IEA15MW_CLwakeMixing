@@ -7,7 +7,7 @@ close all
 addpath('.\Functions');
 
 %% Load model
-buf_sys = load('Model\RightTransform_Azimuth6\ModelOrder4_noise1p.mat');
+buf_sys = load('Model\RightTransform_Azimuth96\ModelOrder4_noise1p_opposite_decoupled.mat');
 A = buf_sys.OLi.A;
 B = buf_sys.OLi.B;
 C = buf_sys.OLi.C;
@@ -18,7 +18,7 @@ sys.InputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
 sys.OutputName = {'z_e','y_e'};
 % G = tf(buf_sys.OLi);        % transfer matrix 
 G = tf(buf_sys.OLi);        % transfer matrix 
-G = G([2, 1], :);
+% G = G([2, 1], :);
 
 % Basic system property
 eig(A)
@@ -76,40 +76,21 @@ ys2 = y_test';  % 2*N
 % Bode diagram (Frequency domain response)
 figure('Name', 'Bode Diagram OL System', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
 bode(G);
-% bode(G_swapped)
 title('Bode Diagram of Open-Loop System')
 
-% %% Step response (Time domain response)
-% % open loop (stable)
-% figure('Name', 'OL Step Response', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-% step(G);
-% title('OL System');
-% xlabel('Time');
-% ylabel('Response');
-% grid on;
-% 
-% % closed loop (unstable)
-% figure('Name', 'CL Step Response', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-% CL_noControl = feedback(G, eye(2));
-% step(feedback(G, eye(2)))
-% title('Uncontrolled CL System');
-% xlabel('Time');
-% ylabel('Response');
-% grid on;
-
-% PID Controller Design
+%% PID Controller Design
 % func: pidtune
 wc = 0.010;
-% C11 = pidtune(G(1,1), 'I', wc);
-C22 = pidtune(G(2,2), 'I', wc);
+C11 = pidtune(G(1,1), 'PI', wc);
+C22 = pidtune(G(2,2), 'PI', wc);
 C12 = 0;
 C21 = 0;
-Kp = 0; % 0
-Ki = 0.03235; % 0.05
-Ts = timeStep;
-C11 = pid(Kp, Ki, 0, 0, Ts);
+% Kp = 0; % 0
+% Ki = 0.0375; % 0.05
+% Ts = timeStep;
+% C11 = pid(Kp, Ki, 0, 0, Ts);
 C_mimo = [C11, 0;
-          0, C22];
+          0, 0];
 OL_ctrl = C_mimo * G;
 
 %%%
@@ -131,21 +112,21 @@ OL_ctrl = C_mimo * G;
 % margin(G(2, 1)); 
 % subplot(1,2,2)
 % margin(G(2, 2));
-
-% Loop shaping
-% bode(OL_ctrl);
-% C11 in charge of below
-figure('Name', 'G11 G12 AfterCtrl', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-subplot(1,2,1)
-margin(OL_ctrl(1, 1));
-subplot(1,2,2)
-margin(OL_ctrl(1, 2)); 
-% C22 in charge of below
-figure('Name', 'G21 G22 AfterCtrl', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-subplot(1,2,1) 
-margin(OL_ctrl(2, 1)); 
-subplot(1,2,2)
-margin(OL_ctrl(2, 2));
+% 
+% % Loop shaping
+% % bode(OL_ctrl);
+% % C11 in charge of below
+% figure('Name', 'G11 G12 AfterCtrl', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+% subplot(1,2,1)
+% margin(OL_ctrl(1, 1));
+% subplot(1,2,2)
+% margin(OL_ctrl(1, 2)); 
+% % C22 in charge of below
+% figure('Name', 'G21 G22 AfterCtrl', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+% subplot(1,2,1) 
+% margin(OL_ctrl(2, 1)); 
+% subplot(1,2,2)
+% margin(OL_ctrl(2, 2));
 
 closed_loop_sys = feedback(OL_ctrl, eye(2));
 t = 0:timeStep:1000;  % Time vector for simulation
@@ -157,7 +138,7 @@ grid on;
 %% Faster tuning
 % close all
 Kp = 0; % 0
-Ki = 0.03235; % 0.03235
+Ki = 0.0375; % 0.0375
 Ts = timeStep;
 C22 = pidtune(G(2,2), 'I', 0.010);
 C11 = pid(Kp, Ki, 0, 0, Ts);

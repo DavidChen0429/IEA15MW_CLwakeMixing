@@ -18,18 +18,18 @@ if isempty(m)
     fprintf('Error')
 end
 
-%% Data file 
-fileName = 'stepResponse_yawOnly_AzimuthOffset.mat';   % Fixed Frame
+% Data file (Chage this accordingly)
+fileName = 'stepResponse_tiltOnly_AzimuthOffset96.mat';   % Fixed Frame
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
 
-%% Load project and Initialize simulation
+% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
 calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime = 2000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 12000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 
@@ -80,8 +80,8 @@ t = linspace(1, simLen, simTime);
 
 % Step input to test basic properties
 % steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5)];
-% steps = [0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -Helix_amplitude*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 2*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10)];
-steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime*4/5)];
+steps = [0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -Helix_amplitude*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 2*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10)];
+% steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime*4/5)];
 sigTilt_e = steps;                  % 0*ones(simTime, 1)
 sigYaw_e = 0*ones(simTime, 1);                   % 0*ones(simTime, 1)
 
@@ -233,12 +233,12 @@ calllib('QBladeDLL','closeInstance')
 %                                       'HF_helixCenter_filtered', ...
 %                                       'FF_beta', ...
 %                                       'HF_beta');
-% save([turbineName caseName fileName], 'FF_helixCenter', ...
-%                                       'FF_helixCenter_filtered', ...
-%                                       'HF_helixCenter', ...
-%                                       'HF_helixCenter_filtered', ...
-%                                       'FF_beta', ...
-%                                       'HF_beta');
+save([turbineName caseName fileName], 'FF_helixCenter', ...
+                                      'FF_helixCenter_filtered', ...
+                                      'HF_helixCenter', ...
+                                      'HF_helixCenter_filtered', ...
+                                      'FF_beta', ...
+                                      'HF_beta');
 toc 
 
 %% Visualization

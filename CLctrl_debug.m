@@ -19,7 +19,7 @@ if isempty(m)
 end
 
 %% Data file 
-fileName = 'try.mat';   % Fixed Frame
+fileName = 'ComponentCheck_AzimuthOffset96.mat';   % Fixed Frame
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Str0.3_U10_1Dd_10Hz_CCW\CLctrl\';
 
@@ -29,7 +29,7 @@ calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime =12000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 10000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 
@@ -45,7 +45,7 @@ Pit2 = 'Pitch Angle Blade 2 [deg]';
 Pit3 = 'Pitch Angle Blade 3 [deg]';
 
 %% Load internal model
-buf_sys = load('Model\RightTransform_Azimuth6\ModelOrder4_noise1p.mat');
+buf_sys = load('Model\RightTransform_Azimuth96\ModelOrder4_noise1p_opposite_decoupled.mat');
 decoupled_sys = buf_sys.OLi;
 
 % Construct delayed model
@@ -85,15 +85,15 @@ Str = 0.3;                          % Strouhal number
 Helix_amplitude = 1;                % Helix amplitude                
 Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
 omega_e = Freq*2*pi;
-AzimuthOffset = 6; % History -35
+AzimuthOffset = 96; % 6 (2\pi) & 96; History -35
 
 t = linspace(1, simLen, simTime);
 % sigTilt_e = Helix_amplitude * ones(simTime, 1);  % basic
 % sigYaw_e = 0 * ones(simTime, 1);                 % basic
 
 % % Step input to test basic properties
-% steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime*2/5) 0*ones(1, simTime*2/5)];
-steps = [0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 2*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10)];
+steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime*2/5) 0*ones(1, simTime*2/5)];
+% steps = [0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 2*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10)];
 sigTilt_e = steps;                  % 0 * ones(simTime, 1)
 sigYaw_e = steps;    % 0 * ones(simTime, 1)
 
@@ -239,11 +239,8 @@ for i = 1:1:simTime
         u(i, :) = [sigTilt_e(i) sigYaw_e(i)];
     else
         % Activate CL Control
-        % Working on !!!!!!! (Activate controller
         e(i, :) = r(i, :) - yc(i-1, :);
-%         u(i, :) = u(i-1, :) + e(i, :) * Ctrlers;
         u(i, :) = [sigTilt_e(i) sigYaw_e(i)];
-%         u(i, :) = r(i, :) - y(i-1, :);
     end
 
     % 1. Get tilt and yaw signals
