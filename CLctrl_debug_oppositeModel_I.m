@@ -126,12 +126,9 @@ wc = 0.1;
 C11 = pidtune(G(1,1), 'I', wc);
 C22 = pidtune(G(2,2), 'I', wc); % This could be much faster
 Ki = 0.0113;                    % Gain acquired from the above result
-% C12 = 0;
-% C21 = 0;
-% C_mimo = [C11, 0;
-%           0, 0];
-Ki_matrix = [0 0; 
-             0 Ki];
+Channel_selector = [0 0;
+                    0 1];
+Ki_matrix = Ki * Channel_selector;
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat

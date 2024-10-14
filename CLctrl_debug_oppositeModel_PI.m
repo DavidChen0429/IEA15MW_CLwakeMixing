@@ -105,8 +105,8 @@ sigYaw_e = steps;    % 0 * ones(simTime, 1)
 %% Define CL Ctrl setting
 Trigger = ceil(simTime/3);      % Time that CL ctrl is triggered
 r = zeros(simTime, 2);      % reference signal
-r(Trigger:end, 1) = 0*ones(simTime+1-Trigger, 1);   % z_e
-r(Trigger:end, 2) = 3*ones(simTime+1-Trigger, 1);   % y_e
+r(Trigger:end, 1) = 3*ones(simTime+1-Trigger, 1);   % z_e
+r(Trigger:end, 2) = 0*ones(simTime+1-Trigger, 1);   % y_e
 e = zeros(simTime, 2);      % error
 % integral_error = 0;         % error for integrator
 u = zeros(simTime, 2);      % control input
@@ -123,14 +123,14 @@ xMd = zeros(simTime+1, size(decoupled_delayed_sys.A, 1));
 
 % Controller Design
 wc = 0.1;
-C11 = pidtune(G(1,1), 'I', wc);
-C22 = pidtune(G(2,2), 'I', wc); % This could be much faster
-Kp = 0.557;
-Ki = 0.0327;                    % Gain acquired from the above result
-Kp_matrix = [0 0; 
-             0 Kp];
-Ki_matrix = [0 0; 
-             0 Ki];
+C11 = pidtune(G(1,1), 'PI');
+C22 = pidtune(G(2,2), 'PI'); % This could be much faster
+Kp = 0.566;     % 0.566; 0.557
+Ki = 0.0337;    % 0.0337; 0.0327    
+Channel_selector = [1 0;    % z_e
+                    0 0];   % y_e
+Kp_matrix = Kp * Channel_selector;
+Ki_matrix = Ki * Channel_selector;
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat
@@ -244,10 +244,12 @@ for i = 1:1:simTime
         u(i, :) = [sigTilt_e(i) sigYaw_e(i)];
     else
         % Activate CL Control
-        e(i, :) = r(i, :) - yc(i-1, :); % This could change to y if yc doesn't do well
-%         e(i, :) = r(i, :) - y(i-1, :); % This could change to y if yc doesn't do well
+        e(i, :) = r(i, :) - yc(i-1, :);
         delta_u = e(i, :) * timeStep * Ki_matrix;
-        u(i, :) = e(i, :) * Kp_matrix + (u(i - 1, :) + delta_u);
+        u(i, :) = (e(i,:)-e(i-1,:))*Kp_matrix + (u(i-1,:)+delta_u);
+        % This can be derived from the inverse z-transform of discrete PI
+        % I am a fucking genius and stupid man at the same time Lol
+        % Can't believe I got stuck on this for hours
     end
 
     % 1. Get tilt and yaw signals
