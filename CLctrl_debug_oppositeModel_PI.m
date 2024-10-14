@@ -104,9 +104,6 @@ sigYaw_e = steps;    % 0 * ones(simTime, 1)
 
 %% Define CL Ctrl setting
 Trigger = ceil(simTime/3);      % Time that CL ctrl is triggered
-r = zeros(simTime, 2);      % reference signal
-r(Trigger:end, 1) = 3*ones(simTime+1-Trigger, 1);   % z_e
-r(Trigger:end, 2) = 0*ones(simTime+1-Trigger, 1);   % y_e
 e = zeros(simTime, 2);      % error
 % integral_error = 0;         % error for integrator
 u = zeros(simTime, 2);      % control input
@@ -125,12 +122,16 @@ xMd = zeros(simTime+1, size(decoupled_delayed_sys.A, 1));
 wc = 0.1;
 C11 = pidtune(G(1,1), 'PI');
 C22 = pidtune(G(2,2), 'PI'); % This could be much faster
-Kp = 0.566;     % 0.566; 0.557
-Ki = 0.0337;    % 0.0337; 0.0327    
-Channel_selector = [1 0;    % z_e
-                    0 0];   % y_e
+Kp = 0.557;     % 0.566; 0.557; 0
+Ki = 0.0327;    % 0.0337; 0.0327; 0.0113   
+Channel_selector = [0 0;    % z_e
+                    0 1];   % y_e
 Kp_matrix = Kp * Channel_selector;
 Ki_matrix = Ki * Channel_selector;
+r = zeros(simTime, 2);      % reference signal
+reference_magnitude = 5 * Channel_selector;
+r(Trigger:end, 1) = reference_magnitude(1,1)*ones(simTime+1-Trigger, 1);   % z_e
+r(Trigger:end, 2) = reference_magnitude(2,2)*ones(simTime+1-Trigger, 1);   % y_e
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat
@@ -244,8 +245,8 @@ for i = 1:1:simTime
         u(i, :) = [sigTilt_e(i) sigYaw_e(i)];
     else
         % Activate CL Control
-        e(i, :) = r(i, :) - yc(i-1, :);
-        delta_u = e(i, :) * timeStep * Ki_matrix;
+        e(i, :) = r(i, :) - y(i-1, :);
+        delta_u = e(i, :)*timeStep*Ki_matrix;
         u(i, :) = (e(i,:)-e(i-1,:))*Kp_matrix + (u(i-1,:)+delta_u);
         % This can be derived from the inverse z-transform of discrete PI
         % I am a fucking genius and stupid man at the same time Lol
@@ -459,19 +460,20 @@ ylabel('Magnitude')
 title('Error check')
 legend('e_{r,1}', 'e_{r,2}','e_{y,1}', 'e_{y,2}')
 
-% % Compare wind turbine real output to the reference
-% figure
-% plot((1:length(ym)) * timeStep, ym(:, 1),'m','LineWidth', 1)
-% hold on
-% plot((1:length(ym)) * timeStep, ym(:, 2),'b','LineWidth', 1)
-% plot((1:length(r)) * timeStep, r(:, 1),'m--','LineWidth', 1)
-% plot((1:length(r)) * timeStep, r(:, 2),'k--','LineWidth', 1)
-% yline(0, '--', 'LineWidth', 1)
-% hold off
-% xlabel('Time [s]')
-% ylabel('Magnitude')
-% title('Controller Performance Check')
-% legend('y_{WTm1}','y_{WTm2}','r_z','r_y')
+% Compare wind turbine real output to the reference
+figure('Name', 'Controller performance', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+plot((1:length(ym)) * timeStep, ym(:, 1),'m','LineWidth', 1)
+hold on
+plot((1:length(ym)) * timeStep, ym(:, 2),'b','LineWidth', 1)
+plot((1:length(r)) * timeStep, r(:, 1),'m--','LineWidth', 1)
+plot((1:length(r)) * timeStep, r(:, 2),'k--','LineWidth', 1)
+yline(0, '--', 'LineWidth', 1)
+xline(trigger_time, '--k', 'Activate CL Ctrl', 'LabelOrientation', 'horizontal', 'LineWidth', 1);
+hold off
+xlabel('Time [s]')
+ylabel('Magnitude')
+title('Controller Performance Check')
+legend('y_{WTm1}','y_{WTm2}','r_z','r_y')
 
 % % Adaptive filter check
 % figure

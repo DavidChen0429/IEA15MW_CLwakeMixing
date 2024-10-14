@@ -104,9 +104,6 @@ sigYaw_e = steps;    % 0 * ones(simTime, 1)
 
 %% Define CL Ctrl setting
 Trigger = ceil(simTime/3);      % Time that CL ctrl is triggered
-r = zeros(simTime, 2);      % reference signal
-r(Trigger:end, 1) = 0*ones(simTime+1-Trigger, 1);   % z_e
-r(Trigger:end, 2) = 3*ones(simTime+1-Trigger, 1);   % y_e
 e = zeros(simTime, 2);      % error
 % integral_error = 0;         % error for integrator
 u = zeros(simTime, 2);      % control input
@@ -126,9 +123,13 @@ wc = 0.1;
 C11 = pidtune(G(1,1), 'I', wc);
 C22 = pidtune(G(2,2), 'I', wc); % This could be much faster
 Ki = 0.0113;                    % Gain acquired from the above result
-Channel_selector = [0 0;
-                    0 1];
+Channel_selector = [0 0;        % ze
+                    0 1];       % ye
 Ki_matrix = Ki * Channel_selector;
+r = zeros(simTime, 2);      % reference signal
+reference_magnitude = 3 * Channel_selector;
+r(Trigger:end, 1) = reference_magnitude(1,1)*ones(simTime+1-Trigger, 1);   % z_e
+r(Trigger:end, 2) = reference_magnitude(2,2)*ones(simTime+1-Trigger, 1);   % y_e
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat
