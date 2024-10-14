@@ -80,17 +80,17 @@ title('Bode Diagram of Open-Loop System')
 
 %% PID Controller Design
 % func: pidtune
-wc = 0.010;
-C11 = pidtune(G(1,1), 'PI', wc);
-C22 = pidtune(G(2,2), 'PI', wc);
-C12 = 0;
+wc = 0.08;
+C11 = pidtune(G(1,1), 'PI'); % To make it faster
+C22 = pidtune(G(2,2), 'PI'); % To make it faster
+C12 = 0;    
 C21 = 0;
 % Kp = 0; % 0
 % Ki = 0.0375; % 0.05
 % Ts = timeStep;
 % C11 = pid(Kp, Ki, 0, 0, Ts);
-C_mimo = [C11, 0;
-          0, 0];
+C_mimo = [0, 0;
+          0, C22];
 OL_ctrl = C_mimo * G;
 
 %%%
@@ -129,8 +129,8 @@ OL_ctrl = C_mimo * G;
 % margin(OL_ctrl(2, 2));
 
 closed_loop_sys = feedback(OL_ctrl, eye(2));
-t = 0:timeStep:1000;  % Time vector for simulation
-figure('Name', 'After Control CL Step', 'NumberTitle', 'off');
+t = 0:timeStep:200;  % Time vector for simulation
+figure('Name', 'After Control CL Step', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
 step(closed_loop_sys, t);
 title('Controlled CL System');
 grid on;
