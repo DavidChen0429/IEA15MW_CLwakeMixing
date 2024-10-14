@@ -123,15 +123,25 @@ wc = 0.1;
 C11 = pidtune(G(1,1), 'PI');
 C22 = pidtune(G(2,2), 'PI'); % This could be much faster
 Kp = 0.557;     % 0.566; 0.557; 0
-Ki = 0.0327;    % 0.0337; 0.0327; 0.0113   
+Ki = 0.0327;    % 0.0337; 0.0327; 0.0113  
+% Select which channel to control (have to do this because of the coupling)
 Channel_selector = [0 0;    % z_e
                     0 1];   % y_e
 Kp_matrix = Kp * Channel_selector;
 Ki_matrix = Ki * Channel_selector;
+
+% Create reference
 r = zeros(simTime, 2);      % reference signal
-reference_magnitude = 5 * Channel_selector;
-r(Trigger:end, 1) = reference_magnitude(1,1)*ones(simTime+1-Trigger, 1);   % z_e
-r(Trigger:end, 2) = reference_magnitude(2,2)*ones(simTime+1-Trigger, 1);   % y_e
+% 1. Steps
+% reference_magnitude = 5 * Channel_selector;
+% r(Trigger:end, 1) = reference_magnitude(1,1)*ones(simTime+1-Trigger, 1);   % z_e
+% r(Trigger:end, 2) = reference_magnitude(2,2)*ones(simTime+1-Trigger, 1);   % y_e
+% 2. Ramp
+reference_slope = 0.0025 * 2 * Channel_selector; % Define the slope of the ramp signal
+for tt = Trigger:simTime
+    r(tt, 1) = reference_slope(1,1) * (tt - Trigger);   % z_e ramp signal
+    r(tt, 2) = reference_slope(2,2) * (tt - Trigger);   % y_e ramp signal
+end
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat

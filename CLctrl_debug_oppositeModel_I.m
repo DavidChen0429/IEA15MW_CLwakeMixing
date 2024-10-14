@@ -127,9 +127,16 @@ Channel_selector = [0 0;        % ze
                     0 1];       % ye
 Ki_matrix = Ki * Channel_selector;
 r = zeros(simTime, 2);      % reference signal
-reference_magnitude = 3 * Channel_selector;
+% 1. Steps
+reference_magnitude = 5 * Channel_selector;
 r(Trigger:end, 1) = reference_magnitude(1,1)*ones(simTime+1-Trigger, 1);   % z_e
 r(Trigger:end, 2) = reference_magnitude(2,2)*ones(simTime+1-Trigger, 1);   % y_e
+% 2. Ramp
+% reference_slope = 0.0025 * 2 * Channel_selector; % Define the slope of the ramp signal
+% for tt = Trigger:simTime
+%     r(tt, 1) = reference_slope(1,1) * (tt - Trigger);   % z_e ramp signal
+%     r(tt, 2) = reference_slope(2,2) * (tt - Trigger);   % y_e ramp signal
+% end
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat
@@ -455,19 +462,20 @@ ylabel('Magnitude')
 title('Error check')
 legend('e_{r,1}', 'e_{r,2}','e_{y,1}', 'e_{y,2}')
 
-% % Compare wind turbine real output to the reference
-% figure
-% plot((1:length(ym)) * timeStep, ym(:, 1),'m','LineWidth', 1)
-% hold on
-% plot((1:length(ym)) * timeStep, ym(:, 2),'b','LineWidth', 1)
-% plot((1:length(r)) * timeStep, r(:, 1),'m--','LineWidth', 1)
-% plot((1:length(r)) * timeStep, r(:, 2),'k--','LineWidth', 1)
-% yline(0, '--', 'LineWidth', 1)
-% hold off
-% xlabel('Time [s]')
-% ylabel('Magnitude')
-% title('Controller Performance Check')
-% legend('y_{WTm1}','y_{WTm2}','r_z','r_y')
+% Compare wind turbine real output to the reference
+figure('Name', 'Controller performance', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+plot((1:length(ym)) * timeStep, ym(:, 1),'m','LineWidth', 1)
+hold on
+plot((1:length(ym)) * timeStep, ym(:, 2),'b','LineWidth', 1)
+plot((1:length(r)) * timeStep, r(:, 1),'m--','LineWidth', 1)
+plot((1:length(r)) * timeStep, r(:, 2),'k--','LineWidth', 1)
+yline(0, '--', 'LineWidth', 1)
+xline(trigger_time, '--k', 'Activate CL Ctrl', 'LabelOrientation', 'horizontal', 'LineWidth', 1);
+hold off
+xlabel('Time [s]')
+ylabel('Magnitude')
+title('Controller Performance Check')
+legend('y_{WTm1}','y_{WTm2}','r_z','r_y')
 
 % % Adaptive filter check
 % figure
