@@ -39,28 +39,28 @@ This file contains the project and simulation files for NREL5MW and IEA15MW wind
 * Folders: Supporting files for simulation
 
 ### Matlab.m Files
-* CLctrl_controllerDesign_MIMO
-* CLctrl_controllerDesign_SISO
-* CLctrl_debug
-* CLctrl_debug_oppositeModel_MIMO_Hinf
-* CLctrl_debug_oppositeModel_SISO_I
-* CLctrl_debug_oppositeModel_SISO_PI
-* coordinateTransform
-* correlationStudy
-* debug
-* decouple
-* decouple_RealApproximation
-* delay
-* ForMarion
-* ForMarionFigure
-* Helix_IEA15MW_fixedFrame
-* Helix_IEA15MW_helixFrame
-* Helix_NREL5MW_fixedFrame
-* Helix_NREL5MW_helixFrame
-* Helix_NREL5MW_helixFrame_CLctrl
-* HelixCenter_study
-* sysIDE
-* sysIDE_dataAcquision_NREL5MW
+* CLctrl_controllerDesign_MIMO: MIMO controller design based on the identified model. A fundamental step before implementing in the loop.
+* CLctrl_controllerDesign_SISO: SISO controller design based on the identified model. A fundamental step before implementing in the loop.
+* CLctrl_debug: Another file that made me want to crash my computer many many many times.
+* CLctrl_debug_oppositeModel_MIMO_Hinf: H infinity controller for controlling the single channel.
+* CLctrl_debug_oppositeModel_SISO_I: I controller for controlling the single channel.
+* CLctrl_debug_oppositeModel_SISO_PI: PI controller for controlling the single channel.
+* coordinateTransform: Study and explore the different coordinate transforms including MBC transform, new transform, and so on.
+* correlationStudy: A file that I spent a lot of time exploring to find the control input and output.
+* debug: The file that made me want to crash my computer many many many times.
+* decouple: Decouple the MIMO system for easier control (I wish).
+* decouple_RealApproximation: Conduct a real approximation of the system's response at a certain frequency for building a decouple compensator.
+* delay: Add a delay factor to the system for building the Smith predictor.
+* ForMarion: Marion is from Belgian.
+* ForMarionFigure: Marion is a postdoc.
+* Helix_IEA15MW_fixedFrame: Simulation of IEA15MW wind turbine in the fixed frame.
+* Helix_IEA15MW_helixFrame: Simulation of IEA15MW wind turbine in the helix frame.
+* Helix_NREL5MW_fixedFrame: Simulation of NREL5MW wind turbine in the fixed frame.
+* Helix_NREL5MW_helixFrame: Simulation of NREL5MW wind turbine in the helix frame.
+* Helix_NREL5MW_helixFrame_CLctrl: Closed-loop control of the Helix for NREL5MW wind turbine in the helix frame.
+* HelixCenter_study: Study the helix center data sampled from the LiDAR.
+* sysIDE: As the name implies, the file that conducts system identification.
+* sysIDE_dataAcquision_NREL5MW: Simulation for acquiring the data for system identification.
 
 ### .qpr Files
 Files that store the simulation result
