@@ -175,21 +175,19 @@ Wn = Fc / (Fs / 2);
 % Finite Impulse Response LPF (small phase lag in real-time)
 n = 50; % Filter order
 b_fir = fir1(n, Wn, 'low');
-bufferSize = 50;   % 50
-buffer = zeros(bufferSize, 2);
 filterState1 = zeros(n, 1);
 filterState2 = zeros(n, 1);
 filterState3 = zeros(n, 1);
 filterState4 = zeros(n, 1);
 
 %% Adaptive filter for Smith Predictor
-filter_order_adpFIR = 3;
+filter_order_adpFIR = 50;
 omega_adpFIR = pi / (8 * DeadtimeDelay);
 Wn_adpFIR = omega_adpFIR / (Fs / 2);
 SP_adpFIR = fir1(filter_order_adpFIR, Wn_adpFIR, 'low');
 filterState_adpFIR1 = zeros(filter_order_adpFIR, 1);
 filterState_adpFIR2 = zeros(filter_order_adpFIR, 1);
-% freqz(SP_adpFIR, 1, 1024, Fs);
+% freqz(SP_adpFIR, 1)
 
 %% Simulation
 % start simulation
@@ -255,7 +253,10 @@ for i = 1:1:simTime
         u(i, :) = [sigTilt_e(i) sigYaw_e(i)];
     else
         % Activate CL Control
-        e(i, :) = r(i, :) - y(i-1, :);
+        e(i, :) = r(i, :) - y(i-1, :);  
+        % !!! The filter is so small that run into numerical issue, 
+        % so do this for alternative
+%         e(i, :) = r(i, :) - yc(i-1, :);
         delta_u = e(i, :)*timeStep*Ki_matrix;
         u(i, :) = (e(i,:)-e(i-1,:))*Kp_matrix + (u(i-1,:)+delta_u);
         % This can be derived from the inverse z-transform of discrete PI
@@ -298,10 +299,11 @@ for i = 1:1:simTime
 
     % Adaptive filter check
     bufy_error(i, :) = ym(i, :) - ytilda(i, :);
-    [ybuf_fir(i, 1), filterState_adpFIR1] = filter(SP_adpFIR, 1, bufy_error(i, 1), filterState_adpFIR1);
-    [ybuf_fir(i, 2), filterState_adpFIR2] = filter(SP_adpFIR, 1, bufy_error(i, 2), filterState_adpFIR2);
+    [bufy_error(i, 1), filterState_adpFIR1] = filter(SP_adpFIR, 1, bufy_error(i, 1), filterState_adpFIR1);
+    [bufy_error(i, 2), filterState_adpFIR2] = filter(SP_adpFIR, 1, bufy_error(i, 2), filterState_adpFIR2);
+
     % Combine output
-    yc(i, :) = ybuf_fir(i, :) + y(i, :);
+    yc(i, :) = bufy_error(i, :) + y(i, :);
 
     % ==================== Store values 
 %     omega_store(i,:) = omega;
@@ -464,13 +466,15 @@ hold on
 plot((1:length(e)) * timeStep, e(:, 2),'b','LineWidth', 1)
 plot((1:length(e)) * timeStep, r(:, 1)-y(:, 1),'m--','LineWidth', 1)
 plot((1:length(e)) * timeStep, r(:, 2)-y(:, 2),'b--','LineWidth', 1)
+plot((1:length(e)) * timeStep, r(:, 1)-yc(:, 1),'m:','LineWidth', 1)
+plot((1:length(e)) * timeStep, r(:, 2)-yc(:, 2),'b:','LineWidth', 1)
 yline(0, '--', 'LineWidth', 1)
 xline(trigger_time, '--k', 'Activate CL Ctrl', 'LabelOrientation', 'horizontal', 'LineWidth', 1);
 hold off
 xlabel('Time [s]')
 ylabel('Magnitude')
 title('Error check')
-legend('e_{r,1}', 'e_{r,2}','e_{y,1}', 'e_{y,2}')
+legend('e_{r,1}', 'e_{r,2}','e_{y,1}', 'e_{y,2}','e_{yc,1}', 'e_{yc,2}')
 
 % Compare wind turbine real output to the reference
 figure('Name', 'Controller performance', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);

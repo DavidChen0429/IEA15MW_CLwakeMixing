@@ -198,8 +198,6 @@ Wn = Fc / (Fs / 2);
 % Finite Impulse Response LPF (small phase lag in real-time)
 n = 50; % Filter order
 b_fir = fir1(n, Wn, 'low');
-bufferSize = 50;   % 50
-buffer = zeros(bufferSize, 2);
 filterState1 = zeros(n, 1);
 filterState2 = zeros(n, 1);
 filterState3 = zeros(n, 1);
@@ -212,7 +210,7 @@ Wn_adpFIR = omega_adpFIR / (Fs / 2);
 SP_adpFIR = fir1(filter_order_adpFIR, Wn_adpFIR, 'low');
 filterState_adpFIR1 = zeros(filter_order_adpFIR, 1);
 filterState_adpFIR2 = zeros(filter_order_adpFIR, 1);
-% freqz(SP_adpFIR, 1, 1024, Fs);
+% freqz(SP_adpFIR, 1);
 
 %% Simulation
 % start simulation
