@@ -97,7 +97,7 @@ W_t_d = c2d(W_t, timeStep, 'tustin');
 P = augw(sys, W_s_d, [], W_t_d);  % augw creates the weighted augmented plant
 ncont = 2; 
 nmeas = 2; 
-[K,CL,gamma] = hinfsyn(P,nmeas,ncont); % this is the right one
+[K,CL,gamma] = hinfsyn(P,nmeas,ncont);
 % [K,CL,gamma] = hinfsyn(sys,nmeas,ncont); % for debug code
 sys_cl = feedback(sys, K);
 
@@ -111,6 +111,7 @@ legend('OL System', 'CL System')
 grid on
 
 %% Default vs. Iterative
+close all
 % 1. Default
 closed_loop_sys = feedback(sys, K);
 t = 0:timeStep:200;  % Time vector for simulation
@@ -182,7 +183,44 @@ for i = 2:length(t)
     xk(:, i+1) = A_K * xk(:, i) + B_K * y(:, i);
     yk(:, i) = C_K * xk(:, i) + D_K * y(:, i);
 end
-figure('Name', 'Iterative', 'NumberTitle', 'off', 'Position', [100, 50, 400, 300]);
+figure('Name', 'Iterative 1.0', 'NumberTitle', 'off', 'Position', [100, 50, 400, 300]);
+plot(t, y(1,:));  % First output
+hold on;
+plot(t, y(2,:));  % Second output
+plot(t, r(1, :)*ones(1, length(t)), 'k--');
+plot(t, r(2, :)*ones(1, length(t)), 'k--');
+hold off
+xlabel('Time (s)');
+ylabel('System Output');
+title('Controlled CL System');
+legend('z_e', 'y_e');
+grid on;
+
+% 3. Iterative Alternative
+A_K = K.A;
+B_K = K.B;
+C_K = K.C;
+D_K = K.D;
+t = 0:timeStep:200;
+x = zeros(length(A), length(t)+1);
+u = zeros(length(B(1, :)), length(t));
+e = zeros(length(C(:, 1)), length(t));
+y = zeros(length(C(:, 1)), length(t));
+xk = zeros(length(A_K), length(t)+1);
+uk = y; % property of H inf
+yk = zeros(length(C_K(:, 1)), length(t)); % property of H inf  
+r = [5; 2]; 
+for i = 2:length(t)
+    % Update controller
+    xk(:, i+1) = A_K * xk(:, i) + B_K * y(:, i-1);
+    yk(:, i) = C_K * xk(:, i) + D_K * y(:, i-1);
+    % Get error 
+    e(:, i) = r - yk(:, i);
+    % Update system
+    x(:, i+1) = A * x(:, i) + B * e(:, i);
+    y(:, i) = C * x(:, i) + D * e(:, i); 
+end
+figure('Name', 'Iterative 2.0', 'NumberTitle', 'off', 'Position', [500, 50, 400, 300]);
 plot(t, y(1,:));  % First output
 hold on;
 plot(t, y(2,:));  % Second output
