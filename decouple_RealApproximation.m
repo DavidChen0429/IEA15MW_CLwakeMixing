@@ -88,17 +88,41 @@ disp(RGA_ssdcpl)
 % 2. Specific frequency decouple / pre-compensator
 bwG11 = calculateBandwidth(G(1, 1));
 bwG22 = calculateBandwidth(G(2, 2));
-bw = (bwG11 + bwG22)/2;    
+bw = (bwG11 + bwG22)/2;  
 [G_mag, G_phase] = bode(buf_sys.OLi, bw);  
-G_bw = freqresp(buf_sys.OLi, bw);  
-G_bw_real = abs(G_bw);
-bw_compensator = inv(G_bw_real) * 3;  
-OLi2 = series(buf_sys.OLi, bw_compensator);
-OLi2.InputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
-OLi2.OutputName = {'z_e','y_e'};
-G_bw_dcpl = dcgain(OLi2);
+G_bw = freqresp(buf_sys.OLi, bw);  % Get the frequency response matrix at bw
+bw_compensator = inv(G_bw);  % Decoupling matrix at bw
+G_bw_real = real(bw_compensator) * 3;  % Real approximation
+OLi = series(buf_sys.OLi, G_bw_real);
+OLi.InputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
+OLi.OutputName = {'z_e','y_e'};
+G_bw_dcpl = dcgain(OLi);
 RGA_bwdcpl = G_bw_dcpl .* (inv(G_bw_dcpl))';
 disp(RGA_bwdcpl)
+
+% % Real-approximation
+[V_left, D_left] = eig(buf_sys.OLi.A'); 
+V1 = V_left(:, 1);
+V2 = V_left(:, 2);
+V3 = V_left(:, 3);
+V4 = V_left(:, 4);
+V = [V1';V2';V3';V4'];
+Alpha1 = real(V1);
+Beta1 = imag(V1);
+Alpha2 = real(V2);
+Beta2 = imag(V2);
+Alpha3 = real(V3);
+Beta3 = imag(V3);
+Alpha4 = real(V4);
+Beta4 = imag(V4);
+D1 = (Alpha2*Alpha2' + Beta2*Beta2') + (Alpha3*Alpha3' + Beta3*Beta3') + (Alpha4*Alpha4' + Beta4*Beta4');
+D2 = (Alpha1*Alpha1' + Beta1*Beta1') + (Alpha3*Alpha3' + Beta3*Beta3') + (Alpha4*Alpha4' + Beta4*Beta4');
+D3 = (Alpha2*Alpha2' + Beta2*Beta2') + (Alpha1*Alpha1' + Beta1*Beta1') + (Alpha4*Alpha4' + Beta4*Beta4');
+D4 = (Alpha2*Alpha2' + Beta2*Beta2') + (Alpha3*Alpha3' + Beta3*Beta3') + (Alpha1*Alpha1' + Beta1*Beta1');
+[R1, J1] = eig(D1);
+[R2, J2] = eig(D2);
+[R3, J3] = eig(D3);
+[R4, J4] = eig(D4);
 
 % % 3. dynamic decoupling
 % % This currently has the issue of not being a non-minimal phase system
@@ -112,39 +136,31 @@ disp(RGA_bwdcpl)
 %% Compare result
 yi2_train = lsim(buf_sys.OLi,us,t_train); % testing set
 yi2d_train = lsim(OLi,us,t_train); % ss decouple 
-yi2d2_train = lsim(OLi2,us,t_train); % bw decouple 
 yi2_test = lsim(buf_sys.OLi,us2,t_test); % testing set
 yi2d_test = lsim(OLi,us2,t_test); % ss decouple 
-yi2d2_test = lsim(OLi2,us2,t_test); % ss decouple 
 
 % VAF
 disp('=================================================')
 disp('[Training] VAF with PBSID-varx (open loop)')
 vaf(ys, yi2_train)
 vaf(ys, yi2d_train)
-vaf(ys, yi2d2_train)
 disp('[Testing] VAF with PBSID-varx (open loop)')
 vaf(ys2, yi2_test)  
-vaf(ys2, yi2d_test) 
-vaf(ys2, yi2d2_test)  
+vaf(ys2, yi2d_test)  
 
 % Validation (Frequency domain)
 [Ga,ws] = spa_avf(us,ys,timeStep,6,[],[],'hamming');
 Ga = frd(Ga,ws);
 figure('Name', 'Frequence Response', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-bodemag(buf_sys.OLi, OLi, OLi2, Ga, 'c:');
+bodemag(buf_sys.OLi, OLi, Ga);
 hold on
 axesHandles = findall(gcf, 'Type', 'axes');
 for k = 1:length(axesHandles)
-    yline(axesHandles(k), 0, 'k--', 'LineWidth', 0.5);  
+    yline(axesHandles(k), 0, 'k--', 'LineWidth', 0.5); % '--r' makes it a dashed red line
 end
-xline(axesHandles(3), bw*2*pi, 'k--', 'LineWidth', 0.5);
-xline(axesHandles(5), bw*2*pi, 'k--', 'LineWidth', 0.5);
-xline(axesHandles(7), bw*2*pi, 'k--', 'LineWidth', 0.5);
-xline(axesHandles(9), bw*2*pi, 'k--', 'LineWidth', 0.5);
 hold off;
 grid on
-legend('Original Sys','SS Decoupled Sys', 'BW Decoupled Sys', 'Real');
+legend('Original Sys','Decoupled Sys', 'Real');
 
 %% Test Set
 % % Frequency response

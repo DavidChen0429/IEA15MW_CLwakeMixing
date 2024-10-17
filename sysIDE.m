@@ -175,19 +175,8 @@ RGA = G_ss .* (inv(G_ss))';
 disp(RGA);
 
 % bandwidth
-[mag, phase, w] = bode(G(1, 1));
-mag_dB = 20*log10(squeeze(mag));
-max_mag_dB = max(mag_dB);
-idx_bandwidth = find(mag_dB <= max_mag_dB-3, 1, 'first');
-bandwidth_frequency = w(idx_bandwidth);
-fprintf('G(1,2) bandwidth: %.5f Hz\n', bandwidth_frequency/(2*pi));
-
-[mag, phase, w] = bode(G(2, 2));
-mag_dB = 20*log10(squeeze(mag));
-max_mag_dB = max(mag_dB);
-idx_bandwidth = find(mag_dB <= max_mag_dB-3, 1, 'first');
-bandwidth_frequency = w(idx_bandwidth);
-fprintf('G(2,1) bandwidth: %.5f Hz\n', bandwidth_frequency/(2*pi));
+calculateBandwidth(G(1,1));
+calculateBandwidth(G(2,2));
 
 % bode diagram
 figure('Name', 'Original System', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);

@@ -131,17 +131,17 @@ Kp_matrix = Kp * Channel_selector;
 Ki_matrix = Ki * Channel_selector;
 
 % Create reference
-r = zeros(simTime, 2);      % reference signal
+r = zeros(simTime, 2); 
 % 1. Steps
-% reference_magnitude = 5 * Channel_selector;
-% r(Trigger:end, 1) = reference_magnitude(1,1)*ones(simTime+1-Trigger, 1);   % z_e
-% r(Trigger:end, 2) = reference_magnitude(2,2)*ones(simTime+1-Trigger, 1);   % y_e
+reference_magnitude = 5 * Channel_selector;
+r(Trigger:end, 1) = reference_magnitude(1,1)*ones(simTime+1-Trigger, 1);   % z_e
+r(Trigger:end, 2) = reference_magnitude(2,2)*ones(simTime+1-Trigger, 1);   % y_e
 % 2. Ramp
-reference_slope = 0.0025 * 2 * Channel_selector; % Define the slope of the ramp signal
-for tt = Trigger:simTime
-    r(tt, 1) = reference_slope(1,1) * (tt - Trigger);   % z_e ramp signal
-    r(tt, 2) = reference_slope(2,2) * (tt - Trigger);   % y_e ramp signal
-end
+% reference_slope = 0.0025 * 1 * Channel_selector; % Define the slope of the ramp signal
+% for tt = Trigger:simTime
+%     r(tt, 1) = reference_slope(1,1) * (tt - Trigger);   % z_e ramp signal
+%     r(tt, 2) = reference_slope(2,2) * (tt - Trigger);   % y_e ramp signal
+% end
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat
@@ -427,6 +427,8 @@ subplot(2, 2, 4)
 plot((1:length(HF_beta)) * timeStep, HF_helixCenter_filtered(:, 1));
 hold on
 plot((1:length(HF_beta)) * timeStep, HF_helixCenter_filtered(:, 2));
+plot((1:length(r)) * timeStep, delayseq(r(:, 1), DeadtimeDelay),'m--','LineWidth', 0.5)
+plot((1:length(r)) * timeStep, delayseq(r(:, 2), DeadtimeDelay),'k--','LineWidth', 0.5)
 xline(trigger_time, '--k', 'Activate CL Ctrl', 'LabelOrientation', 'horizontal', 'LineWidth', 1);
 yline(0, '--', 'LineWidth', 1)
 hold off;
@@ -475,8 +477,8 @@ figure('Name', 'Controller performance', 'NumberTitle', 'off', 'Position', [100,
 plot((1:length(ym)) * timeStep, ym(:, 1),'m','LineWidth', 1)
 hold on
 plot((1:length(ym)) * timeStep, ym(:, 2),'b','LineWidth', 1)
-plot((1:length(r)) * timeStep, r(:, 1),'m--','LineWidth', 1)
-plot((1:length(r)) * timeStep, r(:, 2),'k--','LineWidth', 1)
+plot((1:length(r)) * timeStep, delayseq(r(:, 1), DeadtimeDelay),'m--','LineWidth', 1)
+plot((1:length(r)) * timeStep, delayseq(r(:, 2), DeadtimeDelay),'k--','LineWidth', 1)
 yline(0, '--', 'LineWidth', 1)
 xline(trigger_time, '--k', 'Activate CL Ctrl', 'LabelOrientation', 'horizontal', 'LineWidth', 1);
 hold off

@@ -76,21 +76,34 @@ ys2 = y_test';  % 2*N
 % Bode diagram (Frequency domain response)
 figure('Name', 'Bode Diagram OL System', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
 bode(G);
+bw = calculateBandwidth(G(1, 1));   % Hz
+grid on
+% hold on
+% ax = findall(gcf, 'Type', 'axes');  % Find all axes in the current figure
+% for i = 1:length(ax)
+%     xline(ax(i), 2*pi*bw, 'r:', 'LineWidth', 1);
+% end
+% hold off
 title('Bode Diagram of Open-Loop System')
 
 %% PID Controller Design
 % func: pidtune
-wc = 0.08;
-C11 = pidtune(G(1,1), 'PI'); % To make it faster
-C22 = pidtune(G(2,2), 'PI'); % To make it faster
+wc_hz = 0.004;
+wc = wc_hz * 2*pi; % rad/timeUnit omega = 2pi*f
+[C11, info1] = pidtune(G(1,1), 'PI', wc); % To make it faster
+[C22, info2] = pidtune(G(2,2), 'PI', wc); % To make it faster
 C12 = 0;    
 C21 = 0;
+disp(info1)
 % Kp = 0; % 0
 % Ki = 0.0375; % 0.05
 % Ts = timeStep;
 % C11 = pid(Kp, Ki, 0, 0, Ts);
-C_mimo = [0, 0;
-          0, C11];
+C_mimo = [C11, 0;
+          0, 0];
+% ss_compensator = [0.9526    0.0773;
+%                   -0.0761    0.9453];
+% C_mimo = ss_compensator * C_mimo;
 OL_ctrl = C_mimo * G;
 
 %%%
@@ -130,7 +143,7 @@ OL_ctrl = C_mimo * G;
 
 % Step response simulation
 closed_loop_sys = feedback(OL_ctrl, eye(2));
-t = 0:timeStep:200;  % Time vector for simulation
+t = 0:timeStep:1000;  % Time vector for simulation
 figure('Name', 'After Control CL Step', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
 step(closed_loop_sys, t);
 title('Controlled CL System');
@@ -168,6 +181,7 @@ zpk(G(2,1))
 zpk(G(2,2))
 
 %% Step simulation (Iterative way of implementing PI controller)
+% [Timestep]!!!!!!!!!!! 0.05
 % Default way
 closed_loop_sys = feedback(OL_ctrl, eye(2));
 t = 0:timeStep:200;  % Time vector for simulation
