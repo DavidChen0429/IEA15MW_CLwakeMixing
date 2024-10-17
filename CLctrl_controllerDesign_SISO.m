@@ -181,7 +181,6 @@ zpk(G(2,1))
 zpk(G(2,2))
 
 %% Step simulation (Iterative way of implementing PI controller)
-% [Timestep]!!!!!!!!!!! 0.05
 % Default way
 closed_loop_sys = feedback(OL_ctrl, eye(2));
 t = 0:timeStep:200;  % Time vector for simulation
