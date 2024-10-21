@@ -89,7 +89,8 @@ timeStep = 0.1;
 
 %% MIMO Controller Design (H infinity)
 W_s = tf([1, 1.6], [100, 1]);  % Emphasizes performance and disturbance rejection
-W_t = tf([0.01, 1], [15, 1]);  % Emphasizes robustness and noise rejection
+W_t = tf([0.01, 1], [5, 1]);   % Emphasizes robustness and noise rejection
+W_u = tf([1, 1], [50, 1]);     % Emphasizes input magnitude  
 % Working weight function
 % W_s = tf([1, 1.6], [100, 1]);
 % W_t = tf([1, 1], [1, 1]);
