@@ -88,7 +88,7 @@ title('Bode Diagram of Open-Loop System')
 
 %% MIMO Controller Design (H infinity)
 W_s = tf([1, 1.6], [100, 1]);  % Emphasizes performance and disturbance rejection
-W_t = tf([1, 1], [1, 1]);  % Emphasizes robustness and noise rejection
+W_t = tf([0.01, 1], [15, 1]);  % Emphasizes robustness and noise rejection
 % Working weight function
 % W_s = tf([1, 1.6], [100, 1]);
 % W_t = tf([1, 1], [1, 1]);
@@ -102,10 +102,11 @@ nmeas = 2;
 sys_cl = feedback(sys, K);
 
 % Step response check
+t = 0:0.1:200;
 figure('Name', 'Step Response', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-step(sys)
+step(sys, t)
 hold on
-step(sys_cl)
+step(sys_cl, t)
 hold off
 legend('OL System', 'CL System')
 grid on

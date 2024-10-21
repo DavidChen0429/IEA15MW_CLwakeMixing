@@ -120,7 +120,7 @@ xMd = zeros(simTime+1, size(decoupled_delayed_sys.A, 1));
 
 % Controller Design
 W_s = tf([1, 1.6], [100, 1]);  % Emphasizes performance and disturbance rejection
-W_t = tf([1, 1], [1, 1]);  % Emphasizes robustness and noise rejection
+W_t = tf([1, 1], [5, 1]);  % Emphasizes robustness and noise rejection
 W_s_d = c2d(W_s, timeStep, 'tustin');
 W_t_d = c2d(W_t, timeStep, 'tustin');
 P = augw(decoupled_sys, W_s_d, [], W_t_d);  % augw creates the weighted augmented plant
@@ -140,9 +140,9 @@ yk = zeros(simTime, length(C_K(:, 1)));
 % Create reference
 r = zeros(simTime, 2);     
 % 1. Steps
-% reference_magnitude = [5 2];
-% r(Trigger:end, 1) = reference_magnitude(1)*ones(simTime+1-Trigger, 1);   % z_e
-% r(Trigger:end, 2) = reference_magnitude(2)*ones(simTime+1-Trigger, 1);   % y_e
+reference_magnitude = [5 3];
+r(Trigger:end, 1) = reference_magnitude(1)*ones(simTime+1-Trigger, 1);   % z_e
+r(Trigger:end, 2) = reference_magnitude(2)*ones(simTime+1-Trigger, 1);   % y_e
 % 2. Ramp
 % reference_slope = [0.0025 0.0025]; % Define the slope of the ramp signal
 % for tt = Trigger:simTime
@@ -150,14 +150,14 @@ r = zeros(simTime, 2);
 %     r(tt, 2) = reference_slope(2) * (tt - Trigger);   % y_e ramp signal
 % end
 % 3. Ramp and Stop
-reference_slope = [0.0025 0.0015]; % Define the slope of the ramp signal
-endTime = (simTime*3)/5;
-for tt = Trigger:endTime
-    r(tt, 1) = reference_slope(1) * (tt - Trigger);   % z_e ramp signal
-    r(tt, 2) = reference_slope(2) * (tt - Trigger);   % y_e ramp signal
-end
-r(endTime:end, 1) = 5*ones(simTime+1-endTime, 1);
-r(endTime:end, 2) = 3*ones(simTime+1-endTime, 1);
+% reference_slope = [0.0025 0.0015]; % Define the slope of the ramp signal
+% endTime = (simTime*3)/5;
+% for tt = Trigger:endTime
+%     r(tt, 1) = reference_slope(1) * (tt - Trigger);   % z_e ramp signal
+%     r(tt, 2) = reference_slope(2) * (tt - Trigger);   % y_e ramp signal
+% end
+% r(endTime:end, 1) = 5*ones(simTime+1-endTime, 1);
+% r(endTime:end, 2) = 3*ones(simTime+1-endTime, 1);
 
 % figure()
 % plot(r(:, 1))
@@ -204,7 +204,7 @@ filterState3 = zeros(n, 1);
 filterState4 = zeros(n, 1);
 
 %% Adaptive filter for Smith Predictor
-filter_order_adpFIR = 3;
+filter_order_adpFIR = 80;
 omega_adpFIR = pi / (8 * DeadtimeDelay);
 Wn_adpFIR = omega_adpFIR / (Fs / 2);
 SP_adpFIR = fir1(filter_order_adpFIR, Wn_adpFIR, 'low');
@@ -277,7 +277,7 @@ for i = 1:1:simTime
     else
         % Activate CL Control
         % Update controller
-        x_Kbuf = A_K * xk(i, :)' + B_K * y(i-1, :)';
+        x_Kbuf = A_K * xk(i, :)' + B_K * y(i-1, :)'; % y / yc
         xk(i+1, :) = x_Kbuf';
         y_Kbuf = C_K * xk(i, :)' + D_K * y(i-1, :)';
         yk(i, :) = y_Kbuf';
