@@ -6,9 +6,9 @@ addpath('.\Functions');
 
 %% Define paths
 UserPath = 'C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\IEA15MW_CLwakeMixing\'; 
-QBladePath = 'C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\QBladeEE_2.0.6.4\'; 
+QBladePath = 'C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\QBladeCE_2.0.7.7\'; 
 SourcePath = [UserPath 'Source\'];
-DllPath = [QBladePath 'QBladeEE_2.0.6.dll'];
+DllPath = [QBladePath 'QBladeCE_2.0.7.7.dll'];
 simFile = [SourcePath 'NREL5MW_Torque_Helix.sim'];
 addpath('.\Functions');
 
@@ -80,7 +80,7 @@ N = 97;          % Gearbox ratio
 
 %% Defining Helix Control Setting
 Str = 0.3;                          % Strouhal number
-Helix_amplitude = 0;                % Helix amplitude                
+Helix_amplitude = 1;                % Helix amplitude                
 Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
 omega_e = Freq*2*pi;
 AzimuthOffset = 96; % 6 (2\pi) & 96; History -35
@@ -120,10 +120,12 @@ xMd = zeros(simTime+1, size(decoupled_delayed_sys.A, 1));
 
 % Controller Design
 W_s = tf([1, 1.6], [100, 1]);  % Emphasizes performance and disturbance rejection
-W_t = tf([1, 1], [5, 1]);  % Emphasizes robustness and noise rejection
+W_t = tf([0.01, 1], [6, 1]);   % Emphasizes robustness and noise rejection
+W_u = tf([1, 1], [50, 1]);     % Emphasizes input magnitude  
 W_s_d = c2d(W_s, timeStep, 'tustin');
 W_t_d = c2d(W_t, timeStep, 'tustin');
-P = augw(decoupled_sys, W_s_d, [], W_t_d);  % augw creates the weighted augmented plant
+W_u_d = c2d(W_u, timeStep, 'tustin');
+P = augw(decoupled_sys, W_s_d, W_u_d, W_t_d);  % augw creates the weighted augmented plant
 ncont = 2; 
 nmeas = 2; 
 [K_hinf,CL,gamma] = hinfsyn(P,nmeas,ncont);
@@ -164,7 +166,7 @@ steps = cat(2, ...
     -2*ones(1, (simTime-Trigger)/5), 2*ones(1, (simTime-Trigger)/5), ...
     -1*ones(1, (simTime-Trigger)/5), 0*ones(1, (simTime-Trigger)/5));
 r(:, 1) = steps;
-r(:, 2) = steps;
+% r(:, 2) = steps;
 
 % figure()
 % plot(r(:, 1))
@@ -280,16 +282,16 @@ for i = 1:1:simTime
     else
         % Activate CL Control
         % Update controller
-        x_Kbuf = A_K * xk(i, :)' + B_K * y(i-1, :)'; % y / yc
+%         x_Kbuf = A_K * xk(i, :)' + B_K * y(i-1, :)'; % y / yc
+%         xk(i+1, :) = x_Kbuf';
+%         y_Kbuf = C_K * xk(i, :)' + D_K * y(i-1, :)';
+%         yk(i, :) = y_Kbuf';
+
+        x_Kbuf = A_K * xk(i, :)' + B_K * yc(i-1, :)'; % y / yc
         xk(i+1, :) = x_Kbuf';
-        y_Kbuf = C_K * xk(i, :)' + D_K * y(i-1, :)';
+        y_Kbuf = C_K * xk(i, :)' + D_K * yc(i-1, :)';
         yk(i, :) = y_Kbuf';
 
-%         x_Kbuf = A_K * xk(i, :)' + B_K * yc(i-1, :)'; % y / yc
-%         xk(i+1, :) = x_Kbuf';
-%         y_Kbuf = C_K * xk(i, :)' + D_K * yc(i-1, :)';
-%         yk(i, :) = y_Kbuf';
-        
         % Get error / input of the plant
         u(i, :) = r(i, :) - yk(i, :);
     end
@@ -351,7 +353,7 @@ for i = 1:1:simTime
 
 end
 close(f)
-calllib('QBladeDLL','storeProject','.\Data\NREL5MW\QbladeSim\Hinf_2steps.qpr') 
+% calllib('QBladeDLL','storeProject','.\Data\NREL5MW\QbladeSim\Hinf_step.qpr') 
 calllib('QBladeDLL','closeInstance')
 % save([turbineName caseName fileName], 'LiDAR_data', ...
 %                                       'FF_helixCenter', ...
