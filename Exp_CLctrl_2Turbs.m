@@ -9,7 +9,7 @@ UserPath = 'C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\IEA15MW_CLwakeMixing\';
 QBladePath = 'C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\QBladeEE_2.0.6.4\'; 
 SourcePath = [UserPath 'Source\'];
 DllPath = [QBladePath 'QBladeEE_2.0.6.dll'];
-simFile = [SourcePath 'NREL5MW_Torque_Helix.sim'];
+simFile = [SourcePath 'NREL5MW_2turbines.sim'];
 addpath('.\Functions');
 
 loadlibrary(DllPath,'QBladeLibInclude.h','alias','QBladeDLL') 
@@ -29,7 +29,7 @@ calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime = 15000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 6000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 
@@ -43,6 +43,10 @@ Azimu3 = 'Azimuthal Position Blade 3 [deg]';
 Pit1 = 'Pitch Angle Blade 1 [deg]';
 Pit2 = 'Pitch Angle Blade 2 [deg]';
 Pit3 = 'Pitch Angle Blade 3 [deg]';
+PowerVar = 'Aerodynamic Power [kW]';
+CpVar = 'Power Coefficient [-]';
+Moop1Var = 'Aero. OOP RootBend. Mom. Blade 1 [Nm]';
+Mip1Var = 'Aero. IP RootBend. Mom. Blade 1 [Nm]';
 
 %% Load internal model
 buf_sys = load('Model\RightTransform_Azimuth96\ModelOrder4_noise1p_opposite_decoupled.mat');
@@ -140,7 +144,7 @@ yk = zeros(simTime, length(C_K(:, 1)));
 % Create reference
 r = zeros(simTime, 2);     
 % 1. Steps
-reference_magnitude = [5 3];
+reference_magnitude = [8.6257 8.3827];
 r(Trigger:end, 1) = reference_magnitude(1)*ones(simTime+1-Trigger, 1);   % z_e
 r(Trigger:end, 2) = reference_magnitude(2)*ones(simTime+1-Trigger, 1);   % y_e
 % 2. Ramp
@@ -182,11 +186,25 @@ LiDAR_num_sample = 80;   % 5(ring) to speed up sampling, only 4 valid points
 %% Simulation
 % pre-define array to speed up code
 TSR_store = zeros(simTime, 1);
+Power_store = zeros(simTime, 1);
+Moop1_store = zeros(simTime, 1);
+Mip1_store = zeros(simTime, 1);
+Mflap1_store = zeros(simTime, 1);
+Medge1_store = zeros(simTime, 1);
+Cp_store = zeros(simTime, 1);
+TSRturb2_store = zeros(simTime, 1);
+Powerturb2_store = zeros(simTime, 1);
+Moop1turb2_store = zeros(simTime, 1);
+Mip1turb2_store = zeros(simTime, 1);
+Mflap1turb2_store = zeros(simTime, 1);
+Medge1turb2_store = zeros(simTime, 1);
+Cpturb2_store = zeros(simTime, 1);
 FF_beta = zeros(simTime, 2);
 HF_beta = zeros(simTime, 2);
 FF_helixCenter_filtered = zeros(simTime, 2);
 HF_helixCenter_filtered = zeros(simTime, 2);
 PitchAngles = zeros(simTime, 3);
+PitchAnglesturb2 = zeros(simTime, 3);
 FF_helixCenter = zeros(simTime, 2);
 HF_helixCenter = zeros(simTime, 2);
 templateStruct = struct('x', [], 'y', [], 'z', [], 'u_x', [], 'u_y', [], 'u_z', [], 'u_norm', [], 'u_los', []);
@@ -226,16 +244,32 @@ for i = 1:1:simTime
     calllib('QBladeDLL','advanceTurbineSimulation')
     
     % Get current value
-    omega = calllib('QBladeDLL','getCustomData_at_num',valuestr, 0, 0);
-    genTorqueQB = calllib('QBladeDLL','getCustomData_at_num',valuestr2, 0, 0);
-    TSR = calllib('QBladeDLL','getCustomData_at_num',valuestr3, 0, 0);
     Azimuth1 = calllib('QBladeDLL','getCustomData_at_num', Azimu1, 0, 0);
     Azimuth2 = calllib('QBladeDLL','getCustomData_at_num', Azimu2, 0, 0);
     Azimuth3 = calllib('QBladeDLL','getCustomData_at_num', Azimu3, 0, 0);
+
+    omega = calllib('QBladeDLL','getCustomData_at_num',valuestr, 0, 0);
+    genTorqueQB = calllib('QBladeDLL','getCustomData_at_num',valuestr2, 0, 0);
+    TSR = calllib('QBladeDLL','getCustomData_at_num',valuestr3, 0, 0);
     Pitch1 = calllib('QBladeDLL','getCustomData_at_num', Pit1, 0, 0);
     Pitch2 = calllib('QBladeDLL','getCustomData_at_num', Pit2, 0, 0);
     Pitch3 = calllib('QBladeDLL','getCustomData_at_num', Pit3, 0, 0);
+    Power = calllib('QBladeDLL','getCustomData_at_num', PowerVar, 0, 0);
+    Cp = calllib('QBladeDLL','getCustomData_at_num', CpVar, 0, 0);
+    Moop1 = calllib('QBladeDLL','getCustomData_at_num', Moop1Var, 0, 0);
+    Mip1 = calllib('QBladeDLL','getCustomData_at_num', Mip1Var, 0, 0);
     
+    omega_turb2 = calllib('QBladeDLL','getCustomData_at_num',valuestr, 0, 1);
+    genTorqueQB_turb2 = calllib('QBladeDLL','getCustomData_at_num',valuestr2, 0, 1);
+    TSR_turb2 = calllib('QBladeDLL','getCustomData_at_num',valuestr3, 0, 1);
+    Pitch1_turb2 = calllib('QBladeDLL','getCustomData_at_num', Pit1, 0, 1);
+    Pitch2_turb2 = calllib('QBladeDLL','getCustomData_at_num', Pit2, 0, 1);
+    Pitch3_turb2 = calllib('QBladeDLL','getCustomData_at_num', Pit3, 0, 1);
+    Power_turb2 = calllib('QBladeDLL','getCustomData_at_num', PowerVar, 0, 1);
+    Cp_turb2 = calllib('QBladeDLL','getCustomData_at_num', CpVar, 0, 1);
+    Moop1_turb2 = calllib('QBladeDLL','getCustomData_at_num', Moop1Var, 0, 1);
+    Mip1_turb2 = calllib('QBladeDLL','getCustomData_at_num', Mip1Var, 0, 1);
+
     % Define transform matrix 
     invMBC = [1 cosd(Azimuth1+AzimuthOffset) sind(Azimuth1+AzimuthOffset);
               1 cosd(Azimuth2+AzimuthOffset) sind(Azimuth2+AzimuthOffset);
@@ -272,6 +306,8 @@ for i = 1:1:simTime
     % I. Torque control to maintain optimal TSR of 9 
     omega_g = omega*N;                      % rotor to generator
     genTorque = K.*(omega_g*(2*pi/60))^2;
+    omega_g_turb2 = omega_turb2*N;                      % rotor to generator
+    genTorque_turb2 = K.*(omega_g_turb2*(2*pi/60))^2;
 
     % II. Wake mixing
     if i < Trigger
@@ -280,15 +316,15 @@ for i = 1:1:simTime
     else
         % Activate CL Control
         % Update controller
-        x_Kbuf = A_K * xk(i, :)' + B_K * y(i-1, :)'; % y / yc
-        xk(i+1, :) = x_Kbuf';
-        y_Kbuf = C_K * xk(i, :)' + D_K * y(i-1, :)';
-        yk(i, :) = y_Kbuf';
-
-%         x_Kbuf = A_K * xk(i, :)' + B_K * yc(i-1, :)'; % y / yc
+%         x_Kbuf = A_K * xk(i, :)' + B_K * y(i-1, :)'; % y / yc
 %         xk(i+1, :) = x_Kbuf';
-%         y_Kbuf = C_K * xk(i, :)' + D_K * yc(i-1, :)';
+%         y_Kbuf = C_K * xk(i, :)' + D_K * y(i-1, :)';
 %         yk(i, :) = y_Kbuf';
+
+        x_Kbuf = A_K * xk(i, :)' + B_K * yc(i-1, :)'; % y / yc
+        xk(i+1, :) = x_Kbuf';
+        y_Kbuf = C_K * xk(i, :)' + D_K * yc(i-1, :)';
+        yk(i, :) = y_Kbuf';
         
         % Get error / input of the plant
         u(i, :) = r(i, :) - yk(i, :);
@@ -306,6 +342,8 @@ for i = 1:1:simTime
     % Send control signal to qblade
     calllib('QBladeDLL','setControlVars_at_num',[genTorque 0 ...
         betaBlade_Helix(1) betaBlade_Helix(2) betaBlade_Helix(3)],0)
+    calllib('QBladeDLL','setControlVars_at_num',[genTorque_turb2 0 ...
+        0 0 0],1)
     
     % Building Smith Predictor
     % Internal Model
@@ -337,8 +375,23 @@ for i = 1:1:simTime
     % ==================== Store values 
 %     omega_store(i,:) = omega;
 %     genTorqueQB_store(i,:) = genTorqueQB;
-%     genTorque_store(i,:) = genTorque;
+%     genTorque_store(i,:) = genTorque;   
     TSR_store(i) = TSR;
+    Power_store(i) = Power;
+    Cp_store(i) = Cp;
+    Moop1_store(i) = Moop1;
+    Mip1_store(i) = Mip1;
+    Mflap1_store(i) = Moop1*cosd(Pitch1) + Mip1*sind(Pitch1);
+    Medge1_store(i) = -Moop1*sind(Pitch1) + Mip1*cosd(Pitch1);
+
+    TSRturb2_store(i) = TSR_turb2;
+    Powerturb2_store(i) = Power_turb2;
+    Cpturb2_store(i) = Cp_turb2;
+    Moop1turb2_store(i) = Moop1_turb2;
+    Mip1turb2_store(i) = Mip1_turb2;
+    Mflap1turb2_store(i) = Moop1_turb2*cosd(Pitch1_turb2) + Mip1_turb2*sind(Pitch1_turb2);
+    Medge1turb2_store(i) = -Moop1_turb2*sind(Pitch1_turb2) + Mip1_turb2*cosd(Pitch1_turb2);
+
     FF_beta(i,:) = [betaTiltYaw(1) betaTiltYaw(2)];
     HF_beta(i,:) = [beta_tilt_e beta_yaw_e];
 %     AzimuthAngles(i,:) = [Azimuth1 Azimuth2 Azimuth3];
@@ -351,7 +404,7 @@ for i = 1:1:simTime
 
 end
 close(f)
-calllib('QBladeDLL','storeProject','.\Data\NREL5MW\QbladeSim\Hinf_2steps.qpr') 
+% calllib('QBladeDLL','storeProject','.\Data\NREL5MW\QbladeSim\CL2Turb.qpr') 
 calllib('QBladeDLL','closeInstance')
 % save([turbineName caseName fileName], 'LiDAR_data', ...
 %                                       'FF_helixCenter', ...
@@ -377,48 +430,6 @@ toc
 
 %% Visualization
 trigger_time = Trigger * timeStep;
-% figure;
-% plot(TSR_store)
-% xticks(0:100:length(TSR_store));
-% xticklabels(0:100*timeStep:length(TSR_store)*timeStep);
-% legend('TSR')
-% xlabel("Time (s)");
-% ylabel("TSR");
-
-% figure;
-% plot(genTorqueQB_store)
-% hold on
-% plot(genTorque_store)
-% xticks(0:100:length(genTorqueQB_store));
-% xticklabels(0:100*timeStep:length(genTorqueQB_store)*timeStep);
-% xlabel("Time (s)");
-% ylabel("Torque (Nm)")
-% legend('QB HSS Torque','K omega^2')
-
-% figure;
-% plot(PitchAngles(:,1))
-% hold on
-% plot(PitchAngles(:,2))
-% plot(PitchAngles(:,3))
-% xticks(0:100:length(PitchAngles));
-% xticklabels(0:100*timeStep:length(PitchAngles)*timeStep);
-% ylim([-1.5 1.5])
-% xlim([0 300])
-% xlabel("Time (s)");
-% ylabel("Angle (deg)");
-% title('Blade Pitch Signal')
-% legend('Blade 1','Blade 2','Blade 3')
-
-% figure;
-% plot(AzimuthAngles(:,1))
-% hold on
-% plot(AzimuthAngles(:,2))
-% plot(AzimuthAngles(:,3))
-% xticks(0:100:length(AzimuthAngles));
-% xticklabels(0:100*timeStep:length(AzimuthAngles)*timeStep);
-% xlabel("Time (s)");
-% ylabel("Angle (deg)");
-% legend('Blade 1','Blade 2','Blade 3')
 
 % Overall input and output
 figure('Name', 'Overall Result', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
@@ -468,57 +479,57 @@ title('Center HF')
 % legend('z_e', 'y_e', 'z_{e,f}', 'y_{e,f}')
 legend('z_{e,f}', 'y_{e,f}')
 
-% Comparison between Delayed Model and Wind Turbine Real Output
-figure('Name', 'Output Comparison', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-plot((1:length(ytilda)) * timeStep, ytilda(:, 1),'m','LineWidth', 1)
-hold on
-plot((1:length(ytilda)) * timeStep, ytilda(:, 2),'b', 'LineWidth', 1)
-% plot((1:length(ytilda)) * timeStep, ym(:, 1),'m','LineWidth', 1)
+% % Comparison between Delayed Model and Wind Turbine Real Output
+% figure('Name', 'Output Comparison', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+% plot((1:length(ytilda)) * timeStep, ytilda(:, 1),'m','LineWidth', 1)
 % hold on
-% plot((1:length(ytilda)) * timeStep, ym(:, 2),'b', 'LineWidth', 1)
-plot((1:length(ym)) * timeStep, ym(:, 1),'m--', 'LineWidth', 1)
-plot((1:length(ym)) * timeStep, ym(:, 2),'b--', 'LineWidth', 1)
-plot((1:length(sigYaw_e)) * timeStep, sigYaw_e,'m:', 'LineWidth', 0.5)
-plot((1:length(sigTilt_e)) * timeStep, sigTilt_e,'b:', 'LineWidth', 0.5)
-xline(trigger_time, '--k', 'Activate CL Ctrl', 'LabelOrientation', 'horizontal', 'LineWidth', 1);
-yline(0, '--', 'LineWidth', 1)
-hold off;
-xlabel('Time [s]')
-ylabel('Magnitude')
-title('Model Percision Check')
-legend('z_{Delay}','y_{Delay}','z_{WTm}','y_{WTm}','\beta_{yaw}','\beta_{tilt}')
+% plot((1:length(ytilda)) * timeStep, ytilda(:, 2),'b', 'LineWidth', 1)
+% % plot((1:length(ytilda)) * timeStep, ym(:, 1),'m','LineWidth', 1)
+% % hold on
+% % plot((1:length(ytilda)) * timeStep, ym(:, 2),'b', 'LineWidth', 1)
+% plot((1:length(ym)) * timeStep, ym(:, 1),'m--', 'LineWidth', 1)
+% plot((1:length(ym)) * timeStep, ym(:, 2),'b--', 'LineWidth', 1)
+% plot((1:length(sigYaw_e)) * timeStep, sigYaw_e,'m:', 'LineWidth', 0.5)
+% plot((1:length(sigTilt_e)) * timeStep, sigTilt_e,'b:', 'LineWidth', 0.5)
+% xline(trigger_time, '--k', 'Activate CL Ctrl', 'LabelOrientation', 'horizontal', 'LineWidth', 1);
+% yline(0, '--', 'LineWidth', 1)
+% hold off;
+% xlabel('Time [s]')
+% ylabel('Magnitude')
+% title('Model Percision Check')
+% legend('z_{Delay}','y_{Delay}','z_{WTm}','y_{WTm}','\beta_{yaw}','\beta_{tilt}')
 
-% check different errors
-figure('Name', 'Error', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-plot((1:length(e)) * timeStep, e(:, 1),'m','LineWidth', 1)
-hold on
-plot((1:length(e)) * timeStep, e(:, 2),'b','LineWidth', 1)
-plot((1:length(e)) * timeStep, r(:, 1)-y(:, 1),'m--','LineWidth', 1)
-plot((1:length(e)) * timeStep, r(:, 2)-y(:, 2),'b--','LineWidth', 1)
-plot((1:length(e)) * timeStep, r(:, 1)-yc(:, 1),'m:','LineWidth', 1)
-plot((1:length(e)) * timeStep, r(:, 2)-yc(:, 2),'b:','LineWidth', 1)
-yline(0, '--', 'LineWidth', 1)
-xline(trigger_time, '--k', 'Activate CL Ctrl', 'LabelOrientation', 'horizontal', 'LineWidth', 1);
-hold off
-xlabel('Time [s]')
-ylabel('Magnitude')
-title('Error check')
-legend('e_{r,1}', 'e_{r,2}','e_{y,1}', 'e_{y,2}', 'e_{yc,1}', 'e_{yc,2}')
+% % check different errors
+% figure('Name', 'Error', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+% plot((1:length(e)) * timeStep, e(:, 1),'m','LineWidth', 1)
+% hold on
+% plot((1:length(e)) * timeStep, e(:, 2),'b','LineWidth', 1)
+% plot((1:length(e)) * timeStep, r(:, 1)-y(:, 1),'m--','LineWidth', 1)
+% plot((1:length(e)) * timeStep, r(:, 2)-y(:, 2),'b--','LineWidth', 1)
+% plot((1:length(e)) * timeStep, r(:, 1)-yc(:, 1),'m:','LineWidth', 1)
+% plot((1:length(e)) * timeStep, r(:, 2)-yc(:, 2),'b:','LineWidth', 1)
+% yline(0, '--', 'LineWidth', 1)
+% xline(trigger_time, '--k', 'Activate CL Ctrl', 'LabelOrientation', 'horizontal', 'LineWidth', 1);
+% hold off
+% xlabel('Time [s]')
+% ylabel('Magnitude')
+% title('Error check')
+% legend('e_{r,1}', 'e_{r,2}','e_{y,1}', 'e_{y,2}', 'e_{yc,1}', 'e_{yc,2}')
 
-% Compare wind turbine real output to the reference
-figure('Name', 'Controller performance', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-plot((1:length(ym)) * timeStep, ym(:, 1),'m','LineWidth', 1)
-hold on
-plot((1:length(ym)) * timeStep, ym(:, 2),'b','LineWidth', 1)
-plot((1:length(r)) * timeStep, delayseq(r(:, 1), DeadtimeDelay),'m--','LineWidth', 1)
-plot((1:length(r)) * timeStep, delayseq(r(:, 2), DeadtimeDelay),'k--','LineWidth', 1)
-yline(0, '--', 'LineWidth', 1)
-xline(trigger_time, '--k', 'Activate CL Ctrl', 'LabelOrientation', 'horizontal', 'LineWidth', 1);
-hold off
-xlabel('Time [s]')
-ylabel('Magnitude')
-title('Controller Performance Check')
-legend('y_{WTm1}','y_{WTm2}','r_z','r_y')
+% % Compare wind turbine real output to the reference
+% figure('Name', 'Controller performance', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+% plot((1:length(ym)) * timeStep, ym(:, 1),'m','LineWidth', 1)
+% hold on
+% plot((1:length(ym)) * timeStep, ym(:, 2),'b','LineWidth', 1)
+% plot((1:length(r)) * timeStep, delayseq(r(:, 1), DeadtimeDelay),'m--','LineWidth', 1)
+% plot((1:length(r)) * timeStep, delayseq(r(:, 2), DeadtimeDelay),'k--','LineWidth', 1)
+% yline(0, '--', 'LineWidth', 1)
+% xline(trigger_time, '--k', 'Activate CL Ctrl', 'LabelOrientation', 'horizontal', 'LineWidth', 1);
+% hold off
+% xlabel('Time [s]')
+% ylabel('Magnitude')
+% title('Controller Performance Check')
+% legend('y_{WTm1}','y_{WTm2}','r_z','r_y')
 
 % % Adaptive filter check
 % figure
@@ -534,47 +545,31 @@ legend('y_{WTm1}','y_{WTm2}','r_z','r_y')
 % title('Adaptive Filter Check')
 % legend('preFir_1','preFir_1','aftFir_1','aftFir_2')
 
-% See which output is dominate
-figure('Name', 'Output Component Check', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-plot((1:length(y)) * timeStep, yc(:, 1), 'm','LineWidth', 1)
-hold on
-plot((1:length(y)) * timeStep, yc(:, 2), 'b','LineWidth', 1)
-plot((1:length(y)) * timeStep, y(:, 1), 'm--','LineWidth', 1)
-plot((1:length(y)) * timeStep, y(:, 2), 'b--','LineWidth', 1)
-xline(trigger_time, '--k', 'Activate CL Ctrl', 'LabelOrientation', 'horizontal', 'LineWidth', 1);
-yline(0, '--', 'LineWidth', 1)
-hold off
-title('Ouput Component Check')
-legend('y_{c1}','y_{c2}','y_{1}','y_{2}')
-
-% figure()
-% plot(PitchAngles(:,1))
+% % See which output is dominate
+% figure('Name', 'Output Component Check', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+% plot((1:length(y)) * timeStep, yc(:, 1), 'm','LineWidth', 1)
 % hold on
-% plot(PitchAngles(:,2))
-% plot(PitchAngles(:,3))
+% plot((1:length(y)) * timeStep, yc(:, 2), 'b','LineWidth', 1)
+% plot((1:length(y)) * timeStep, y(:, 1), 'm--','LineWidth', 1)
+% plot((1:length(y)) * timeStep, y(:, 2), 'b--','LineWidth', 1)
+% xline(trigger_time, '--k', 'Activate CL Ctrl', 'LabelOrientation', 'horizontal', 'LineWidth', 1);
+% yline(0, '--', 'LineWidth', 1)
 % hold off
-% xticks(0:100:length(PitchAngles));
-% xticklabels(0:100*timeStep:length(PitchAngles)*timeStep);
-% ylim([-1.25 1.25])
-% % xlim([0 300])
-% xlabel("Time (s)");
-% ylabel("Angle (deg)");
-% title('Blade Pitch Signal')
-% legend('\beta_1','\beta_2','\beta_3')
-% 
-% figure()
-% plot(FF_beta(:, 1))
-% hold on
-% plot(FF_beta(:, 2))
-% hold off
-% xticks(0:100:length(PitchAngles));
-% xticklabels(0:100*timeStep:length(PitchAngles)*timeStep);
-% ylim([-1.25 1.25])
-% xlabel("Time (s)");
-% ylabel("Angle (deg)");
-% title('Rotor Disc Signal')
-% legend('\beta_{tilt}', '\beta_{yaw}')
+% title('Ouput Component Check')
+% legend('y_{c1}','y_{c2}','y_{1}','y_{2}')
 
-% ringVisualization(LiDAR_data, D_NREL5MW)
+%% Calcuate Power, DEL, PBD
+% Power production [MW]
+PowerTurb1 = calculatePower(Cp_store,D_NREL5MW,U_inflow);
+PowerTurb2 = calculatePower(Cpturb2_store,D_NREL5MW,U_inflow);
+
+% (DELs) Damage Equivalent Load [Nm]
+DELTurb1 = calculateDEL(Moop1_store, timeStep);
+DELTurb2 = calculateDEL(Moop1turb2_store, timeStep);
+
+% (PBD) Pitch Bearing Damage [Nm deg]
+PBDTurb1 = calculatePBD(PitchAngles,Mflap1_store,Medge1_store);
+PBDTurb2 = calculatePBD(PitchAnglesturb2,Mflap1turb2_store,Medge1turb2_store);
+
 %% Unload Library 
 % unloadlibrary 'QBladeDLL'

@@ -1,11 +1,11 @@
 ----------------------------------------QBlade Simulation Definition File------------------------------------------
 Generated with : QBlade EE v2.0.6.4_beta windows
 Archive Format: 310013
-Time : 08:57:22
-Date : 22.05.2024
+Time : 16:21:56
+Date : 24.10.2024
 
 ----------------------------------------Object Name-----------------------------------------------------------------
-NREL5MW_torque                           OBJECTNAME         - the name of the simulation object
+NREL5MW_2turbines                        OBJECTNAME         - the name of the simulation object
 
 ----------------------------------------Simulation Type-------------------------------------------------------------
 0                                        ISOFFSHORE         - use a number: 0 = onshore; 1 = offshore
@@ -37,9 +37,33 @@ TURB_1
                                          MOTIONFILE         - the prescribed motion file name (leave blank if unused)
 END_TURB_1
 
+TURB_2
+    NREL_5MW_ASE/NREL_5MW_ASE.trb        TURBFILE           - the turbine definition file that is used for this simulation
+    NREL_5MW_ASE2                        TURBNAME           - the (unique) name of the turbine in the simulation (results will appear under this name)
+    0.00                                 INITIAL_YAW        - the initial turbine yaw in [deg]
+    0.00                                 INITIAL_PITCH      - the initial collective blade pitch in [deg]
+    0.00                                 INITIAL_AZIMUTH    - the initial azimuthal rotor angle in [deg]
+    1                                    STRSUBSTEP         - the number of structural substeps per timestep (usually 1)
+    5                                    RELAXSTEPS         - the number of initial static structural relaxation steps
+    0                                    PRESCRIBETYPE      - rotor RPM prescribe type (0 = ramp-up; 1 = whole sim; 2 = no RPM prescibed) 
+    12.126                               RPMPRESCRIBED      - the prescribed rotor RPM [-]
+    10                                   STRITERATIONS      - number of iterations for the time integration (used when integrator is HHT or Euler)
+    0                                    MODNEWTONITER      - use the modified newton iteration?
+    630.00                               GLOBPOS_X          - the global x-position of the turbine [m]
+    0.00                                 GLOBPOS_Y          - the global y-position of the turbine [m]
+    0.00                                 GLOBPOS_Z          - the global z-position of the turbine [m]
+    0.00                                 GLOBROT_X          - the global x-rotation of the turbine [deg]
+    0.00                                 GLOBROT_Y          - the global y-rotation of the turbine [deg]
+    0.00                                 GLOBROT_Z          - the global z-rotation of the turbine [deg]
+                                         EVENTFILE          - the file containing fault event definitions (leave blank if unused)
+                                         LOADINGFILE        - the loading file name (leave blank if unused)
+                                         SIMFILE            - the simulation file name (leave blank if unused)
+                                         MOTIONFILE         - the prescribed motion file name (leave blank if unused)
+END_TURB_2
+
 ----------------------------------------Simulation Settings-------------------------------------------------------
-0.050000                                 TIMESTEP           - the timestep size in [s]
-1000                                     NUMTIMESTEPS       - the number of timesteps
+0.100000                                 TIMESTEP           - the timestep size in [s]
+2147483647                               NUMTIMESTEPS       - the number of timesteps
 20.000                                   RAMPUP             - the rampup time for the structural model
 0.000                                    ADDDAMP            - the initial time with additional damping
 100.000                                  ADDDAMPFACTOR      - for the additional damping time this factor is used to increase the damping of all components
@@ -58,13 +82,13 @@ END_TURB_1
 0.000                                    SHEAREXP           - the shear exponent if using a power law profile, if a windfield is used these values are used to calculate the mean wake convection velocities
 0.010                                    ROUGHLENGTH        - the roughness length if using a log profile, if a windfield is used these values are used to calculate the mean wake convection velocities
 0.00                                     DIRSHEAR           - a value for the directional shear in deg/m
-87.60                                    REFHEIGHT          - the reference height, used to contruct the BL profile
+129.39                                   REFHEIGHT          - the reference height, used to contruct the BL profile
 
 ----------------------------------------Ocean Depth, Waves and Currents------------------------------------------- 
 the following parameters only need to be set if ISOFFSHORE = 1
 1.00                                     WATERDEPTH         - the water depth
                                          WAVEFILE           - the path to the wave file, leave blank if unused
-1                                        WAVESTRETCHING     - the type of wavestretching, 0 = vertical, 1 = wheeler, 2 = extrapolation, 3 = none
+0                                        WAVESTRETCHING     - the type of wavestretching, 0 = vertical, 1 = wheeler, 2 = extrapolation, 3 = none
 10000.00                                 SEABEDSTIFF        - the vertical seabed stiffness [N/m^3]
 0.50                                     SEABEDDAMP         - a damping factor for the vertical seabed stiffness evaluation, between 0 and 1 [-]
 0.00                                     SEABEDSHEAR        - a factor for the evaluation of shear forces (friction), between 0 and 1 [-]
