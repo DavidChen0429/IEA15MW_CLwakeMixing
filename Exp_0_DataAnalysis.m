@@ -7,7 +7,7 @@ addpath('.\Functions');
 %% Data file (Chage this accordingly)
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\';
-fileName = '2Turbines_OL_Helix.mat';
+fileName = '2Turbines_CL_Helix_Shear.mat';
 
 Data = load([turbineName caseName fileName]);
 

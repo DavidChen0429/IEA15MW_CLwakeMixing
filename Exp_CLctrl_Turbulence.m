@@ -9,7 +9,7 @@ UserPath = 'C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\IEA15MW_CLwakeMixing\';
 QBladePath = 'C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\QBladeEE_2.0.6.4\'; 
 SourcePath = [UserPath 'Source\'];
 DllPath = [QBladePath 'QBladeEE_2.0.6.dll'];
-simFile = [SourcePath 'NREL5MW_1turbine.sim'];
+simFile = [SourcePath 'NREL5MW_1turbine_turbulence.sim'];
 addpath('.\Functions');
 
 loadlibrary(DllPath,'QBladeLibInclude.h','alias','QBladeDLL') 
@@ -19,9 +19,10 @@ if isempty(m)
 end
 
 %% Data file 
-fileName = 'Hinf_steps.mat';
 turbineName = '.\Data\NREL5MW\';
-caseName = 'Str0.3_U10_1Dd_10Hz_CCW\CLctrl\';
+caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\';
+fileName = '1Turbines_CL_Helix_Turbulence.mat';
+QprName = '1Turbines_CL_Helix_Turbulence.qpr';
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
@@ -73,9 +74,9 @@ Turb_type = 'NTM';   % NTM, ETM, etc
 seed = 43;
 vertInf = 0;         % Vertical inflow angle in degrees
 horInf = 0;          % Horizontal inflow angle in degrees
-calllib('QBladeDLL', 'addTurbulentWind', ...
-    U_inflow,Hub_NREL5MW,Hub_NREL5MW,dimension,grid_point, ...
-    Turb_time,Turb_dt,Turb_class,Turb_type,seed,vertInf,horInf,1)
+% calllib('QBladeDLL', 'addTurbulentWind', ...
+%     U_inflow,Hub_NREL5MW,Hub_NREL5MW,dimension,grid_point, ...
+%     Turb_time,Turb_dt,Turb_class,Turb_type,seed,vertInf,horInf,1)
 
 %% Defining Torque Control Setting
 % This need to be changed when inflow windspeed is varied
@@ -371,7 +372,7 @@ for i = 1:1:simTime
 
 end
 close(f)
-% calllib('QBladeDLL','storeProject','.\Data\NREL5MW\QbladeSim\Hinf_2steps.qpr') 
+calllib('QBladeDLL','storeProject', [turbineName caseName QprName])
 calllib('QBladeDLL','closeInstance')
 % save([turbineName caseName fileName], 'LiDAR_data', ...
 %                                       'FF_helixCenter', ...
@@ -393,6 +394,13 @@ calllib('QBladeDLL','closeInstance')
 %                                       'ym', ...
 %                                       'ytilda', ...
 %                                       'yc');
+save([turbineName caseName fileName], 'Power_store', ...
+                                      'Cp_store', ...
+                                      'Moop1_store', ...
+                                      'Mip1_store', ...
+                                      'Mflap1_store', ...
+                                      'Medge1_store', ...
+                                      'PitchAngles');
 toc 
 
 %% Visualization

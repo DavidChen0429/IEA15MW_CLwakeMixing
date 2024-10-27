@@ -19,9 +19,10 @@ if isempty(m)
 end
 
 %% Data file 
-fileName = 'Hinf_steps.mat';
 turbineName = '.\Data\NREL5MW\';
-caseName = 'Str0.3_U10_1Dd_10Hz_CCW\CLctrl\';
+caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\';
+fileName = '2Turbines_CL_Helix.mat';
+QprName = '2Turbines_CL_Helix.qpr';
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
@@ -192,6 +193,7 @@ Mip1_store = zeros(simTime, 1);
 Mflap1_store = zeros(simTime, 1);
 Medge1_store = zeros(simTime, 1);
 Cp_store = zeros(simTime, 1);
+
 TSRturb2_store = zeros(simTime, 1);
 Powerturb2_store = zeros(simTime, 1);
 Moop1turb2_store = zeros(simTime, 1);
@@ -199,6 +201,7 @@ Mip1turb2_store = zeros(simTime, 1);
 Mflap1turb2_store = zeros(simTime, 1);
 Medge1turb2_store = zeros(simTime, 1);
 Cpturb2_store = zeros(simTime, 1);
+
 FF_beta = zeros(simTime, 2);
 HF_beta = zeros(simTime, 2);
 FF_helixCenter_filtered = zeros(simTime, 2);
@@ -404,7 +407,7 @@ for i = 1:1:simTime
 
 end
 close(f)
-% calllib('QBladeDLL','storeProject','.\Data\NREL5MW\QbladeSim\CL2Turb.qpr') 
+calllib('QBladeDLL','storeProject', [turbineName caseName QprName]) 
 calllib('QBladeDLL','closeInstance')
 % save([turbineName caseName fileName], 'LiDAR_data', ...
 %                                       'FF_helixCenter', ...
@@ -426,6 +429,20 @@ calllib('QBladeDLL','closeInstance')
 %                                       'ym', ...
 %                                       'ytilda', ...
 %                                       'yc');
+save([turbineName caseName fileName], 'Power_store', ...
+                                      'Powerturb2_store', ...
+                                      'Cp_store', ...
+                                      'Cpturb2_store', ...
+                                      'Moop1_store', ...
+                                      'Mip1_store', ...
+                                      'Mflap1_store', ...
+                                      'Medge1_store', ...
+                                      'Moop1turb2_store', ...
+                                      'Mip1turb2_store', ...
+                                      'Mflap1turb2_store', ...
+                                      'Medge1turb2_store', ...
+                                      'PitchAngles', ...
+                                      'PitchAnglesturb2');
 toc 
 
 %% Visualization
