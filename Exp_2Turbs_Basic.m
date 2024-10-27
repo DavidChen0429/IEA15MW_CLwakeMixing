@@ -21,8 +21,8 @@ end
 %% Data file (Chage this accordingly)
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\';
-fileName = '2Turbines_OL_Helix.mat';
-QprName = '2Turbines_OL_Helix.qpr';
+fileName = '2Turbines_Basic.mat';
+QprName = '2Turbines_Basic.qpr';
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
@@ -112,7 +112,7 @@ sigYaw_e = Helix_amplitude*ones(simTime, 1);   % basic
 r = zeros(simTime, 2);   
 Trigger = ceil(simTime/5);      % Time that CL ctrl is triggered
 % 1. Steps
-reference_magnitude = [Helix_amplitude Helix_amplitude];
+reference_magnitude = [0 0];
 r(Trigger:end, 1) = reference_magnitude(1)*ones(simTime+1-Trigger, 1);   % z_e
 r(Trigger:end, 2) = reference_magnitude(2)*ones(simTime+1-Trigger, 1);   % y_e
 % 2. Ramp
@@ -154,6 +154,7 @@ Mip1_store = zeros(simTime, 1);
 Mflap1_store = zeros(simTime, 1);
 Medge1_store = zeros(simTime, 1);
 Cp_store = zeros(simTime, 1);
+
 TSRturb2_store = zeros(simTime, 1);
 Powerturb2_store = zeros(simTime, 1);
 Moop1turb2_store = zeros(simTime, 1);
@@ -161,6 +162,7 @@ Mip1turb2_store = zeros(simTime, 1);
 Mflap1turb2_store = zeros(simTime, 1);
 Medge1turb2_store = zeros(simTime, 1);
 Cpturb2_store = zeros(simTime, 1);
+
 FF_beta = zeros(simTime, 2);
 HF_beta = zeros(simTime, 2);
 FF_helixCenter_filtered = zeros(simTime, 2);
@@ -266,13 +268,8 @@ for i = 1:1:simTime
 
     % II. Wake mixing
     % 1. Get tilt and yaw signals
-    if i < Trigger
-        beta_tilt_e = 0;
-        beta_yaw_e = 0;
-    else
-        beta_tilt_e = sigTilt_e(i);
-        beta_yaw_e = sigYaw_e(i);
-    end
+    beta_tilt_e = 0;
+    beta_yaw_e = 0;
     % 2. Inverse MBC 
     % 3. Blade pitch signal
     betaTiltYaw = invR_helix * [beta_tilt_e; 
@@ -283,7 +280,7 @@ for i = 1:1:simTime
 
     % Send control signal to qblade
     calllib('QBladeDLL','setControlVars_at_num',[genTorque 0 ...
-        betaBlade_Helix(1) betaBlade_Helix(2) betaBlade_Helix(3)],0)
+        0 0 0],0)
     calllib('QBladeDLL','setControlVars_at_num',[genTorque_turb2 0 ...
         0 0 0],1)
 

@@ -49,7 +49,7 @@ TURB_2
     12.126                               RPMPRESCRIBED      - the prescribed rotor RPM [-]
     10                                   STRITERATIONS      - number of iterations for the time integration (used when integrator is HHT or Euler)
     0                                    MODNEWTONITER      - use the modified newton iteration?
-    630.00                               GLOBPOS_X          - the global x-position of the turbine [m]
+    378.00                               GLOBPOS_X          - the global x-position of the turbine [m]
     0.00                                 GLOBPOS_Y          - the global y-position of the turbine [m]
     0.00                                 GLOBPOS_Z          - the global z-position of the turbine [m]
     0.00                                 GLOBROT_X          - the global x-rotation of the turbine [deg]
