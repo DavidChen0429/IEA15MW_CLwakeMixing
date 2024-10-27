@@ -367,15 +367,5 @@ legend('z_{e,f}', 'y_{e,f}')
 
 % ringVisualization(LiDAR_data, D_NREL5MW)
 
-%% Calcuate Power, DEL, PBD
-% Power production [MW]
-PowerTurb1 = calculatePower(Cp_store,D_NREL5MW,U_inflow);
-
-% (DELs) Damage Equivalent Load [Nm]
-DELTurb1 = calculateDEL(Moop1_store, timeStep);
-
-% (PBD) Pitch Bearing Damage [Nm deg]
-PBDTurb1 = calculatePBD(PitchAngles,Mflap1_store,Medge1_store);
-
 %% Unload Library 
 % unloadlibrary 'QBladeDLL'

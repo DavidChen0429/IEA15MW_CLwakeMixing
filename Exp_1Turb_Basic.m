@@ -21,8 +21,8 @@ end
 %% Data file (Chage this accordingly)
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\';
-fileName = '1Turbines_OL_Helix.mat';
-QprName = '1Turbines_OL_Helix.qpr';
+fileName = '1Turbine_Basic.mat';
+QprName = '1Turbine_Basic.qpr';
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
@@ -247,15 +247,9 @@ for i = 1:1:simTime
 
     % II. Wake mixing
     % 1. Get tilt and yaw signals
-    if i < Trigger
-        beta_tilt_e = 0;
-        beta_yaw_e = 0;
-    else
-        beta_tilt_e = sigTilt_e(i);
-        beta_yaw_e = sigYaw_e(i);
-    end
+    beta_tilt_e = 0;
+    beta_yaw_e = 0;
     % 2. Inverse MBC 
-    
     % 3. Blade pitch signal
     betaTiltYaw = invR_helix * [beta_tilt_e; 
                                 beta_yaw_e];    

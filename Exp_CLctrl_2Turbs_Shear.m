@@ -21,8 +21,8 @@ end
 %% Data file 
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\';
-fileName = '2Turbines_CL_Helix_Shear.mat';
-QprName = '2Turbines_CL_Helix_Shear.qpr';
+fileName = '2Turbines_CL_Helix_Shear2p.mat';
+QprName = '2Turbines_CL_Helix_Shear2p.qpr';
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
@@ -574,19 +574,6 @@ legend('z_{e,f}', 'y_{e,f}')
 % hold off
 % title('Ouput Component Check')
 % legend('y_{c1}','y_{c2}','y_{1}','y_{2}')
-
-%% Calcuate Power, DEL, PBD
-% Power production [MW]
-PowerTurb1 = calculatePower(Cp_store,D_NREL5MW,U_inflow);
-PowerTurb2 = calculatePower(Cpturb2_store,D_NREL5MW,U_inflow);
-
-% (DELs) Damage Equivalent Load [Nm]
-DELTurb1 = calculateDEL(Moop1_store, timeStep);
-DELTurb2 = calculateDEL(Moop1turb2_store, timeStep);
-
-% (PBD) Pitch Bearing Damage [Nm deg]
-PBDTurb1 = calculatePBD(PitchAngles,Mflap1_store,Medge1_store);
-PBDTurb2 = calculatePBD(PitchAnglesturb2,Mflap1turb2_store,Medge1turb2_store);
 
 %% Unload Library 
 % unloadlibrary 'QBladeDLL'

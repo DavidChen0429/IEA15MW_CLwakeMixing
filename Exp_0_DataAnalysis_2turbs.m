@@ -7,7 +7,7 @@ addpath('.\Functions');
 %% Data file (Chage this accordingly)
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\';
-fileName = '2Turbines_CL_Helix_Shear.mat';
+fileName = '2Turbines_CL_Helix_TI10.mat';
 
 Data = load([turbineName caseName fileName]);
 
@@ -31,21 +31,22 @@ U_inflow = 10;
 timeStep = 0.1;
 
 %% Calcuate Power, DEL, PBD
+filter = 3000;
 % WT1 
-PowerTurb1 = calculatePower(Cp_store,D_NREL5MW,U_inflow); % [MW]
-DELTurb1 = calculateDEL(Moop1_store, timeStep); % [Nm]
-PBDTurb1 = calculatePBD(PitchAngles,Mflap1_store,Medge1_store); % [Nm deg]
+PowerTurb1 = calculatePower(filter,Cp_store,D_NREL5MW,U_inflow); % [MW]
+DELTurb1 = calculateDEL(filter,Moop1_store, timeStep); % [Nm]
+PBDTurb1 = calculatePBD(filter,PitchAngles,Mflap1_store,Medge1_store); % [kNm deg]
 fprintf('================================================== \n');
 fprintf('The output of Wind turbine 1:\n');
 fprintf('    Power Production: %.2f [MW]\n', PowerTurb1);
 fprintf('    DEL: %.2e  [Nm]\n', DELTurb1);
-fprintf('    PBD: %.2e [Nm deg]\n', PBDTurb1);
+fprintf('    PBD: %.2e [kNm deg]\n', PBDTurb1);
 
 % WT2 (if there is any)
-PowerTurb2 = calculatePower(Cpturb2_store,D_NREL5MW,U_inflow); % [MW]
-DELTurb2 = calculateDEL(Moop1turb2_store, timeStep); % [Nm]
-PBDTurb2 = calculatePBD(PitchAnglesturb2,Mflap1turb2_store,Medge1turb2_store); % [Nm deg]
+PowerTurb2 = calculatePower(filter,Cpturb2_store,D_NREL5MW,U_inflow); % [MW]
+DELTurb2 = calculateDEL(filter,Moop1turb2_store, timeStep); % [Nm]
+PBDTurb2 = calculatePBD(filter,PitchAnglesturb2,Mflap1turb2_store,Medge1turb2_store); % [kNm deg]
 fprintf('The output of Wind turbine 2:\n');
 fprintf('    Power Production: %.2f [MW]\n', PowerTurb2);
 fprintf('    DEL: %.2e [Nm]\n', DELTurb2);
-fprintf('    PBD: %.2e [Nm deg]\n', PBDTurb2);
+fprintf('    PBD: %.2e [kNm deg]\n', PBDTurb2);

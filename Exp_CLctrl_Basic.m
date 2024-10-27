@@ -533,19 +533,5 @@ legend('z_{e,f}', 'y_{e,f}')
 % title('Ouput Component Check')
 % legend('y_{c1}','y_{c2}','y_{1}','y_{2}')
 
-%% Calcuate Power, DEL, PBD
-% Power production 
-Cp_overall = mean(Cp_store);
-Power2 = (1.225*pi*((D_NREL5MW)/2)^2*U_inflow^3*Cp_store)/2; % same Power_store
-PowerAvg = mean(Power2)/1e6; % MW
-
-% (DELs) Damage Equivalent  Load
-cycles = rainflow(Moop1_store, timeStep);
-neq = 1;
-inverseWohlerSlope = 10;
-DEL = (sum(cycles(:, 1) .* (cycles(:, 2).^inverseWohlerSlope))/neq)^(1/inverseWohlerSlope);
-
-% Pitch Bearing Damage
-
 %% Unload Library 
 % unloadlibrary 'QBladeDLL'
