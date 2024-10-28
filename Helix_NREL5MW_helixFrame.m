@@ -18,18 +18,18 @@ if isempty(m)
     fprintf('Error')
 end
 
-% Data file (Chage this accordingly)
-fileName = 'stepResponse_tiltOnly_AzimuthOffset96.mat';   % Fixed Frame
+%% Data file (Chage this accordingly)
 turbineName = '.\Data\NREL5MW\';
-caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
+caseName = 'HubJet\';
+fileName = 'St3A4.mat';
 
-% Load project and Initialize simulation
+%% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
 calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime = 12000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 3000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 
@@ -69,21 +69,21 @@ N = 97;          % Gearbox ratio
 
 %% Defining Helix Control Setting
 Str = 0.3;                          % Strouhal number
-Helix_amplitude = 3;                % Helix amplitude                
+Helix_amplitude = 4;                % Helix amplitude                
 Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
 omega_e = Freq*2*pi;
 AzimuthOffset = 96; % 6 for pi/2 shift ;96 for pi shift (right relationship)
 
 t = linspace(1, simLen, simTime);
-% sigTilt_e = Helix_amplitude*ones(simTime, 1);  % basic
-% sigYaw_e = 0*ones(simTime, 1);   % basic
+sigTilt_e = Helix_amplitude*ones(simTime, 1);  % basic
+sigYaw_e = Helix_amplitude*ones(simTime, 1);   % basic
 
 % Step input to test basic properties
 % steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5)];
-steps = [0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -Helix_amplitude*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 2*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10)];
+% steps = [0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -Helix_amplitude*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 2*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10)];
 % steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime*4/5)];
-sigTilt_e = steps;                  % 0*ones(simTime, 1)
-sigYaw_e = 0*ones(simTime, 1);                   % 0*ones(simTime, 1)
+% sigTilt_e = steps;                  % 0*ones(simTime, 1)
+% sigYaw_e = 0*ones(simTime, 1);                   % 0*ones(simTime, 1)
 
 % figure;
 % plot(t, sigTilt_e);
@@ -162,9 +162,6 @@ for i = 1:1:simTime
     beta_tilt_e = sigTilt_e(i);
     beta_yaw_e = sigYaw_e(i);
     % 2. Inverse MBC 
-%     invMBC = [1 cosd(Azimuth1) sind(Azimuth1);
-%               1 cosd(Azimuth2) sind(Azimuth2);
-%               1 cosd(Azimuth3) sind(Azimuth3)];
     invMBC = [1 cosd(Azimuth1+AzimuthOffset) sind(Azimuth1+AzimuthOffset);
               1 cosd(Azimuth2+AzimuthOffset) sind(Azimuth2+AzimuthOffset);
               1 cosd(Azimuth3+AzimuthOffset) sind(Azimuth3+AzimuthOffset)];
@@ -201,11 +198,15 @@ for i = 1:1:simTime
     
     % Low pass filter
     % Centering
-    centerZ = wakeCenter(1) - meanZ;  % 91.9411
-    centerY = wakeCenter(2) - meanY;  % -3.1245
+    centerZ = wakeCenter(1) - meanZ;  % 91.2632
+    centerY = wakeCenter(2) - meanY;  % -4.9713
+%     centerZ = wakeCenter(1) - 91.2632;  % 91.2632
+%     centerY = wakeCenter(2) + 4.9713;  % -4.9713
     center_e = invR_helix * [centerZ; centerY];
     [HF_helixCenter_filtered(i, 1), filterState3] = filter(b_fir, 1, center_e(1), filterState3);
     [HF_helixCenter_filtered(i, 2), filterState4] = filter(b_fir, 1, center_e(2), filterState4);
+    % Sign change because of opposite model
+    HF_helixCenter_filtered(i, :) = HF_helixCenter_filtered(i, :) * [-1 0; 0 1];
 
     % Store values 
 %     omega_store(i,:) = omega;
@@ -224,7 +225,7 @@ for i = 1:1:simTime
 
 end
 close(f)
-%calllib('QBladeDLL','storeProject','15MW_Helix_Uni-U8_Str3.qpr') 
+% calllib('QBladeDLL','storeProject', [turbineName caseName QprName]) 
 calllib('QBladeDLL','closeInstance')
 % save([turbineName caseName fileName], 'LiDAR_data', ...
 %                                       'FF_helixCenter', ...
@@ -233,12 +234,12 @@ calllib('QBladeDLL','closeInstance')
 %                                       'HF_helixCenter_filtered', ...
 %                                       'FF_beta', ...
 %                                       'HF_beta');
-% save([turbineName caseName fileName], 'FF_helixCenter', ...
-%                                       'FF_helixCenter_filtered', ...
-%                                       'HF_helixCenter', ...
-%                                       'HF_helixCenter_filtered', ...
-%                                       'FF_beta', ...
-%                                       'HF_beta');
+save([turbineName caseName fileName], 'FF_helixCenter', ...
+                                      'FF_helixCenter_filtered', ...
+                                      'HF_helixCenter', ...
+                                      'HF_helixCenter_filtered', ...
+                                      'FF_beta', ...
+                                      'HF_beta');
 toc 
 
 %% Visualization
@@ -285,7 +286,7 @@ toc
 % ylabel("Angle (deg)");
 % legend('Blade 1','Blade 2','Blade 3')
 
-figure;
+figure('Name', 'Overall Result', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
 subplot(2, 2, 1)
 plot((1:length(FF_beta)) * timeStep, FF_beta(:, 1));
 hold on;

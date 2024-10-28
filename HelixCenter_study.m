@@ -6,13 +6,14 @@ addpath('.\Functions');
 %% Load data
 Fs = 10;  % sampling frequency Hz
 Fc = 0.02;  % cutoff frequency Hz
-fileName = 'ForMarion_0.5R.mat';   % Fixed Frame
 turbineName = '.\Data\NREL5MW\';
-caseName = 'Str0.3_U10_1Dd_10Hz_CCW\LiDAR_Look\';
+caseName = 'LiDAR\';
+fileName = 'BasicHelix.mat';
 windspeed = load([turbineName caseName fileName]);
-fileName2 = 'ForMarion_0.5R.mat';   % Fixed Frame
+
 turbineName = '.\Data\NREL5MW\';
-caseName = 'Str0.3_U10_1Dd_10Hz_CCW\LiDAR_Look\';
+caseName = 'LiDAR\';
+fileName2 = 'BasicHelix.mat';
 windspeed2 = load([turbineName caseName fileName2]);
 
 dataLiDAR= windspeed.LiDAR_data;
@@ -24,6 +25,10 @@ Uin = 10;
 Str = 0.3;           % Strouhal number 
 DIEA15 = 126;
 Freq = Str*Uin/DIEA15;      % From Str, in Hz
+
+theta = linspace(0, 2*pi, 20);
+y_1Dref = 0 + DIEA15/2 * cos(theta);
+z_1Dref = Hub_NREL5MW + DIEA15/2 * sin(theta);
 
 % % Reference signal
 % timeWakeTravel0 = round(measurementPos/Uin);
@@ -38,10 +43,6 @@ Freq = Str*Uin/DIEA15;      % From Str, in Hz
 %   LOS speed info:         u_los
 
 %% Pure snapshot visualization
-theta = linspace(0, 2*pi, 20);
-y_1Dref = 0 + DIEA15/2 * cos(theta);
-z_1Dref = Hub_NREL5MW + DIEA15/2 * sin(theta);
-
 % Visualization
 figure;
 counter = 600;  % 400 600 800 1000 
@@ -59,6 +60,28 @@ ylabel('Z [m]')
 title('LiDAR Wind Speed', counter)
 colorbar;
 clim([4 7])
+
+%% For Thesis Writing
+buffer = linspace(1000, 1000+420, 8);
+for i = 1:length(buffer)
+    figure('Name', 'LiDAR Sampling', 'NumberTitle', 'off', 'Position', [100, 100, 350, 300]);
+    counter = buffer(i);
+    snapshot = dataLiDAR(counter);
+    u_los = snapshot.u_los;
+    y = snapshot.y;
+    z = snapshot.z;
+    scatter(y, z, 10, u_los, 'filled');
+    hold on
+    plot(y_1Dref, z_1Dref, "k:", 'LineWidth',1);
+    hold off;
+    xlabel('Y [m]')
+    ylabel('Z [m]')
+    title([num2str(counter/10), ' seconds'])
+    colorbarHandle = colorbar;
+    ylabel(colorbarHandle, 'u [m/s]');
+    clim([4 10])
+%     setfigpaper('Width',[10 0.9],'Interpreter','Latex','FontSize',15,'linewidth',1)
+end
 
 %% Discussion with Marion 
 theta = linspace(0, 2*pi, 20);
@@ -81,7 +104,7 @@ xlabel('Y [m]')
 ylabel('Z [m]')
 title('0T', counter)
 colorbar;
-clim([4 7])
+clim([4 10])
 
 subplot(2,2,3)
 counter = 600;  % 400 600 800 1000 
@@ -97,7 +120,7 @@ xlabel('Y [m]')
 ylabel('Z [m]')
 title('0.25T', counter)
 colorbar;
-clim([4 7])
+clim([4 10])
 
 subplot(2,2,2)
 counter = 800;  % 400 600 800 1000 
@@ -113,7 +136,7 @@ xlabel('Y [m]')
 ylabel('Z [m]')
 title('0.5T', counter)
 colorbar;
-clim([4 7])
+clim([4 10])
 
 subplot(2,2,4)
 counter = 1000;  % 400 600 800 1000 
@@ -129,7 +152,7 @@ xlabel('Y [m]')
 ylabel('Z [m]')
 title('0.75T', counter)
 colorbar;
-clim([4 7])
+clim([4 10])
 
 %% Pure visualization
 theta = linspace(0, 2*pi, 20);
