@@ -125,10 +125,8 @@ Fc = 0.05;
 Wn = Fc / (Fs / 2);
 
 % Finite Impulse Response LPF (small phase lag in real-time)
-n = 50; % Filter order
+n = 20; % Filter order
 b_fir = fir1(n, Wn, 'low');
-bufferSize = 50;   % 50
-buffer = zeros(bufferSize, 2);
 filterState1 = zeros(n, 1);
 filterState2 = zeros(n, 1);
 filterState3 = zeros(n, 1);
