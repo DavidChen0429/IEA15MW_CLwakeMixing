@@ -208,13 +208,7 @@ ws_filter = 100;
 ws_centering = ceil(1/(Freq * timeStep));
 
 %% Real-time LPF
-Fs = 1/timeStep;
-Fc = 0.05;
-Wn = Fc / (Fs / 2);
-
-% Finite Impulse Response LPF (small phase lag in real-time)
-n = 20; % Filter order
-b_fir = fir1(n, Wn, 'low');
+[b_fir, n] = FIR_LPF(1/timeStep, 0.05);
 filterState1 = zeros(n, 1);
 filterState2 = zeros(n, 1);
 filterState3 = zeros(n, 1);
@@ -275,8 +269,10 @@ for i = 1:1:simTime
     end
     % Low pass filter
     % Centering
-    centerZ = wakeCenter(1) - meanZ;
-    centerY = wakeCenter(2) - meanY;
+%     centerZ = wakeCenter(1) - meanZ;  % 91.2632
+%     centerY = wakeCenter(2) - meanY;  % -4.9713
+    centerZ = wakeCenter(1) - 92.0026;  % data derived from the basecase
+    centerY = wakeCenter(2) + 4.0999;   % data derived from the basecase
     center_e = invR_helix * [centerZ; centerY];
     [HF_helixCenter_filtered(i, 1), filterState3] = filter(b_fir, 1, center_e(1), filterState3);
     [HF_helixCenter_filtered(i, 2), filterState4] = filter(b_fir, 1, center_e(2), filterState4);
