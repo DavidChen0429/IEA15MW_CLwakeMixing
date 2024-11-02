@@ -21,7 +21,7 @@ end
 %% Data file (Chage this accordingly)
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Pipeline\';
-fileName = 'St3A3_30_step.mat';
+fileName = 'St3A4.mat';
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
@@ -29,7 +29,7 @@ calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime = 5000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 3000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 
@@ -69,7 +69,7 @@ N = 97;          % Gearbox ratio
 
 %% Defining Helix Control Setting
 Str = 0.3;                          % Strouhal number
-Helix_amplitude = 3;                % Helix amplitude                
+Helix_amplitude = 4;                % Helix amplitude                
 Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
 omega_e = Freq*2*pi;
 AzimuthOffset = 96; % 6 for pi/2 shift ;96 for pi shift (right relationship)
@@ -190,10 +190,10 @@ for i = 1:1:simTime
     
     % Low pass filter
     % Centering
-%     centerZ = wakeCenter(1) - meanZ;  % 91.2632
-%     centerY = wakeCenter(2) - meanY;  % -4.9713
-    centerZ = wakeCenter(1) - 92.0026;  % data derived from the basecase
-    centerY = wakeCenter(2) + 4.0999;   % data derived from the basecase
+%     centerZ = wakeCenter(1) - meanZ;  % 91.2632  92.0026
+%     centerY = wakeCenter(2) - meanY;  % -4.9713  -4.0999
+    centerZ = wakeCenter(1) - 91.6673;  % data derived from the basecase
+    centerY = wakeCenter(2) + 4.5923;   % data derived from the basecase
     center_e = invR_helix * [centerZ; centerY];
     [HF_helixCenter_filtered(i, 1), filterState3] = filter(b_fir, 1, center_e(1), filterState3);
     [HF_helixCenter_filtered(i, 2), filterState4] = filter(b_fir, 1, center_e(2), filterState4);

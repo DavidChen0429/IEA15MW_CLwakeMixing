@@ -194,8 +194,8 @@ xlim([0 250])
 ylim([70 110])
 xlabel('Time [s]')
 ylabel('Z [m]')
-title('Z, Fixed Frame')
-legend('Baseline', 'A=1', 'A=2', 'A=3', 'A=4')
+title('Z  Fixed Frame')
+legend('Baseline', 'A=1', 'A=2', 'A=3', 'A=4', 'Location', 'southeast')
 % setfigpaper('Width',[30,0.5],'Interpreter','Latex','FontSize',15,'linewidth',1)
 % y
 % figure('Name', 'Y', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
@@ -211,9 +211,9 @@ xlim([0 250])
 ylim([-20 20])
 xlabel('Time [s]')
 ylabel('Y [m]')
-title('Y, Fixed Frame')
-legend('Baseline', 'A=1', 'A=2', 'A=3', 'A=4')
-setfigpaper('Width',[30,0.5],'Interpreter','Latex','FontSize',20,'linewidth',1)
+title('Y  Fixed Frame')
+legend('Baseline', 'A=1', 'A=2', 'A=3', 'A=4', 'Location', 'southeast')
+setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',20,'linewidth',1)
 
 % Helix Frame
 figure('Name', 'Helix Frame', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
@@ -228,8 +228,8 @@ hold off
 xlim([0 250])
 xlabel('Time [s]')
 ylabel('Z [m]')
-title('Z, Helix Frame')
-legend('Baseline', 'A=1', 'A=2', 'A=3', 'A=4')
+title('Z^e  Helix Frame')
+legend('Baseline', 'A=1', 'A=2', 'A=3', 'A=4', 'Location', 'southeast')
 % setfigpaper('Width',[30,0.5],'Interpreter','Latex','FontSize',15,'linewidth',1)
 % y
 % figure('Name', 'Y', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
@@ -244,16 +244,16 @@ hold off
 xlim([0 250])
 xlabel('Time [s]')
 ylabel('Y [m]')
-title('Y, Helix Frame')
-legend('Baseline', 'A=1', 'A=2', 'A=3', 'A=4')
-setfigpaper('Width',[30,0.5],'Interpreter','Latex','FontSize',20,'linewidth',1)
+title('Y^e  Helix Frame')
+legend('Baseline', 'A=1', 'A=2', 'A=3', 'A=4', 'Location', 'southeast')
+setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',20,'linewidth',1)
 
 
 % === Input
 % Fixed Frame
 % z
-biasZ = mean(Baseline.FF_beta(filterIndex, 1)) - 90;
-biasY = mean(Baseline.FF_beta(filterIndex, 2)) - 0;
+biasZ = 0;
+biasY = 0;
 figure('Name', 'Fixed Frame', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
 subplot(2, 1, 1)
 plot(t,Baseline.FF_beta(filterIndex:end, 1)-biasZ,'LineWidth', lw)
@@ -266,9 +266,9 @@ hold off
 xlim([0 250])
 % ylim([70 110])
 xlabel('Time [s]')
-ylabel('Z [m]')
-title('Tilt Input, Fixed Frame')
-legend('Baseline', 'A=1', 'A=2', 'A=3', 'A=4')
+ylabel('Magnitude')
+title('\beta_{tilt}  Fixed Frame')
+legend('Baseline', 'A=1', 'A=2', 'A=3', 'A=4', 'Location', 'southeast')
 % setfigpaper('Width',[30,0.5],'Interpreter','Latex','FontSize',15,'linewidth',1)
 % y
 % figure('Name', 'Y', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
@@ -283,10 +283,10 @@ hold off
 xlim([0 250])
 % ylim([-20 20])
 xlabel('Time [s]')
-ylabel('Y [m]')
-title('Yaw Input, Fixed Frame')
-legend('Baseline', 'A=1', 'A=2', 'A=3', 'A=4')
-setfigpaper('Width',[30,0.5],'Interpreter','Latex','FontSize',20,'linewidth',1)
+ylabel('Magnitude')
+title('\beta_{yaw}  Fixed Frame')
+legend('Baseline', 'A=1', 'A=2', 'A=3', 'A=4', 'Location', 'southeast')
+setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',20,'linewidth',1)
 
 % Helix Frame
 figure('Name', 'Helix Frame', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
@@ -300,9 +300,9 @@ plot(t,St3A4.HF_beta(filterIndex:end, 1),'LineWidth', lw)
 hold off
 xlim([0 250])
 xlabel('Time [s]')
-ylabel('Z [m]')
-title('Tilt Input, Helix Frame')
-legend('Baseline', 'A=1', 'A=2', 'A=3', 'A=4')
+ylabel('Magnitude')
+title('\beta^e_{tilt}  Helix Frame')
+legend('Baseline', 'A=1', 'A=2', 'A=3', 'A=4', 'Location', 'southeast')
 % setfigpaper('Width',[30,0.5],'Interpreter','Latex','FontSize',15,'linewidth',1)
 % y
 % figure('Name', 'Y', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
@@ -316,7 +316,7 @@ plot(t,St3A4.HF_beta(filterIndex:end, 2),'LineWidth', lw)
 hold off
 xlim([0 250])
 xlabel('Time [s]')
-ylabel('Y [m]')
-title('Yaw Input, Helix Frame')
-legend('Baseline', 'A=1', 'A=2', 'A=3', 'A=4')
-setfigpaper('Width',[30,0.5],'Interpreter','Latex','FontSize',20,'linewidth',1)
+ylabel('Magnitude')
+title('\beta^e_{yaw}  Helix Frame')
+legend('Baseline', 'A=1', 'A=2', 'A=3', 'A=4', 'Location', 'southeast')
+setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',20,'linewidth',1)
