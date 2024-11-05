@@ -217,7 +217,7 @@ filterState4 = zeros(n, 1);
 %% Adaptive filter for Smith Predictor
 filter_order_adpFIR = 80;
 omega_adpFIR = pi / (8 * DeadtimeDelay);
-Wn_adpFIR = omega_adpFIR / (Fs / 2);
+Wn_adpFIR = omega_adpFIR / (1/timeStep / 2);
 SP_adpFIR = fir1(filter_order_adpFIR, Wn_adpFIR, 'low');
 filterState_adpFIR1 = zeros(filter_order_adpFIR, 1);
 filterState_adpFIR2 = zeros(filter_order_adpFIR, 1);
