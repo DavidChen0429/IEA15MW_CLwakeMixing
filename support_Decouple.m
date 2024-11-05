@@ -34,7 +34,7 @@ u_test = IDEdata_test.HF_beta;
 y_test = IDEdata_test.HF_helixCenter_filtered;
 
 % Remove first few data
-shiftNum = 999;
+shiftNum = 500;
 u_train = u_train(shiftNum:end, :);
 y_train = y_train(shiftNum:end, :);
 u_test = u_test(shiftNum:end, :);
@@ -77,6 +77,7 @@ disp(RGA)
 bwG11 = calculateBandwidth(G(1, 1));
 bwG22 = calculateBandwidth(G(2, 2));
 bw = (bwG11 + bwG22)/2; 
+bw = 0.0175;
 testCoupling(buf_sys.OLi, bw, timeStep);
 
 % % 1. steady-state decoupling
@@ -107,11 +108,11 @@ testCoupling(OLi3, bw, timeStep);
 
 %% Compare result
 yi2_train = lsim(buf_sys.OLi,us,t_train); % testing set
-yi2d_train = lsim(OLi,us,t_train); % ss decouple 
-yi2d2_train = lsim(OLi2,us,t_train); % bw decouple 
+% yi2d_train = lsim(OLi,us,t_train); % ss decouple 
+yi2d_train = lsim(OLi2,us,t_train); % bw decouple 
 yi2_test = lsim(buf_sys.OLi,us2,t_test); % testing set
-yi2d_test = lsim(OLi,us2,t_test); % ss decouple 
-yi2d2_test = lsim(OLi2,us2,t_test); % bw decouple 
+% yi2d_test = lsim(OLi,us2,t_test); % ss decouple 
+yi2d_test = lsim(OLi2,us2,t_test); % bw decouple 
 
 % % VAF
 % disp('=================================================')
@@ -125,80 +126,62 @@ yi2d2_test = lsim(OLi2,us2,t_test); % bw decouple
 % vaf(ys2, yi2d2_test)  
 
 %% Frequency Domain Fitting Result
+lw = 1;
 [Ga,ws] = spa_avf(us,ys,timeStep,6,[],[],'hamming');
 Ga = frd(Ga,ws);
 figure('Name', 'Frequence Response', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
 % bodemag(buf_sys.OLi, OLi, OLi2, Ga);
-bode(Ga, buf_sys.OLi, OLi, OLi2);
+% bode(Ga, buf_sys.OLi, OLi, OLi2);
+bode(buf_sys.OLi, OLi, OLi2);
 hold on
 axesHandles = findall(gcf, 'Type', 'axes');
 for k = 1:length(axesHandles)
-    yline(axesHandles(k), 0, 'k--', 'LineWidth', 0.5);  
+    yline(axesHandles(k), 0, 'k--', 'LineWidth', lw);  
 end
 % Don't forget to convert to Hz when using below to show bw !!!
-xline(axesHandles(3), bw, 'k--', 'LineWidth', 0.5);
-xline(axesHandles(5), bw, 'k--', 'LineWidth', 0.5);
-xline(axesHandles(7), bw, 'k--', 'LineWidth', 0.5);
-xline(axesHandles(9), bw, 'k--', 'LineWidth', 0.5);
-xline(axesHandles(2), bw, 'k--', 'LineWidth', 0.5);
-xline(axesHandles(4), bw, 'k--', 'LineWidth', 0.5);
-xline(axesHandles(6), bw, 'k--', 'LineWidth', 0.5);
-xline(axesHandles(8), bw, 'k--', 'LineWidth', 0.5);
+xline(axesHandles(3), bw, 'k--', 'LineWidth', lw);
+xline(axesHandles(5), bw, 'k--', 'LineWidth', lw);
+xline(axesHandles(7), bw, 'k--', 'LineWidth', lw);
+xline(axesHandles(9), bw, 'k--', 'LineWidth', lw);
+xline(axesHandles(2), bw, 'k--', 'LineWidth', lw);
+xline(axesHandles(4), bw, 'k--', 'LineWidth', lw);
+xline(axesHandles(6), bw, 'k--', 'LineWidth', lw);
+xline(axesHandles(8), bw, 'k--', 'LineWidth', lw);
 hold off;
 grid on
-legend('Real', 'Original Sys','Ss', 'Bw','Location','southeast');
+% legend('Real', 'Original Sys','Ss', 'Bw','Location','southeast');
+legend('Original','Steady-state', 'Bandwidth','Location','southeast');
+setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',15,'linewidth',lw)
 
 [U,S,V] = svd(abs(G_bw));
 
 %% Test Set
-% % Frequency response
-% figure('Name', 'Original System', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-% bode(G)
-% figure('Name', 'Decoupled System', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-% bode(OLi)
-
+lw = 1;
 figure('Name', 'Time-domain Response', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
 subplot(2, 1, 1)
-plot((1:length(us2)) * timeStep, us2(1, :), 'm', 'LineWidth', 1)
+plot((1:length(us2)) * timeStep, us2(1, :), 'm', 'LineWidth', lw)
 hold on 
-plot((1:length(us2)) * timeStep, us2(2, :), 'b', 'LineWidth', 1)
-yline(0, '--', 'LineWidth', 1)
+plot((1:length(us2)) * timeStep, us2(2, :), 'b', 'LineWidth', lw)
+yline(0, '--', 'LineWidth', lw)
 hold off
 xlabel('Time [s]')
-ylabel('Magnitude')
-legend('\beta^e_{tilt}', '\beta^e_{yaw}')
+xlim([0, length(us2)*timeStep])
+ylabel('Magnitude [m]')
+legend('\beta^e_{tilt}', '\beta^e_{yaw}','Location','southeast')
 title('Decouple Result -- Input')
 
 % For already decoupled system
 subplot(2, 1, 2)
-plot((1:length(yi2_test)) * timeStep, yi2_test(:, 1),'m--', 'LineWidth', 1)
+plot((1:length(yi2_test)) * timeStep, yi2_test(:, 1),'m--', 'LineWidth', lw)
 hold on
-plot((1:length(yi2_test)) * timeStep, yi2_test(:, 2),'b--', 'LineWidth', 1)
-plot((1:length(yi2d_test)) * timeStep, yi2d_test(:, 1),'m', 'LineWidth', 1)
-plot((1:length(yi2d_test)) * timeStep, yi2d_test(:, 2),'b', 'LineWidth', 1)
-plot((1:length(yi2d_test)) * timeStep, yi2d2_test(:, 1),'m:', 'LineWidth', 1)
-plot((1:length(yi2d_test)) * timeStep, yi2d2_test(:, 2),'b:', 'LineWidth', 1)
-yline(0, '--', 'LineWidth', 1)
+plot((1:length(yi2_test)) * timeStep, yi2_test(:, 2),'b--', 'LineWidth', lw)
+plot((1:length(yi2d_test)) * timeStep, yi2d_test(:, 1),'m', 'LineWidth', lw)
+plot((1:length(yi2d_test)) * timeStep, yi2d_test(:, 2),'b', 'LineWidth', lw)
+yline(0, '--', 'LineWidth', lw)
 hold off
 xlabel('Time [s]')
-ylabel('Magnitude')
-% legend('z_e - tilt','y_e - yaw','z_{e,d} - tilt','y_{e,d} - yaw')
-legend('z_e - tilt','y_e - yaw','z_{e,d} - tilt','y_{e,d} - yaw','z_{e,d2} - tilt','y_{e,d2} - yaw')
-% legend('tilt','yaw','tilt_{dcpl}','yaw_{dcpl}','tilt_{dcpl2}','yaw_{dcpl2}')
+xlim([0, length(yi2_test)*timeStep])
+ylabel('Magnitude [m]')
+legend('z^e','y^e','z^e_d','y^e_d','Location','southeast')
 title('Decouple Result -- Output')
-
-% When you actually decouple
-% subplot(2, 1, 2)
-% plot((1:length(yi2)) * timeStep, yi2(:, 1),'m')
-% hold on
-% plot((1:length(yi2)) * timeStep, yi2(:, 2),'b')
-% plot((1:length(yi2d)) * timeStep, yi2d(:, 1),'r--', 'LineWidth', 1)
-% plot((1:length(yi2d)) * timeStep, yi2d(:, 2),'b--', 'LineWidth', 1)
-% % plot(yi2d2)
-% yline(0, '--', 'LineWidth', 1)
-% hold off
-% xlabel('Time [s]')
-% ylabel('Magnitude')
-% legend('tilt','yaw','tilt_{dcpl}','yaw_{dcpl}')
-% % legend('tilt','yaw','tilt_{dcpl}','yaw_{dcpl}','tilt_{dcpl2}','yaw_{dcpl2}')
-% title('Decouple Result -- Output')
+setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',20,'linewidth',lw)

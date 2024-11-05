@@ -21,8 +21,8 @@ end
 %% Data file 
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\';
-fileName = '1Turbines_CL_Helix.mat';
-QprName = '1Turbines_CL_Helix.qpr';
+fileName = '1Turbines_CL_Helix_SISO_PI.mat';
+QprName = '1Turbines_CL_Helix_SISO_PI.qpr';
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
@@ -69,7 +69,7 @@ dimension = D_NREL5MW;     % span dim*dim meters
 grid_point = 50;     % sqaure grid
 Turb_time = 10;      % Simulation length of the windfield in seconds
 Turb_dt = timeStep;  % Temporal resolution of the windfield
-Turb_class = 'C';    % A, B, C
+Turb_class = 'A';    % A, B, C
 Turb_type = 'NTM';   % NTM, ETM, etc   
 seed = 43;
 vertInf = 0;         % Vertical inflow angle in degrees
@@ -95,10 +95,10 @@ t = linspace(1, simLen, simTime);
 % sigYaw_e = 0 * ones(simTime, 1);                 % basic
 
 % % Step input to test basic properties
-% steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime*2/5) 0*ones(1, simTime*2/5)];
+steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime*2/5) 0*ones(1, simTime*2/5)];
 % steps = [0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 2*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10)];
-sigTilt_e = 0 * ones(simTime, 1);   % steps
-sigYaw_e = 0 * ones(simTime, 1);    % steps
+sigTilt_e = steps;   % 0 * ones(simTime, 1)
+sigYaw_e = steps;    % 0 * ones(simTime, 1)
 
 % figure;
 % plot(t, sigTilt_e);
@@ -108,7 +108,7 @@ sigYaw_e = 0 * ones(simTime, 1);    % steps
 % legend('\beta_{tilt,e}', '\beta_{yaw,e}')
 
 %% Define CL Ctrl setting
-Trigger = ceil(simTime/5);      % Time that CL ctrl is triggered
+Trigger = ceil(simTime/3);      % Time that CL ctrl is triggered
 e = zeros(simTime, 2);      % error
 % integral_error = 0;         % error for integrator
 u = zeros(simTime, 2);      % control input
@@ -124,28 +124,21 @@ xM = zeros(simTime+1, size(decoupled_sys.A, 1));
 xMd = zeros(simTime+1, size(decoupled_delayed_sys.A, 1));
 
 % Controller Design
-W_s = tf([1, 1.6], [100, 1]);  % Emphasizes performance and disturbance rejection
-W_t = tf([1, 1], [5, 1]);  % Emphasizes robustness and noise rejection
-W_s_d = c2d(W_s, timeStep, 'tustin');
-W_t_d = c2d(W_t, timeStep, 'tustin');
-P = augw(decoupled_sys, W_s_d, [], W_t_d);  % augw creates the weighted augmented plant
-ncont = 2; 
-nmeas = 2; 
-[K_hinf,CL,gamma] = hinfsyn(P,nmeas,ncont);
-A_K = K_hinf.A;
-B_K = K_hinf.B;
-C_K = K_hinf.C;
-D_K = K_hinf.D;
-
-% H-inf variables
-xk = zeros(simTime+ 1, length(A_K));
-uk = y; % property of H inf
-yk = zeros(simTime, length(C_K(:, 1)));
+wc = 0.1;
+C11 = pidtune(G(1,1), 'PI');
+C22 = pidtune(G(2,2), 'PI'); % This could be much faster
+Kp = 0.557;     % 0.566; 0.557; 0
+Ki = 0.0327;    % 0.0337; 0.0327; 0.0113  
+% Select which channel to control (have to do this because of the coupling)
+Channel_selector = [1 0;    % z_e
+                    0 0];   % y_e
+Kp_matrix = Kp * Channel_selector;
+Ki_matrix = Ki * Channel_selector;
 
 % Create reference
 r = zeros(simTime, 2);     
 % 1. Steps
-reference_magnitude = [8.6257 8.3827];
+reference_magnitude = [5 1];
 r(Trigger:end, 1) = reference_magnitude(1)*ones(simTime+1-Trigger, 1);   % z_e
 r(Trigger:end, 2) = reference_magnitude(2)*ones(simTime+1-Trigger, 1);   % y_e
 % 2. Ramp
@@ -170,12 +163,6 @@ r(Trigger:end, 2) = reference_magnitude(2)*ones(simTime+1-Trigger, 1);   % y_e
 %     -1*ones(1, (simTime-Trigger)/5), 0*ones(1, (simTime-Trigger)/5));
 % r(:, 1) = steps;
 % r(:, 2) = steps;
-
-% figure()
-% plot(r(:, 1))
-% hold on
-% plot(r(:, 2))
-% hold off
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat
@@ -244,7 +231,7 @@ for i = 1:1:simTime
     Cp = calllib('QBladeDLL','getCustomData_at_num', CpVar, 0, 0);
     Moop1 = calllib('QBladeDLL','getCustomData_at_num', Moop1Var, 0, 0);
     Mip1 = calllib('QBladeDLL','getCustomData_at_num', Mip1Var, 0, 0);
-
+    
     % Define transform matrix 
     invMBC = [1 cosd(Azimuth1+AzimuthOffset) sind(Azimuth1+AzimuthOffset);
               1 cosd(Azimuth2+AzimuthOffset) sind(Azimuth2+AzimuthOffset);
@@ -269,10 +256,8 @@ for i = 1:1:simTime
     end
     % Low pass filter
     % Centering
-%     centerZ = wakeCenter(1) - meanZ;  % 91.2632
-%     centerY = wakeCenter(2) - meanY;  % -4.9713
-    centerZ = wakeCenter(1) - 92.0026;  % data derived from the basecase
-    centerY = wakeCenter(2) + 4.0999;   % data derived from the basecase
+    centerZ = wakeCenter(1) - meanZ;
+    centerY = wakeCenter(2) - meanY;
     center_e = invR_helix * [centerZ; centerY];
     [HF_helixCenter_filtered(i, 1), filterState3] = filter(b_fir, 1, center_e(1), filterState3);
     [HF_helixCenter_filtered(i, 2), filterState4] = filter(b_fir, 1, center_e(2), filterState4);
@@ -290,19 +275,15 @@ for i = 1:1:simTime
         u(i, :) = [sigTilt_e(i) sigYaw_e(i)];
     else
         % Activate CL Control
-        % Update controller
-%         x_Kbuf = A_K * xk(i, :)' + B_K * y(i-1, :)'; % y / yc
-%         xk(i+1, :) = x_Kbuf';
-%         y_Kbuf = C_K * xk(i, :)' + D_K * y(i-1, :)';
-%         yk(i, :) = y_Kbuf';
-
-        x_Kbuf = A_K * xk(i, :)' + B_K * yc(i-1, :)'; % y / yc
-        xk(i+1, :) = x_Kbuf';
-        y_Kbuf = C_K * xk(i, :)' + D_K * yc(i-1, :)';
-        yk(i, :) = y_Kbuf';
-        
-        % Get error / input of the plant
-        u(i, :) = r(i, :) - yk(i, :);
+        e(i, :) = r(i, :) - y(i-1, :);  
+        % !!! The filter is so small that run into numerical issue, 
+        % so do this for alternative
+%         e(i, :) = r(i, :) - yc(i-1, :);
+        delta_u = e(i, :)*timeStep*Ki_matrix;
+        u(i, :) = (e(i,:)-e(i-1,:))*Kp_matrix + (u(i-1,:)+delta_u);
+        % This can be derived from the inverse z-transform of discrete PI
+        % I am a fucking genius and stupid man at the same time Lol
+        % Can't believe I got stuck on this for hours
     end
 
     % 1. Get tilt and yaw signals
@@ -340,10 +321,11 @@ for i = 1:1:simTime
 
     % Adaptive filter check
     bufy_error(i, :) = ym(i, :) - ytilda(i, :);
-    [ybuf_fir(i, 1), filterState_adpFIR1] = filter(SP_adpFIR, 1, bufy_error(i, 1), filterState_adpFIR1);
-    [ybuf_fir(i, 2), filterState_adpFIR2] = filter(SP_adpFIR, 1, bufy_error(i, 2), filterState_adpFIR2);
+    [bufy_error(i, 1), filterState_adpFIR1] = filter(SP_adpFIR, 1, bufy_error(i, 1), filterState_adpFIR1);
+    [bufy_error(i, 2), filterState_adpFIR2] = filter(SP_adpFIR, 1, bufy_error(i, 2), filterState_adpFIR2);
+
     % Combine output
-    yc(i, :) = ybuf_fir(i, :) + y(i, :);
+    yc(i, :) = bufy_error(i, :) + y(i, :);
 
     % ==================== Store values 
 %     omega_store(i,:) = omega;
@@ -537,4 +519,4 @@ legend('z_{e,f}', 'y_{e,f}')
 % legend('y_{c1}','y_{c2}','y_{1}','y_{2}')
 
 %% Unload Library 
-% unloadlibrary 'QBladeDLL'
+% unloadlibrary 'QBladeDLL'% unloadlibrary 'QBladeDLL'
