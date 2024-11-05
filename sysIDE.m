@@ -53,32 +53,32 @@ ys(1, :) = -1 * ys(1, :);
 ys2(1, :) = -1 * ys2(1, :);
 
 %% Power Spectrum Density
-% Ts_prbn = timeStep;
-% [M1,F1] = pwelch(us(1, :),[],[],[],1/Ts_prbn);
-% [M2,F2] = pwelch(us(2, :),[],[],[],1/Ts_prbn);
-% figure
-% semilogx(F1,mag2db(M1),'k','LineWidth',1)
-% hold on
-% semilogx(F2,mag2db(M2),'r','LineWidth',1)
-% yline(0, '--', 'LineWidth', 1)
-% hold off
-% xlabel('Frequency [Hz]');
-% ylabel('Amplitude [dB]');
-% legend('\beta^e_{tilt}', '\beta^e_{yaw}')
-% title('Input PSD')
-% 
-% [M1,F1] = pwelch(ys(1, :),[],[],[],1/Ts_prbn);
-% [M2,F2] = pwelch(ys(2, :),[],[],[],1/Ts_prbn);
-% figure
-% semilogx(F1,mag2db(M1),'k','LineWidth',1)
-% hold on
-% semilogx(F2,mag2db(M2),'r','LineWidth',1)
-% yline(0, '--', 'LineWidth', 1)
-% hold off
-% xlabel('Frequency [Hz]');
-% ylabel('Amplitude [dB]');
-% legend('z_f', 'y_f')
-% title('Output PSD')
+Ts_prbn = timeStep;
+[M1,F1] = pwelch(us(1, :),[],[],[],1/Ts_prbn);
+[M2,F2] = pwelch(us(2, :),[],[],[],1/Ts_prbn);
+figure
+semilogx(F1,mag2db(M1),'k','LineWidth',1)
+hold on
+semilogx(F2,mag2db(M2),'r','LineWidth',1)
+yline(0, '--', 'LineWidth', 1)
+hold off
+xlabel('Frequency [Hz]');
+ylabel('Amplitude [dB]');
+legend('\beta^e_{tilt}', '\beta^e_{yaw}')
+title('Input PSD')
+
+[M1,F1] = pwelch(ys(1, :),[],[],[],1/Ts_prbn);
+[M2,F2] = pwelch(ys(2, :),[],[],[],1/Ts_prbn);
+figure
+semilogx(F1,mag2db(M1),'k','LineWidth',1)
+hold on
+semilogx(F2,mag2db(M2),'r','LineWidth',1)
+yline(0, '--', 'LineWidth', 1)
+hold off
+xlabel('Frequency [Hz]');
+ylabel('Amplitude [dB]');
+legend('z_f', 'y_f')
+title('Output PSD')
 
 %% PBSID-varx   
 n_varx = 4; % 4 7 10

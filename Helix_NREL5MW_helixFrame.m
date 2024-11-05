@@ -20,8 +20,8 @@ end
 
 %% Data file (Chage this accordingly)
 turbineName = '.\Data\NREL5MW\';
-caseName = 'Pipeline\';
-fileName = 'St3A4.mat';
+caseName = 'IDE\';
+fileName = 'bandwidthCheck.mat';
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
@@ -69,21 +69,21 @@ N = 97;          % Gearbox ratio
 
 %% Defining Helix Control Setting
 Str = 0.3;                          % Strouhal number
-Helix_amplitude = 4;                % Helix amplitude                
+Helix_amplitude = 1;                % Helix amplitude                
 Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
 omega_e = Freq*2*pi;
 AzimuthOffset = 96; % 6 for pi/2 shift ;96 for pi shift (right relationship)
 
 t = linspace(1, simLen, simTime);
-sigTilt_e = Helix_amplitude*ones(simTime, 1);  % basic
-sigYaw_e = Helix_amplitude*ones(simTime, 1);   % basic
+% sigTilt_e = Helix_amplitude*ones(simTime, 1);  % basic
+% sigYaw_e = Helix_amplitude*ones(simTime, 1);   % basic
 
 % Step input to test basic properties
 % steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5)];
 % steps = [0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -Helix_amplitude*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 2*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10)];
-% steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime*4/5)];
-% sigTilt_e = steps;                  % 0*ones(simTime, 1)
-% sigYaw_e = steps;                   % 0*ones(simTime, 1)
+steps = [0*ones(1, simTime/3) Helix_amplitude*ones(1, simTime*2/3)];
+sigTilt_e = steps;                  % 0*ones(simTime, 1)
+sigYaw_e = steps;                   % 0*ones(simTime, 1)
 
 % figure;
 % plot(t, sigTilt_e);
@@ -190,10 +190,10 @@ for i = 1:1:simTime
     
     % Low pass filter
     % Centering
-%     centerZ = wakeCenter(1) - meanZ;  % 91.2632  92.0026
-%     centerY = wakeCenter(2) - meanY;  % -4.9713  -4.0999
-    centerZ = wakeCenter(1) - 91.6673;  % data derived from the basecase
-    centerY = wakeCenter(2) + 4.5923;   % data derived from the basecase
+    centerZ = wakeCenter(1) - meanZ;  % 91.2632  92.0026
+    centerY = wakeCenter(2) - meanY;  % -4.9713  -4.0999
+%     centerZ = wakeCenter(1) - 91.6673;  % data derived from the basecase
+%     centerY = wakeCenter(2) + 4.5923;   % data derived from the basecase
     center_e = invR_helix * [centerZ; centerY];
     [HF_helixCenter_filtered(i, 1), filterState3] = filter(b_fir, 1, center_e(1), filterState3);
     [HF_helixCenter_filtered(i, 2), filterState4] = filter(b_fir, 1, center_e(2), filterState4);
@@ -226,12 +226,12 @@ calllib('QBladeDLL','closeInstance')
 %                                       'HF_helixCenter_filtered', ...
 %                                       'FF_beta', ...
 %                                       'HF_beta');
-% save([turbineName caseName fileName], 'FF_helixCenter', ...
-%                                       'FF_helixCenter_filtered', ...
-%                                       'HF_helixCenter', ...
-%                                       'HF_helixCenter_filtered', ...
-%                                       'FF_beta', ...
-%                                       'HF_beta');
+save([turbineName caseName fileName], 'FF_helixCenter', ...
+                                      'FF_helixCenter_filtered', ...
+                                      'HF_helixCenter', ...
+                                      'HF_helixCenter_filtered', ...
+                                      'FF_beta', ...
+                                      'HF_beta');
 toc 
 
 %% Visualization
