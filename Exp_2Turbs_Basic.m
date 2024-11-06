@@ -109,34 +109,7 @@ sigYaw_e = Helix_amplitude*ones(simTime, 1);   % basic
 % legend('\beta_{tilt,e}', '\beta_{yaw,e}')
 
 % Reference is not used, but for comparison with CLctrl
-r = zeros(simTime, 2);   
-Trigger = ceil(simTime/5);      % Time that CL ctrl is triggered
-% 1. Steps
-reference_magnitude = [0 0];
-r(Trigger:end, 1) = reference_magnitude(1)*ones(simTime+1-Trigger, 1);   % z_e
-r(Trigger:end, 2) = reference_magnitude(2)*ones(simTime+1-Trigger, 1);   % y_e
-% 2. Ramp
-% reference_slope = [0.0025 0.0025]; % Define the slope of the ramp signal
-% for tt = Trigger:simTime
-%     r(tt, 1) = reference_slope(1) * (tt - Trigger);   % z_e ramp signal
-%     r(tt, 2) = reference_slope(2) * (tt - Trigger);   % y_e ramp signal
-% end
-% 3. Ramp and Stop
-% reference_slope = [0.0025 0.0015]; % Define the slope of the ramp signal
-% endTime = (simTime*3)/5;
-% for tt = Trigger:endTime
-%     r(tt, 1) = reference_slope(1) * (tt - Trigger);   % z_e ramp signal
-%     r(tt, 2) = reference_slope(2) * (tt - Trigger);   % y_e ramp signal
-% end
-% r(endTime:end, 1) = 5*ones(simTime+1-endTime, 1);
-% r(endTime:end, 2) = 3*ones(simTime+1-endTime, 1);
-% 4. Random step
-% steps = cat(2, ...
-%     0*ones(1, Trigger), 1*ones(1, (simTime-Trigger)/5), ...
-%     -2*ones(1, (simTime-Trigger)/5), 2*ones(1, (simTime-Trigger)/5), ...
-%     -1*ones(1, (simTime-Trigger)/5), 0*ones(1, (simTime-Trigger)/5));
-% r(:, 1) = steps;
-% r(:, 2) = steps;
+r = referenceGenerator(simTime,Trigger,(simTime*4)/5,'ramp&stop',2,0);
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat
