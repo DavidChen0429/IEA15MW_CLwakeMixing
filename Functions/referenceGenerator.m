@@ -45,6 +45,8 @@ function [r] = referenceGenerator(simTime,Trigger,endTime,type,mag,plotOption)
             -1*ones(1, (simTime-Trigger)/5), 0*ones(1, (simTime-Trigger)/5));
         r(:, 1) = steps;
         r(:, 2) = steps;
+    elseif strcmp(type, 'zero')
+        r = zeros(simTime, 2); 
     end
 
     if plotOption == 1

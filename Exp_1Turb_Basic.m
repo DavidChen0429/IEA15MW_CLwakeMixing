@@ -48,6 +48,10 @@ PowerVar = 'Aerodynamic Power [kW]';
 CpVar = 'Power Coefficient [-]';
 Moop1Var = 'Aero. OOP RootBend. Mom. Blade 1 [Nm]';
 Mip1Var = 'Aero. IP RootBend. Mom. Blade 1 [Nm]';
+Moop2Var = 'Aero. OOP RootBend. Mom. Blade 2 [Nm]';
+Mip2Var = 'Aero. IP RootBend. Mom. Blade 2 [Nm]';
+Moop3Var = 'Aero. OOP RootBend. Mom. Blade 3 [Nm]';
+Mip3Var = 'Aero. IP RootBend. Mom. Blade 3 [Nm]';
 
 %% Load internal model
 buf_sys = load('Model\RightTransform_Azimuth96\ModelOrder4_noise1p_opposite_decoupled.mat');
@@ -109,7 +113,8 @@ sigYaw_e = Helix_amplitude*ones(simTime, 1);   % basic
 % legend('\beta_{tilt,e}', '\beta_{yaw,e}')
 
 % Reference is not used, but for comparison with CLctrl
-r = referenceGenerator(simTime,Trigger,(simTime*4)/5,'ramp&stop',2,0);
+Trigger = 0;
+r = referenceGenerator(simTime,Trigger,(simTime*4)/5,'zero',2,0);
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat
@@ -122,10 +127,22 @@ LiDAR_num_sample = 80;
 % pre-define array to speed up code
 TSR_store = zeros(simTime, 1);
 Power_store = zeros(simTime, 1);
+% blade 1
 Moop1_store = zeros(simTime, 1);
 Mip1_store = zeros(simTime, 1);
 Mflap1_store = zeros(simTime, 1);
 Medge1_store = zeros(simTime, 1);
+% blade 2
+Moop2_store = zeros(simTime, 1);
+Mip2_store = zeros(simTime, 1);
+Mflap2_store = zeros(simTime, 1);
+Medge2_store = zeros(simTime, 1);
+% blade 3
+Moop3_store = zeros(simTime, 1);
+Mip3_store = zeros(simTime, 1);
+Mflap3_store = zeros(simTime, 1);
+Medge3_store = zeros(simTime, 1);
+
 Cp_store = zeros(simTime, 1);
 FF_beta = zeros(simTime, 2);
 HF_beta = zeros(simTime, 2);
@@ -172,6 +189,10 @@ for i = 1:1:simTime
     Cp = calllib('QBladeDLL','getCustomData_at_num', CpVar, 0, 0);
     Moop1 = calllib('QBladeDLL','getCustomData_at_num', Moop1Var, 0, 0);
     Mip1 = calllib('QBladeDLL','getCustomData_at_num', Mip1Var, 0, 0);
+    Moop2 = calllib('QBladeDLL','getCustomData_at_num', Moop2Var, 0, 0);
+    Mip2 = calllib('QBladeDLL','getCustomData_at_num', Mip2Var, 0, 0);
+    Moop3 = calllib('QBladeDLL','getCustomData_at_num', Moop3Var, 0, 0);
+    Mip3 = calllib('QBladeDLL','getCustomData_at_num', Mip3Var, 0, 0);
 
     % Define transform matrix 
     invMBC = [1 cosd(Azimuth1+AzimuthOffset) sind(Azimuth1+AzimuthOffset);
@@ -235,10 +256,22 @@ for i = 1:1:simTime
     TSR_store(i) = TSR;
     Power_store(i) = Power;
     Cp_store(i) = Cp;
+    % blade 1
     Moop1_store(i) = Moop1;
     Mip1_store(i) = Mip1;
     Mflap1_store(i) = Moop1*cosd(Pitch1) + Mip1*sind(Pitch1);
     Medge1_store(i) = -Moop1*sind(Pitch1) + Mip1*cosd(Pitch1);
+    % blade 2
+    Moop2_store(i) = Moop2;
+    Mip2_store(i) = Mip2;
+    Mflap2_store(i) = Moop2*cosd(Pitch2) + Mip2*sind(Pitch2);
+    Medge2_store(i) = -Moop2*sind(Pitch2) + Mip2*cosd(Pitch2);
+    % blade 3
+    Moop3_store(i) = Moop3;
+    Mip3_store(i) = Mip3;
+    Mflap3_store(i) = Moop3*cosd(Pitch3) + Mip3*sind(Pitch3);
+    Medge3_store(i) = -Moop3*sind(Pitch3) + Mip3*cosd(Pitch3);
+    
     FF_beta(i,:) = [betaTiltYaw(1) betaTiltYaw(2)];
     HF_beta(i,:) = [beta_tilt_e beta_yaw_e];
 %     AzimuthAngles(i,:) = [Azimuth1 Azimuth2 Azimuth3];
@@ -279,6 +312,14 @@ save([turbineName caseName fileName], 'LiDAR_data', ...
                                       'Mip1_store', ...
                                       'Mflap1_store', ...
                                       'Medge1_store', ...
+                                      'Moop2_store', ...
+                                      'Mip2_store', ...
+                                      'Mflap2_store', ...
+                                      'Medge2_store', ...
+                                      'Moop3_store', ...
+                                      'Mip3_store', ...
+                                      'Mflap3_store', ...
+                                      'Medge3_store', ...
                                       'PitchAngles');
 toc 
 
