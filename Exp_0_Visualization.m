@@ -7,8 +7,8 @@ addpath('.\Functions');
 %% Data file (Chage this accordingly)
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\';
-fileName = '1Turbine_Basic.mat';
-basefile = '1Turbine_Basic.mat';
+fileName = '1Turbines_CL_Helix_MIMO_ramp&stop_mag3.mat';
+basefile = '1Turbines_OL_Helix_mag3.mat';
 
 Data = load([turbineName caseName fileName]);
 Baseline = load([turbineName caseName basefile]);
@@ -99,5 +99,7 @@ hold off
 title('Hub Jet Trajectory')
 xlabel('y [m]')
 ylabel('z [m]')
+xlim([-20 10])
+ylim([77 107])
 legend('Baseline', 'Controlled', 'Location','southeast')
 setfigpaper('Width',[15,1],'Interpreter','tex','FontSize',15,'linewidth',lw)

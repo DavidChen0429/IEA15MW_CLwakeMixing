@@ -3,10 +3,12 @@ function [r] = referenceGenerator(simTime,Trigger,endTime,type,mag,plotOption)
     % Parameter List
     %       simTime: simulation length 
     %       type: type of reference 
-    %             1 --- step
-    %             2 --- ramp
-    %             3 --- ramp and stop
-    %             4 --- complicated step
+    %             step
+    %             ramp
+    %             ramp&stop
+    %             step&step
+    %             customize&step
+    %             customize&ramp
     %       mag: corresponding helix magnitude
 
     r = zeros(simTime, 2);    
@@ -47,6 +49,19 @@ function [r] = referenceGenerator(simTime,Trigger,endTime,type,mag,plotOption)
         r(:, 2) = steps;
     elseif strcmp(type, 'zero')
         r = zeros(simTime, 2); 
+    elseif strcmp(type, 'customize&step') 
+        customMagnitude = [6 9]; % Do NOT exceed 10
+        r(Trigger:end, 1) = customMagnitude(1)*ones(simTime+1-Trigger, 1);   % z_e
+        r(Trigger:end, 2) = customMagnitude(2)*ones(simTime+1-Trigger, 1);   % y_e
+    elseif strcmp(type, 'customize&ramp')
+        customMagnitude = [6 9]; % Do NOT exceed 10
+        customSlope = customMagnitude/(endTime-Trigger);
+        for tt = Trigger:endTime
+            r(tt, 1) = customSlope(1) * (tt - Trigger);   % z_e ramp signal
+            r(tt, 2) = customSlope(2) * (tt - Trigger);   % y_e ramp signal
+        end
+        r(endTime:end, 1) = customMagnitude(1)*ones(simTime+1-endTime, 1);
+        r(endTime:end, 2) = customMagnitude(2)*ones(simTime+1-endTime, 1);
     end
 
     if plotOption == 1
