@@ -25,11 +25,12 @@ simLen = simTime * timeStep; % seconds
 mag = 3;
 referenceType = 'ramp&stop'; % step, ramp, ramp&stop, step&step, zero
 Trigger = ceil(simTime/5);      % Time that ctrl is triggered
+Endtime = (simTime*4)/5;
 
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\';
-fileName = ['1Turbines_OL_Helix_SISO_I_',referenceType,'_mag', num2str(mag),'.mat'];
-QprName = ['1Turbines_OL_Helix_SISO_I_',referenceType,'_mag', num2str(mag),'.qpr'];
+fileName = ['1Turbine_CL_Helix_SISO_I_',referenceType,'_mag', num2str(mag),'.mat'];
+QprName = ['1Turbine_CL_Helix_SISO_I_',referenceType,'_mag', num2str(mag),'.qpr'];
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
@@ -139,7 +140,7 @@ Channel_selector = [1 0;        % ze
 Ki_matrix = Ki * Channel_selector;
 
 % Create reference
-r = referenceGenerator(simTime,Trigger,(simTime*4)/5,referenceType,mag,1);
+r = referenceGenerator(simTime,Trigger,Endtime,referenceType,mag,1);
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat

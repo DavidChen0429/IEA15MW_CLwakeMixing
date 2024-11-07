@@ -7,11 +7,11 @@ addpath('.\Functions');
 %% Data file (Chage this accordingly)
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\';
-fileName = '2Turbines_Basic.mat';
-basefile = '2Turbines_Basic.mat';
+basefile = '2Turbines_OL_Helix_mag3.mat';
+fileName = '2Turbines_OL_Helix_Shear2p_mag3.mat';
 
-Data = load([turbineName caseName fileName]);
 Baseline = load([turbineName caseName basefile]);
+Data = load([turbineName caseName fileName]);
 
 % Controlled info
 %   WT1

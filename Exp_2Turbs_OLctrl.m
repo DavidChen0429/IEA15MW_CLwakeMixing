@@ -19,10 +19,18 @@ if isempty(m)
 end
 
 %% Data file (Chage this accordingly)
+simTime = 6000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+timeStep = 0.1;    % same with the Q-blade setting
+simLen = simTime * timeStep; % seconds
+mag = 3; % 2, 3, 99(customize), -1(doesn't work)
+referenceType = 'step'; % step, ramp, ramp&stop, step&step, zero, customize&step, customize&ramp
+Trigger = ceil(simTime/5);      % Time that ctrl is triggered
+Endtime = (simTime*4)/5;
+
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\';
-fileName = '2Turbines_OL_Helix.mat';
-QprName = '2Turbines_OL_Helix.qpr';
+fileName = ['2Turbines_OL_Helix','_mag', num2str(mag),'.mat'];
+QprName = ['2Turbines_OL_Helix','_mag', num2str(mag),'.qpr'];
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
@@ -30,9 +38,6 @@ calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime = 6000;     % in timestep, actual time is simTime*timestep(Q-blade define)
-timeStep = 0.1;    % same with the Q-blade setting
-simLen = simTime * timeStep; % seconds
 
 % Variables we care
 valuestr = 'Rotational Speed [rpm]';
@@ -48,6 +53,10 @@ PowerVar = 'Aerodynamic Power [kW]';
 CpVar = 'Power Coefficient [-]';
 Moop1Var = 'Aero. OOP RootBend. Mom. Blade 1 [Nm]';
 Mip1Var = 'Aero. IP RootBend. Mom. Blade 1 [Nm]';
+Moop2Var = 'Aero. OOP RootBend. Mom. Blade 2 [Nm]';
+Mip2Var = 'Aero. IP RootBend. Mom. Blade 2 [Nm]';
+Moop3Var = 'Aero. OOP RootBend. Mom. Blade 3 [Nm]';
+Mip3Var = 'Aero. IP RootBend. Mom. Blade 3 [Nm]';
 
 %% Load internal model
 buf_sys = load('Model\RightTransform_Azimuth96\ModelOrder4_noise1p_opposite_decoupled.mat');
@@ -85,7 +94,7 @@ N = 97;          % Gearbox ratio
 
 %% Defining Helix Control Setting
 Str = 0.3;                          % Strouhal number
-Helix_amplitude = 3;                % Helix amplitude                
+Helix_amplitude = mag;                % Helix amplitude                
 Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
 omega_e = Freq*2*pi;
 AzimuthOffset = 96; % 6 for pi/2 shift ;96 for pi shift (right relationship)
@@ -109,7 +118,7 @@ sigYaw_e = Helix_amplitude*ones(simTime, 1);   % basic
 % legend('\beta_{tilt,e}', '\beta_{yaw,e}')
 
 % Reference is not used, but for comparison with CLctrl
-r = referenceGenerator(simTime,Trigger,(simTime*4)/5,'ramp&stop',2,0);
+r = referenceGenerator(simTime,Trigger,Endtime,referenceType,mag,1);
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat
@@ -122,19 +131,41 @@ LiDAR_num_sample = 80;
 % pre-define array to speed up code
 TSR_store = zeros(simTime, 1);
 Power_store = zeros(simTime, 1);
+Cp_store = zeros(simTime, 1);
+% blade 1
 Moop1_store = zeros(simTime, 1);
 Mip1_store = zeros(simTime, 1);
 Mflap1_store = zeros(simTime, 1);
 Medge1_store = zeros(simTime, 1);
-Cp_store = zeros(simTime, 1);
+% blade 2
+Moop2_store = zeros(simTime, 1);
+Mip2_store = zeros(simTime, 1);
+Mflap2_store = zeros(simTime, 1);
+Medge2_store = zeros(simTime, 1);
+% blade 3
+Moop3_store = zeros(simTime, 1);
+Mip3_store = zeros(simTime, 1);
+Mflap3_store = zeros(simTime, 1);
+Medge3_store = zeros(simTime, 1);
 
 TSRturb2_store = zeros(simTime, 1);
 Powerturb2_store = zeros(simTime, 1);
+Cpturb2_store = zeros(simTime, 1);
+% blade 1
 Moop1turb2_store = zeros(simTime, 1);
 Mip1turb2_store = zeros(simTime, 1);
 Mflap1turb2_store = zeros(simTime, 1);
 Medge1turb2_store = zeros(simTime, 1);
-Cpturb2_store = zeros(simTime, 1);
+% blade 2
+Moop2turb2_store = zeros(simTime, 1);
+Mip2turb2_store = zeros(simTime, 1);
+Mflap2turb2_store = zeros(simTime, 1);
+Medge2turb2_store = zeros(simTime, 1);
+% blade 3
+Moop3turb2_store = zeros(simTime, 1);
+Mip3turb2_store = zeros(simTime, 1);
+Mflap3turb2_store = zeros(simTime, 1);
+Medge3turb2_store = zeros(simTime, 1);
 
 FF_beta = zeros(simTime, 2);
 HF_beta = zeros(simTime, 2);
@@ -180,6 +211,10 @@ for i = 1:1:simTime
     Cp = calllib('QBladeDLL','getCustomData_at_num', CpVar, 0, 0);
     Moop1 = calllib('QBladeDLL','getCustomData_at_num', Moop1Var, 0, 0);
     Mip1 = calllib('QBladeDLL','getCustomData_at_num', Mip1Var, 0, 0);
+    Moop2 = calllib('QBladeDLL','getCustomData_at_num', Moop2Var, 0, 0);
+    Mip2 = calllib('QBladeDLL','getCustomData_at_num', Mip2Var, 0, 0);
+    Moop3 = calllib('QBladeDLL','getCustomData_at_num', Moop3Var, 0, 0);
+    Mip3 = calllib('QBladeDLL','getCustomData_at_num', Mip3Var, 0, 0);
 
     omega_turb2 = calllib('QBladeDLL','getCustomData_at_num',valuestr, 0, 1);
     genTorqueQB_turb2 = calllib('QBladeDLL','getCustomData_at_num',valuestr2, 0, 1);
@@ -191,6 +226,10 @@ for i = 1:1:simTime
     Cp_turb2 = calllib('QBladeDLL','getCustomData_at_num', CpVar, 0, 1);
     Moop1_turb2 = calllib('QBladeDLL','getCustomData_at_num', Moop1Var, 0, 1);
     Mip1_turb2 = calllib('QBladeDLL','getCustomData_at_num', Mip1Var, 0, 1);
+    Moop2_turb2 = calllib('QBladeDLL','getCustomData_at_num', Moop2Var, 0, 1);
+    Mip2_turb2 = calllib('QBladeDLL','getCustomData_at_num', Mip2Var, 0, 1);
+    Moop3_turb2 = calllib('QBladeDLL','getCustomData_at_num', Moop3Var, 0, 1);
+    Mip3_turb2 = calllib('QBladeDLL','getCustomData_at_num', Mip3Var, 0, 1);
 
     % Define transform matrix 
     invMBC = [1 cosd(Azimuth1+AzimuthOffset) sind(Azimuth1+AzimuthOffset);
@@ -263,18 +302,40 @@ for i = 1:1:simTime
     TSR_store(i) = TSR;
     Power_store(i) = Power;
     Cp_store(i) = Cp;
+    % blade 1
     Moop1_store(i) = Moop1;
     Mip1_store(i) = Mip1;
     Mflap1_store(i) = Moop1*cosd(Pitch1) + Mip1*sind(Pitch1);
     Medge1_store(i) = -Moop1*sind(Pitch1) + Mip1*cosd(Pitch1);
+    % blade 2
+    Moop2_store(i) = Moop2;
+    Mip2_store(i) = Mip2;
+    Mflap2_store(i) = Moop2*cosd(Pitch2) + Mip2*sind(Pitch2);
+    Medge2_store(i) = -Moop2*sind(Pitch2) + Mip2*cosd(Pitch2);
+    % blade 3
+    Moop3_store(i) = Moop3;
+    Mip3_store(i) = Mip3;
+    Mflap3_store(i) = Moop3*cosd(Pitch3) + Mip3*sind(Pitch3);
+    Medge3_store(i) = -Moop3*sind(Pitch3) + Mip3*cosd(Pitch3);
 
     TSRturb2_store(i) = TSR_turb2;
     Powerturb2_store(i) = Power_turb2;
     Cpturb2_store(i) = Cp_turb2;
+    % blade 1
     Moop1turb2_store(i) = Moop1_turb2;
     Mip1turb2_store(i) = Mip1_turb2;
     Mflap1turb2_store(i) = Moop1_turb2*cosd(Pitch1_turb2) + Mip1_turb2*sind(Pitch1_turb2);
     Medge1turb2_store(i) = -Moop1_turb2*sind(Pitch1_turb2) + Mip1_turb2*cosd(Pitch1_turb2);
+    % blade 2
+    Moop2turb2_store(i) = Moop2_turb2;
+    Mip2turb2_store(i) = Mip2_turb2;
+    Mflap2turb2_store(i) = Moop2_turb2*cosd(Pitch2_turb2) + Mip2_turb2*sind(Pitch2_turb2);
+    Medge2turb2_store(i) = -Moop2_turb2*sind(Pitch2_turb2) + Mip2_turb2*cosd(Pitch2_turb2);
+    % blade 3
+    Moop3turb2_store(i) = Moop3_turb2;
+    Mip3turb2_store(i) = Mip3_turb2;
+    Mflap3turb2_store(i) = Moop3_turb2*cosd(Pitch3_turb2) + Mip3_turb2*sind(Pitch3_turb2);
+    Medge3turb2_store(i) = -Moop3_turb2*sind(Pitch3_turb2) + Mip3_turb2*cosd(Pitch3_turb2);
     
     FF_beta(i,:) = [betaTiltYaw(1) betaTiltYaw(2)];
     HF_beta(i,:) = [beta_tilt_e beta_yaw_e];
@@ -291,19 +352,6 @@ end
 close(f)
 calllib('QBladeDLL','storeProject', [turbineName caseName QprName]) 
 calllib('QBladeDLL','closeInstance')
-% save([turbineName caseName fileName], 'LiDAR_data', ...
-%                                       'FF_helixCenter', ...
-%                                       'FF_helixCenter_filtered', ...
-%                                       'HF_helixCenter', ...
-%                                       'HF_helixCenter_filtered', ...
-%                                       'FF_beta', ...
-%                                       'HF_beta');
-% save([turbineName caseName fileName], 'FF_helixCenter', ...
-%                                       'FF_helixCenter_filtered', ...
-%                                       'HF_helixCenter', ...
-%                                       'HF_helixCenter_filtered', ...
-%                                       'FF_beta', ...
-%                                       'HF_beta');
 save([turbineName caseName fileName], 'LiDAR_data', ...
                                       'FF_helixCenter', ...
                                       'FF_helixCenter_filtered', ...
@@ -319,10 +367,26 @@ save([turbineName caseName fileName], 'LiDAR_data', ...
                                       'Mip1_store', ...
                                       'Mflap1_store', ...
                                       'Medge1_store', ...
+                                      'Moop2_store', ...
+                                      'Mip2_store', ...
+                                      'Mflap2_store', ...
+                                      'Medge2_store', ...
+                                      'Moop3_store', ...
+                                      'Mip3_store', ...
+                                      'Mflap3_store', ...
+                                      'Medge3_store', ...
                                       'Moop1turb2_store', ...
                                       'Mip1turb2_store', ...
                                       'Mflap1turb2_store', ...
                                       'Medge1turb2_store', ...
+                                      'Moop2turb2_store', ...
+                                      'Mip2turb2_store', ...
+                                      'Mflap2turb2_store', ...
+                                      'Medge2turb2_store', ...
+                                      'Moop3turb2_store', ...
+                                      'Mip3turb2_store', ...
+                                      'Mflap3turb2_store', ...
+                                      'Medge3turb2_store', ...
                                       'PitchAngles', ...
                                       'PitchAnglesturb2');
 toc 
