@@ -26,7 +26,7 @@ mag = 3; % 2, 3, 99(customize), -1(doesn't work)
 referenceType = 'step'; % step, ramp, ramp&stop, step&step, zero, customize&step, customize&ramp
 Trigger = ceil(simTime/5);      % Time that ctrl is triggered
 Endtime = (simTime*4)/5;
-windtype = 'Shear3p'; % Check .sim file (right. bts file) !!!!!!! 
+windtype = 'TI10'; % Check .sim file (right. bts file) !!!!!!! 
 
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\';
