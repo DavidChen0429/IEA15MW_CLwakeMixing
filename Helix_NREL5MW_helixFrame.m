@@ -20,8 +20,8 @@ end
 
 %% Data file (Chage this accordingly)
 turbineName = '.\Data\NREL5MW\';
-caseName = 'IDE\';
-fileName = 'bandwidthCheck.mat';
+caseName = 'HubJet\';
+fileName = 'St4A3.mat';
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
@@ -68,22 +68,22 @@ K = 2.24;
 N = 97;          % Gearbox ratio
 
 %% Defining Helix Control Setting
-Str = 0.3;                          % Strouhal number
-Helix_amplitude = 1;                % Helix amplitude                
+Str = 0.4;                          % Strouhal number
+Helix_amplitude = 3;                % Helix amplitude                
 Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
 omega_e = Freq*2*pi;
 AzimuthOffset = 96; % 6 for pi/2 shift ;96 for pi shift (right relationship)
 
 t = linspace(1, simLen, simTime);
-% sigTilt_e = Helix_amplitude*ones(simTime, 1);  % basic
-% sigYaw_e = Helix_amplitude*ones(simTime, 1);   % basic
+sigTilt_e = Helix_amplitude*ones(simTime, 1);  % basic
+sigYaw_e = Helix_amplitude*ones(simTime, 1);   % basic
 
 % Step input to test basic properties
 % steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5)];
 % steps = [0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -Helix_amplitude*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 2*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10)];
-steps = [0*ones(1, simTime/3) Helix_amplitude*ones(1, simTime*2/3)];
-sigTilt_e = steps;                  % 0*ones(simTime, 1)
-sigYaw_e = steps;                   % 0*ones(simTime, 1)
+% steps = [0*ones(1, simTime/3) Helix_amplitude*ones(1, simTime*2/3)];
+% sigTilt_e = steps;                  % 0*ones(simTime, 1)
+% sigYaw_e = steps;                   % 0*ones(simTime, 1)
 
 % figure;
 % plot(t, sigTilt_e);
@@ -192,8 +192,8 @@ for i = 1:1:simTime
     % Centering
     centerZ = wakeCenter(1) - meanZ;  % 91.2632  92.0026
     centerY = wakeCenter(2) - meanY;  % -4.9713  -4.0999
-%     centerZ = wakeCenter(1) - 91.6673;  % data derived from the basecase
-%     centerY = wakeCenter(2) + 4.5923;   % data derived from the basecase
+%     centerZ = wakeCenter(1) - 92.0026;  % data derived from the basecase
+%     centerY = wakeCenter(2) + 4.0999;   % data derived from the basecase
     center_e = invR_helix * [centerZ; centerY];
     [HF_helixCenter_filtered(i, 1), filterState3] = filter(b_fir, 1, center_e(1), filterState3);
     [HF_helixCenter_filtered(i, 2), filterState4] = filter(b_fir, 1, center_e(2), filterState4);
@@ -235,49 +235,6 @@ save([turbineName caseName fileName], 'FF_helixCenter', ...
 toc 
 
 %% Visualization
-% figure;
-% plot(TSR_store)
-% xticks(0:100:length(TSR_store));
-% xticklabels(0:100*timeStep:length(TSR_store)*timeStep);
-% legend('TSR')
-% xlabel("Time (s)");
-% ylabel("TSR");
-
-% figure;
-% plot(genTorqueQB_store)
-% hold on
-% plot(genTorque_store)
-% xticks(0:100:length(genTorqueQB_store));
-% xticklabels(0:100*timeStep:length(genTorqueQB_store)*timeStep);
-% xlabel("Time (s)");
-% ylabel("Torque (Nm)")
-% legend('QB HSS Torque','K omega^2')
-
-% figure;
-% plot(PitchAngles(:,1))
-% hold on
-% plot(PitchAngles(:,2))
-% plot(PitchAngles(:,3))
-% xticks(0:100:length(PitchAngles));
-% xticklabels(0:100*timeStep:length(PitchAngles)*timeStep);
-% ylim([-1.5 1.5])
-% xlim([0 300])
-% xlabel("Time (s)");
-% ylabel("Angle (deg)");
-% title('Blade Pitch Signal')
-% legend('Blade 1','Blade 2','Blade 3')
-
-% figure;
-% plot(AzimuthAngles(:,1))
-% hold on
-% plot(AzimuthAngles(:,2))
-% plot(AzimuthAngles(:,3))
-% xticks(0:100:length(AzimuthAngles));
-% xticklabels(0:100*timeStep:length(AzimuthAngles)*timeStep);
-% xlabel("Time (s)");
-% ylabel("Angle (deg)");
-% legend('Blade 1','Blade 2','Blade 3')
-
 figure('Name', 'Overall Result', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
 subplot(2, 2, 1)
 plot((1:length(FF_beta)) * timeStep, FF_beta(:, 1));
@@ -322,75 +279,7 @@ title('Center HF')
 % legend('z_e', 'y_e', 'z_{ef}', 'y_{ef}')
 legend('z_{e2}', 'y_{e2}')
 
-% figure;
-% subplot(2, 2, 1)
-% plot(FF_beta(:, 1));
-% hold on;
-% plot(FF_beta(:, 2));
-% hold off;
-% title('\beta FF')
-% legend('\beta_{tilt}', '\beta_{yaw}')
-% subplot(2, 2, 3);
-% plot(HF_beta(:, 1));
-% hold on;
-% plot(HF_beta(: ,2));
-% hold off;
-% title('\beta_e HF')
-% legend('\beta^e_{tilt}', '\beta^e_{yaw}')
-% subplot(2, 2, 2)
-% plot(FF_helixCenter_filtered(:, 1));
-% hold on;
-% plot(FF_helixCenter_filtered(:, 2));
-% hold off;
-% title('Center FF')
-% legend('z_f', 'y_f')
-% subplot(2, 2, 4)
-% plot(HF_helixCenter_filtered(:, 1));
-% hold on;
-% plot(HF_helixCenter_filtered(:, 2));
-% hold off;
-% title('Center HF')
-% legend('z_{f,e}', 'y_{f,e}')
-
-% figure();
-% % plot(HF_helixCenter(:, 1));
-% % hold on;
-% % plot(HF_helixCenter(:, 2));
-% plot(HF_helixCenter_filtered(:, 1));
-% hold on;
-% plot(HF_helixCenter_filtered(:, 2));
-% hold off;
-% title('Center HF')
-% legend('z_e', 'y_e')
-
-% figure()
-% plot(PitchAngles(:,1))
-% hold on
-% plot(PitchAngles(:,2))
-% plot(PitchAngles(:,3))
-% hold off
-% xticks(0:100:length(PitchAngles));
-% xticklabels(0:100*timeStep:length(PitchAngles)*timeStep);
-% ylim([-1.25 1.25])
-% % xlim([0 300])
-% xlabel("Time (s)");
-% ylabel("Angle (deg)");
-% title('Blade Pitch Signal')
-% legend('\beta_1','\beta_2','\beta_3')
-% 
-% figure()
-% plot(FF_beta(:, 1))
-% hold on
-% plot(FF_beta(:, 2))
-% hold off
-% xticks(0:100:length(PitchAngles));
-% xticklabels(0:100*timeStep:length(PitchAngles)*timeStep);
-% ylim([-1.25 1.25])
-% xlabel("Time (s)");
-% ylabel("Angle (deg)");
-% title('Rotor Disc Signal')
-% legend('\beta_{tilt}', '\beta_{yaw}')
-
 % ringVisualization(LiDAR_data, D_NREL5MW)
+
 %% Unload Library 
 % unloadlibrary 'QBladeDLL'

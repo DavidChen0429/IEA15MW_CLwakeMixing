@@ -1,17 +1,6 @@
-function [] = videoCompare_func(data1, data2, Fs, Fc, D, fileName)
+function [] = videoCompare_func(data1, data2, D, fileName)
 dataLiDAR_A = data1.LiDAR_data;
 dataLiDAR_B = data2.LiDAR_data;
-
-% wake center traj
-wakeCenterZ1 = data1.FF_helixCenter(:, 1);
-wakeCenterY1 = data1.FF_helixCenter(:, 2);
-wakeCenterZ2 = data2.FF_helixCenter(:, 1);
-wakeCenterY2 = data2.FF_helixCenter(:, 2);
-
-% wakeCenterY1_f = lowpassFilter(wakeCenterY1, Fs, Fc);
-% wakeCenterZ1_f = lowpassFilter(wakeCenterZ1, Fs, Fc);
-% wakeCenterY2_f = lowpassFilter(wakeCenterY2, Fs, Fc);
-% wakeCenterZ2_f = lowpassFilter(wakeCenterZ2, Fs, Fc);
 
 data_length = size(dataLiDAR_A);
 interval = 10;

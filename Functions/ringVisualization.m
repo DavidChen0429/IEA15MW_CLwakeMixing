@@ -1,5 +1,6 @@
-function [] = ringVisualization(dataLiDAR, D)
+function [] = ringVisualization(data, D)
 interval = 10;
+dataLiDAR = data.LiDAR_data;
 data_length = size(dataLiDAR);
 % Rotor Disc
 theta = linspace(0, 2*pi, 20);

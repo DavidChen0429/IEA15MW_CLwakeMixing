@@ -1,18 +1,26 @@
 %% Data Analysis for Experiments
 clear
-close all 
+% close all 
 addpath('.\Functions');
 %clc
 
 %% Data file (Chage this accordingly)
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\';
-fileName = '1Turbine_Basic.mat';
-basefile = '1Turbine_Basic.mat';
+basefile = '1Turbine_OL_Helix_mag3.mat';
+fileName = '1Turbine_CL_Helix_MIMO_step_mag3.mat';
 
-Data = load([turbineName caseName fileName]);
 Baseline = load([turbineName caseName basefile]);
+Data = load([turbineName caseName fileName]);
 
+%% Basic Settings
+D_NREL5MW = 126;
+U_inflow = 10;
+timeStep = 0.1;
+filter = 3000;  % Steady-state value
+simLength = length(Baseline.Cp_store);
+
+%% Get Data
 % Baseline info
 Cp_store_bl = Baseline.Cp_store;
 PitchAngles_bl = Baseline.PitchAngles;
@@ -39,13 +47,6 @@ Medge2_store = Data.Medge2_store;
 Mflap3_store = Data.Mflap3_store;
 Medge3_store = Data.Medge3_store;
 
-%% Basic Settings
-D_NREL5MW = 126;
-U_inflow = 10;
-timeStep = 0.1;
-filter = 1000;
-simLength = length(Baseline.Cp_store);
-
 %% Calcuate Power, DEL, PBD
 % Baseline
 PowerTurb_bl = calculatePower(filter,Cp_store_bl,D_NREL5MW,U_inflow); % [MW]
@@ -54,7 +55,7 @@ DELTurb_bl = calculateDEL(filter, ...
     Mflap2_store_bl,Medge2_store_bl, ...
     Mflap3_store_bl,Medge3_store_bl, ...
     timeStep); % [Nm]
-PBDTurb_bl = calculatePBD(filter,PitchAngles, ...
+PBDTurb_bl = calculatePBD(filter,PitchAngles_bl, ...
     Mflap1_store_bl,Medge1_store_bl, ...
     Mflap2_store_bl,Medge2_store_bl, ...
     Mflap3_store_bl,Medge3_store_bl); % [kNm deg]

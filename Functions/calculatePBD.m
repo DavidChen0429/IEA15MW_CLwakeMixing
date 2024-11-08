@@ -3,6 +3,7 @@ function [PBD] = calculatePBD(filter,PitchAngles,Mflap1_store,Medge1_store,Mflap
     PitchAngles_buf = PitchAngles(filter:end, :);
     N = length(PitchAngles_buf);
     WohlerSlope = 3;
+    Neq = 1e8;
     gamma = 0:10:350;
     ThetaDiff = abs([PitchAngles_buf(1, :); diff(PitchAngles_buf)]);
     
@@ -17,7 +18,7 @@ function [PBD] = calculatePBD(filter,PitchAngles,Mflap1_store,Medge1_store,Mflap
         PBD1 = PBD1 + ThetaDiff(k, 1)*max_bufff1^WohlerSlope;
     end
     PitchBearingDamage1 = PBD1 / 1e3; % [kNm deg]
-    PitchBearningDEL1 = (PitchBearingDamage1 ./1e8).^(1/WohlerSlope);
+    PitchBearningDEL1 = (PitchBearingDamage1 ./Neq).^(1/WohlerSlope);
 
     % Blade2
     PBD2 = 0;
@@ -30,7 +31,7 @@ function [PBD] = calculatePBD(filter,PitchAngles,Mflap1_store,Medge1_store,Mflap
         PBD2 = PBD2 + ThetaDiff(k, 2)*max_bufff2^WohlerSlope;
     end
     PitchBearingDamage2 = PBD2 / 1e3; % [kNm deg]
-    PitchBearningDEL2 = (PitchBearingDamage2 ./1e8).^(1/WohlerSlope);
+    PitchBearningDEL2 = (PitchBearingDamage2 ./Neq).^(1/WohlerSlope);
 
     % Blade3
     PBD3 = 0;
@@ -43,7 +44,7 @@ function [PBD] = calculatePBD(filter,PitchAngles,Mflap1_store,Medge1_store,Mflap
         PBD3 = PBD3 + ThetaDiff(k, 3)*max_bufff3^WohlerSlope;
     end
     PitchBearingDamage3 = PBD3 / 1e3; % [kNm deg]
-    PitchBearningDEL3 = (PitchBearingDamage3 ./1e8).^(1/WohlerSlope);
+    PitchBearningDEL3 = (PitchBearingDamage3 ./Neq).^(1/WohlerSlope);
     
     % Array storage
     PBD = [PitchBearningDEL1, PitchBearningDEL2, PitchBearningDEL3];

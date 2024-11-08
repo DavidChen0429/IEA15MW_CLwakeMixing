@@ -19,16 +19,18 @@ if isempty(m)
 end
 
 %% Data file (Chage this accordingly)
-simTime = 6000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 8000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
-mag = 2; % 2, 3, 99(customize), -1(doesn't work)
-referenceType = 'step'; % step, ramp, ramp&stop, step&step, zero, customize&step, customize&ramp
+mag = 3; % 2, 3, 99(customize), -1(doesn't work)
+referenceType = 'ramp&stop'; % step, ramp, ramp&stop, step&step, zero, customize&step, customize&ramp
 Trigger = ceil(simTime/5);      % Time that ctrl is triggered
-Endtime = (simTime*4)/5;
+HelixCycle = 1/(0.3*10/126) * (1/timeStep);
+Endtime = Trigger + 1*HelixCycle;
+saveOption = 'N';
 
 turbineName = '.\Data\NREL5MW\';
-caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\';
+caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\1Turbine\';
 fileName = ['1Turbines_OL_Helix','_mag', num2str(mag),'.mat'];
 QprName = ['1Turbines_OL_Helix','_mag', num2str(mag),'.qpr'];
 
@@ -100,15 +102,16 @@ omega_e = Freq*2*pi;
 AzimuthOffset = 96; % 6 for pi/2 shift ;96 for pi shift (right relationship)
 
 t = linspace(1, simLen, simTime);
-sigTilt_e = Helix_amplitude*ones(simTime, 1);  % basic
-sigYaw_e = Helix_amplitude*ones(simTime, 1);   % basic
+sigTilt_e = zeros(simTime, 1);  % basic
+sigYaw_e = zeros(simTime, 1);   % basic
 
-% Step input to test basic properties
-% steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime/5) 0*ones(1, simTime/5)];
-% steps = [0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -Helix_amplitude*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 2*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10)];
-% steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime*4/5)];
-% sigTilt_e = steps;                  % 0*ones(simTime, 1)
-% sigYaw_e = 0*ones(simTime, 1);                   % 0*ones(simTime, 1)
+HelixInputMag = Helix_amplitude/(Endtime-Trigger);
+for tt = Trigger:Endtime
+    sigTilt_e(tt) = HelixInputMag * (tt - Trigger);   % z_e ramp signal
+    sigYaw_e(tt) = HelixInputMag * (tt - Trigger);   % y_e ramp signal
+end
+sigTilt_e(Endtime:end, 1) = Helix_amplitude*ones(simTime+1-Endtime, 1);
+sigYaw_e(Endtime:end, 1) = Helix_amplitude*ones(simTime+1-Endtime, 1);
 
 % figure;
 % plot(t, sigTilt_e);
@@ -118,7 +121,7 @@ sigYaw_e = Helix_amplitude*ones(simTime, 1);   % basic
 % legend('\beta_{tilt,e}', '\beta_{yaw,e}')
 
 % Reference is not used, but for comparison with CLctrl
-r = referenceGenerator(simTime,Trigger,Endtime,referenceType,mag,1);
+r = referenceGenerator(simTime,Trigger,Endtime,referenceType,mag,0);
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat
@@ -294,9 +297,9 @@ for i = 1:1:simTime
 
 end
 close(f)
-calllib('QBladeDLL','storeProject', [turbineName caseName QprName]) 
-calllib('QBladeDLL','closeInstance')
-save([turbineName caseName fileName], 'LiDAR_data', ...
+if strcmp(saveOption, 'Y')
+    calllib('QBladeDLL','storeProject', [turbineName caseName QprName]) 
+    save([turbineName caseName fileName], 'LiDAR_data', ...
                                       'FF_helixCenter', ...
                                       'FF_helixCenter_filtered', ...
                                       'HF_helixCenter', ...
@@ -318,6 +321,8 @@ save([turbineName caseName fileName], 'LiDAR_data', ...
                                       'Mflap3_store', ...
                                       'Medge3_store', ...
                                       'PitchAngles');
+end
+calllib('QBladeDLL','closeInstance')
 toc 
 
 %% Visualization
@@ -371,7 +376,7 @@ title('Center HF')
 % legend('z_e', 'y_e', 'z_{e,f}', 'y_{e,f}')
 legend('z_{e,f}', 'y_{e,f}')
 
-% ringVisualization(LiDAR_data, D_NREL5MW)
+ringVisualization2(LiDAR_data, D_NREL5MW)
 
 %% Unload Library 
 % unloadlibrary 'QBladeDLL'

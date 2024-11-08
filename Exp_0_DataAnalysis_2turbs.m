@@ -1,18 +1,26 @@
 %% Data Analysis for Experiments
 clear
-close all 
+% close all 
 addpath('.\Functions');
 %clc
 
 %% Data file (Chage this accordingly)
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\';
-basefile = '2Turbines_OL_Helix_mag3.mat';
-fileName = '2Turbines_OL_Helix_Shear2p_mag3.mat';
+fileName = '2Turbines_Basic.mat';
+% fileName = '2Turbines_CL_Helix_TI5_mag3.mat';
 
-Baseline = load([turbineName caseName basefile]);
+% Baseline = load([turbineName caseName basefile]);
 Data = load([turbineName caseName fileName]);
 
+%% Define Basic Helix Information
+D_NREL5MW = 126;
+U_inflow = 10;
+timeStep = 0.1;
+filter = 3000;  % Steady-state value
+simLength = length(Data.Cp_store);
+
+%% Get Data
 % Controlled info
 %   WT1
 Cp_store = Data.Cp_store;
@@ -39,14 +47,8 @@ Medge2turb2_store = Data.Medge2turb2_store;
 Mflap3turb2_store = Data.Mflap3turb2_store;
 Medge3turb2_store = Data.Medge3turb2_store;
 
-%% Define Basic Helix Information
-D_NREL5MW = 126;
-U_inflow = 10;
-timeStep = 0.1;
-filter = 1000;
-simLength = length(Baseline.Cp_store);
-
 %% Calcuate Power, DEL, PBD
+% ============== Baseline
 % WT1
 PowerTurb1 = calculatePower(filter,Cp_store,D_NREL5MW,U_inflow); % [MW]
 DELTurb1 = calculateDEL(filter, ...
@@ -59,7 +61,7 @@ PBDTurb1 = calculatePBD(filter,PitchAngles, ...
     Mflap2_store,Medge2_store, ...
     Mflap3_store,Medge3_store); % [kNm deg]
 fprintf('================================================== \n');
-fprintf('Baseline ====================== \n');
+fprintf('========== Controlled \n');
 fprintf('The output of WT1:\n');
 fprintf('    Power Production: %.2f [MW]\n', PowerTurb1);
 fprintf('    DEL:\n');

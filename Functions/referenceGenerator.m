@@ -11,6 +11,7 @@ function [r] = referenceGenerator(simTime,Trigger,endTime,type,mag,plotOption)
     %             customize&ramp
     %       mag: corresponding helix magnitude
 
+%     HelixCycle = 1/(0.3*10/126); % From the equation 
     r = zeros(simTime, 2);    
     % Helix magnitude (from OL simulation)
     if mag == 2
