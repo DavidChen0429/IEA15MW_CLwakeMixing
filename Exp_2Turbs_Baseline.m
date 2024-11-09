@@ -19,10 +19,10 @@ if isempty(m)
 end
 
 %% Data file (Chage this accordingly)
-simTime = 8000;     % in timestep, actual time is simTime*timestep(Q-blade define)
-timeStep = 0.1;    % same with the Q-blade setting
+simTime = 6000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+timeStep = 0.1;    % same with tdhe Q-blade setting
 simLen = simTime * timeStep; % seconds
-saveOption = 'N';
+saveOption = 'Y';
 
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2Turbines\';
@@ -345,7 +345,8 @@ end
 close(f)
 if strcmp(saveOption, 'Y')
     calllib('QBladeDLL','storeProject', [turbineName caseName QprName]) 
-    save([turbineName caseName fileName], 'LiDAR_data', ...
+    save([turbineName caseName fileName], ...
+                                      'LiDAR_data', ...
                                       'FF_helixCenter', ...
                                       'FF_helixCenter_filtered', ...
                                       'HF_helixCenter', ...
@@ -437,7 +438,7 @@ title('Center HF')
 % legend('z_e', 'y_e', 'z_{e,f}', 'y_{e,f}')
 legend('z_{e,f}', 'y_{e,f}')
 
-ringVisualization(LiDAR_data, D_NREL5MW)
+% ringVisualization2(LiDAR_data, D_NREL5MW)
 
 %% Unload Library 
 % unloadlibrary 'QBladeDLL'

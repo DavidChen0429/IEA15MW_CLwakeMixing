@@ -19,7 +19,7 @@ if isempty(m)
 end
 
 %% Data file 
-simTime = 8000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 6000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 mag = 3; % 2, 3, 99(customize), -1(doesn't work)
@@ -27,7 +27,7 @@ referenceType = 'ramp&stop'; % step, ramp, ramp&stop, step&step, zero, customize
 Trigger = ceil(simTime/5);      % Time that ctrl is triggered
 HelixCycle = 1/(0.3*10/126) * (1/timeStep);
 Endtime = Trigger + 1*HelixCycle;
-saveOption = 'N';
+saveOption = 'Y';
 
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2Turbines\';
@@ -298,10 +298,10 @@ for i = 1:1:simTime
     end
     % Low pass filter
     % Centering
-%     centerZ = wakeCenter(1) - meanZ;  % 91.2632
-%     centerY = wakeCenter(2) - meanY;  % -4.9713
-    centerZ = wakeCenter(1) - 92.0026;  % data derived from the basecase
-    centerY = wakeCenter(2) + 4.0999;   % data derived from the basecase
+    centerZ = wakeCenter(1) - meanZ;  % 91.2632
+    centerY = wakeCenter(2) - meanY;  % -4.9713
+%     centerZ = wakeCenter(1) - 92.0026;  % data derived from the basecase
+%     centerY = wakeCenter(2) + 4.0999;   % data derived from the basecase
     center_e = invR_helix * [centerZ; centerY];
     [HF_helixCenter_filtered(i, 1), filterState3] = filter(b_fir, 1, center_e(1), filterState3);
     [HF_helixCenter_filtered(i, 2), filterState4] = filter(b_fir, 1, center_e(2), filterState4);
@@ -534,7 +534,7 @@ title('Center HF')
 % legend('z_e', 'y_e', 'z_{e,f}', 'y_{e,f}')
 legend('z_{e,f}', 'y_{e,f}')
 
-ringVisualization2(LiDAR_data, D_NREL5MW)
+% ringVisualization2(LiDAR_data, D_NREL5MW)
 
 %% Unload Library 
 % unloadlibrary 'QBladeDLL'
