@@ -101,8 +101,8 @@ C_mimo2 = [0, 0;
 %   [C11*G11 C11*G12]
 %   [C22*G21 C22*G22]
 %%%
-OL_ctrl = G*C_mimo;
-OL_ctrl2 = G*C_mimo2;
+OL_ctrl = C_mimo*G;
+OL_ctrl2 = C_mimo2*G;
 
 % ==== Check Controller
 % Frequency Domain
@@ -187,6 +187,28 @@ h = findall(gcf, 'Type', 'axes');
 set(h, 'XLim', [0 200], 'YLim', [-0.5 1.5]);  
 xticks(0:50:200);
 setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',20,'linewidth',2)
+
+%% Explane the sequential SIMO control
+C_mimo = [Cpi1, 0;
+          0, 0];
+OL_ctrl = C_mimo*G;
+C_mimo2 = [0, 0;
+           0, Cpi1];
+OL_ctrl2 = C_mimo2*G;
+C_mimo3 = [Cpi1, 0;
+           0, Cpi1];
+OL_ctrl3 = C_mimo3*G;
+
+figure('Name', 'BD Controllers', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+bode(OL_ctrl, OL_ctrl2, OL_ctrl3)
+axesHandles = findall(gcf, 'Type', 'axes');
+legend('OL1', 'OL2','OL3','Location','southeast');
+
+margin(OL_ctrl3(1,1))
+margin(OL_ctrl3(1, 2))
+
+margin(OL_ctrl3(2, 2))
+margin(OL_ctrl3(2, 1))
 
 %% Faster tuning
 % close all
