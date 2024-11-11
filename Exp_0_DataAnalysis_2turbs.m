@@ -2,15 +2,13 @@
 clear
 % close all 
 addpath('.\Functions');
-%clc
+clc
 
 %% Data file (Chage this accordingly)
 turbineName = '.\Data\NREL5MW\';
-caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\';
-fileName = '2Turbines_Basic.mat';
-% fileName = '2Turbines_CL_Helix_TI5_mag3.mat';
+caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2Turbines\';
+fileName = '2Turbines_OL_Helix_TI6_mag3.mat';
 
-% Baseline = load([turbineName caseName basefile]);
 Data = load([turbineName caseName fileName]);
 
 %% Define Basic Helix Information
@@ -48,7 +46,7 @@ Mflap3turb2_store = Data.Mflap3turb2_store;
 Medge3turb2_store = Data.Medge3turb2_store;
 
 %% Calcuate Power, DEL, PBD
-% ============== Baseline
+% ============== Case
 % WT1
 PowerTurb1 = calculatePower(filter,Cp_store,D_NREL5MW,U_inflow); % [MW]
 DELTurb1 = calculateDEL(filter, ...
@@ -60,9 +58,9 @@ PBDTurb1 = calculatePBD(filter,PitchAngles, ...
     Mflap1_store,Medge1_store, ...
     Mflap2_store,Medge2_store, ...
     Mflap3_store,Medge3_store); % [kNm deg]
-fprintf('================================================== \n');
+fprintf('\n================================================== \n');
 fprintf('========== Controlled \n');
-fprintf('The output of WT1:\n');
+fprintf('The output of Upstream WT:\n');
 fprintf('    Power Production: %.2f [MW]\n', PowerTurb1);
 fprintf('    DEL:\n');
 fprintf('        Blade1 Flapwise: %.2e  [Nm]\n', DELTurb1(1))
@@ -86,7 +84,7 @@ PBDTurb2 = calculatePBD(filter,PitchAnglesturb2, ...
     Mflap1turb2_store,Medge1turb2_store, ...
     Mflap2turb2_store,Medge2turb2_store, ...
     Mflap3turb2_store,Medge3turb2_store); % [kNm deg]
-fprintf('The output of WT2:\n');
+fprintf('The output of Downstream WT:\n');
 fprintf('    Power Production: %.2f [MW]\n', PowerTurb2);
 fprintf('    DEL:\n');
 fprintf('        Blade1 Flapwise: %.2e  [Nm]\n', DELTurb2(1))

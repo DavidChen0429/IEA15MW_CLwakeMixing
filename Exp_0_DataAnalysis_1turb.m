@@ -6,7 +6,7 @@ addpath('.\Functions');
 
 %% Data file (Chage this accordingly)
 turbineName = '.\Data\NREL5MW\';
-caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\';
+caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\1Turbine\';
 basefile = '1Turbine_OL_Helix_mag3.mat';
 fileName = '1Turbine_CL_Helix_MIMO_step_mag3.mat';
 

@@ -19,7 +19,7 @@ if isempty(m)
 end
 
 %% Data file 
-simTime = 8000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 6000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 mag = -1; % 2, 3, 99(customize), -1(doesn't work)

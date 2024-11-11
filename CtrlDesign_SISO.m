@@ -16,17 +16,17 @@ D = buf_sys.OLi.D;
 sys = buf_sys.OLi;
 sys.InputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
 sys.OutputName = {'z_e','y_e'};
-% G = tf(buf_sys.OLi);        % transfer matrix 
 G = tf(buf_sys.OLi);        % transfer matrix 
-% G = G([2, 1], :);
 
-% Basic system property
-eig(A)
-size(A, 1)
-rank(ctrb(A, B))    
-rank(obsv(A, C))
+%% Basic system property
+fprintf('======== System property \n');
+fprintf(' System Dimension: %.0f \n', size(A, 1));
+fprintf(' Ctrb Matrix Rank: %.0f \n', rank(ctrb(A, B)));
+fprintf(' Obsv Matrix Rank: %.0f \n', rank(obsv(A, C)));
+fprintf(' Eigenvalues of A: \n');
+disp(eig(A));
 
-% Load data
+%% Load data
 trainData = 'train_120min_1bw_noise5%_AzimuthOffset6.mat';       % train set
 testData = 'stepResponse_both_AzimuthOffset6.mat';                % test set
 turbineName = '.\Data\NREL5MW\';
@@ -76,78 +76,117 @@ ys2 = y_test';  % 2*N
 % Bode diagram (Frequency domain response)
 figure('Name', 'Bode Diagram OL System', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
 bode(G);
-bw = calculateBandwidth(G(1, 1));   % Hz
+bw = calculateBandwidth(G(1,1));   % Hz
+bw_rad = bw*2*pi;
 grid on
-% hold on
-% ax = findall(gcf, 'Type', 'axes');  % Find all axes in the current figure
-% for i = 1:length(ax)
-%     xline(ax(i), 2*pi*bw, 'r:', 'LineWidth', 1);
-% end
-% hold off
 title('Bode Diagram of Open-Loop System')
 
 %% PID Controller Design
 % func: pidtune
-wc_hz = 0.004;
+wc_hz = 0.5*bw;
 wc = wc_hz * 2*pi; % rad/timeUnit omega = 2pi*f
-[C11, info1] = pidtune(G(1,1), 'PI', wc); % To make it faster
-[C22, info2] = pidtune(G(2,2), 'PI', wc); % To make it faster
-C12 = 0;    
-C21 = 0;
-disp(info1)
-% Kp = 0; % 0
-% Ki = 0.0375; % 0.05
-% Ts = timeStep;
-% C11 = pid(Kp, Ki, 0, 0, Ts);
-C_mimo = [C11, 0;
+printOption = 'N';
+bdOption = 'N';
+[Ci1, info1] = pidtune(G(1,1), 'I', wc);
+[Ci2, info2] = pidtune(G(1,1), 'I');
+[Cpi1, info3] = pidtune(G(1,1), 'PI', wc);
+[Cpi2, info4] = pidtune(G(1,1), 'PI');
+C_mimo = [Cpi1, 0;
           0, 0];
-% ss_compensator = [0.9526    0.0773;
-%                   -0.0761    0.9453];
-% C_mimo = ss_compensator * C_mimo;
-OL_ctrl = C_mimo * G;
+C_mimo2 = [0, 0;
+           0, Cpi1];
 
 %%%
 % Open loop transfer matrix becomes
 %   [C11*G11 C11*G12]
 %   [C22*G21 C22*G22]
 %%%
+OL_ctrl = G*C_mimo;
+OL_ctrl2 = G*C_mimo2;
 
-% % Before control
-% % C11 in charge of below
-% figure('Name', 'G11 G12 BeforeCtrl', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-% subplot(1,2,1)
-% margin(G(1, 1));
-% subplot(1,2,2)
-% margin(G(1, 2)); 
-% % C22 in charge of below
-% figure('Name', 'G21 G22 BeforeCtrl', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-% subplot(1,2,1)
-% margin(G(2, 1)); 
-% subplot(1,2,2)
-% margin(G(2, 2));
-% 
-% % Loop shaping
-% % bode(OL_ctrl);
-% % C11 in charge of below
-% figure('Name', 'G11 G12 AfterCtrl', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-% subplot(1,2,1)
-% margin(OL_ctrl(1, 1));
-% subplot(1,2,2)
-% margin(OL_ctrl(1, 2)); 
-% % C22 in charge of below
-% figure('Name', 'G21 G22 AfterCtrl', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-% subplot(1,2,1) 
-% margin(OL_ctrl(2, 1)); 
-% subplot(1,2,2)
-% margin(OL_ctrl(2, 2));
+% ==== Check Controller
+% Frequency Domain
+% 1. Bode Diagram of Controllers
+if strcmp(bdOption, 'Y') 
+    figure('Name', 'BD Controllers', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+    bode(Ci1, Ci2, Cpi1, Cpi2)
+    axesHandles = findall(gcf, 'Type', 'axes');
+    set(axesHandles(2), 'YLim', [-180 10]);
+    set(axesHandles(3), 'YLim', [-100 50]);
+    hold on
+    % Don't forget to convert to Hz when using below to show bw !!!
+    xline(axesHandles(3), bw, 'k--', 'LineWidth', 2);
+    xline(axesHandles(3), wc_hz, 'k-.', 'LineWidth', 2);
+    xline(axesHandles(2), bw, 'k--', 'LineWidth', 2);
+    xline(axesHandles(2), wc_hz, 'k-.', 'LineWidth', 2);
+    hold off
+    title('Controller Bode Diagram')
+    legend('I1', 'I2','PI1','PI2','\omega_b','\omega_c','Location','southeast');
+    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',20,'linewidth',2)
+    grid on
+end
 
-% Step response simulation
+% 2. Bode Diagram of OL System G11 and G22 only
+% Ci1
+if strcmp(printOption, 'Y')
+    fprintf('======== I1 \n');
+    [Gm, Pm, ~, Wcp] = margin(G(1,1)*Ci1);
+    [Gm2, Pm2, ~, Wcp2] = margin(G(1,2)*Ci1);
+    [Gm3, Pm3, ~, Wcp3] = margin(G(2,1)*Ci1);
+    [Gm4, Pm4, ~, Wcp4] = margin(G(2,2)*Ci1);
+    fprintf(' Gain Margin: %.3f, %.3f, %.3f, %.3f [dB] \n', 20*log10(Gm), 20*log10(Gm2), 20*log10(Gm3), 20*log10(Gm4));
+    fprintf(' Phase Margin: %.3f, %.3f, %.3f, %.3f [deg] \n', Pm, Pm2, Pm3, Pm4);
+    fprintf(' Crossover Frequncy: %.3f, %.3f, %.3f, %.3f [rad] \n', Wcp, Wcp2, Wcp3, Wcp4);
+    
+    % Ci2
+    fprintf('======== I2 \n');
+    [Gm, Pm, ~, Wcp] = margin(G(1,1)*Ci2);
+    [Gm2, Pm2, ~, Wcp2] = margin(G(1,2)*Ci2);
+    [Gm3, Pm3, ~, Wcp3] = margin(G(2,1)*Ci2);
+    [Gm4, Pm4, ~, Wcp4] = margin(G(2,2)*Ci2);
+    fprintf(' Gain Margin: %.3f, %.3f, %.3f, %.3f [dB] \n', 20*log10(Gm), 20*log10(Gm2), 20*log10(Gm3), 20*log10(Gm4));
+    fprintf(' Phase Margin: %.3f, %.3f, %.3f, %.3f [deg] \n', Pm, Pm2, Pm3, Pm4);
+    fprintf(' Crossover Frequncy: %.3f, %.3f, %.3f, %.3f [rad] \n', Wcp, Wcp2, Wcp3, Wcp4);
+    
+    % Cpi1
+    fprintf('======== PI1 \n');
+    [Gm, Pm, ~, Wcp] = margin(G(1,1)*Cpi1);
+    [Gm2, Pm2, ~, Wcp2] = margin(G(1,2)*Cpi1);
+    [Gm3, Pm3, ~, Wcp3] = margin(G(2,1)*Cpi1);
+    [Gm4, Pm4, ~, Wcp4] = margin(G(2,2)*Cpi1);
+    fprintf(' Gain Margin: %.3f, %.3f, %.3f, %.3f [dB] \n', 20*log10(Gm), 20*log10(Gm2), 20*log10(Gm3), 20*log10(Gm4));
+    fprintf(' Phase Margin: %.3f, %.3f, %.3f, %.3f [deg] \n', Pm, Pm2, Pm3, Pm4);
+    fprintf(' Crossover Frequncy: %.3f, %.3f, %.3f, %.3f [rad] \n', Wcp, Wcp2, Wcp3, Wcp4);
+    
+    % Cpi2
+    fprintf('======== PI2 \n');
+    [Gm, Pm, ~, Wcp] = margin(G(1,1)*Cpi2);
+    [Gm2, Pm2, ~, Wcp2] = margin(G(1,2)*Cpi2);
+    [Gm3, Pm3, ~, Wcp3] = margin(G(2,1)*Cpi2);
+    [Gm4, Pm4, ~, Wcp4] = margin(G(2,2)*Cpi2);
+    fprintf(' Gain Margin: %.3f, %.3f, %.3f, %.3f [dB] \n', 20*log10(Gm), 20*log10(Gm2), 20*log10(Gm3), 20*log10(Gm4));
+    fprintf(' Phase Margin: %.3f, %.3f, %.3f, %.3f [deg] \n', Pm, Pm2, Pm3, Pm4);
+    fprintf(' Crossover Frequncy: %.3f, %.3f, %.3f, %.3f [rad] \n', Wcp, Wcp2, Wcp3, Wcp4);
+end
+
+% Time Domain: Step Response
 closed_loop_sys = feedback(OL_ctrl, eye(2));
-t = 0:timeStep:1000;  % Time vector for simulation
+closed_loop_sys2 = feedback(OL_ctrl2, eye(2));
+closed_loop_sys.InputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
+closed_loop_sys.OutputName = {'z_e','y_e'};
+closed_loop_sys2.InputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
+closed_loop_sys2.OutputName = {'z_e','y_e'};
+t = 0:timeStep:200;  % Time vector for simulation
 figure('Name', 'After Control CL Step', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
 step(closed_loop_sys, t);
-title('Controlled CL System');
-grid on;
+hold on
+step(closed_loop_sys2, t);
+hold off
+legend('Tilt Only','Yaw Only','Location','southeast');
+h = findall(gcf, 'Type', 'axes');
+set(h, 'XLim', [0 200], 'YLim', [-0.5 1.5]);  
+xticks(0:50:200);
+setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',20,'linewidth',2)
 
 %% Faster tuning
 % close all

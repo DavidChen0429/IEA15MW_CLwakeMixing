@@ -47,7 +47,7 @@ END_TURB_1
 
 ----------------------------------------Wind Input-----------------------------------------------------------------
 1                                        WNDTYPE            - use a number: 0 = steady; 1 = windfield; 2 = hubheight
-ShearTry.bts                             WNDNAME            - filename of the turbsim input file or hubheight file (with extension), leave blank if unused
+ShearReal.bts                            WNDNAME            - filename of the turbsim input file or hubheight file (with extension), leave blank if unused
 0                                        STITCHINGTYPE      - the windfield stitching type; 0 = periodic; 1 = mirror
 1                                        WINDAUTOSHIFT      - the windfield shifting automatically based on rotor diameter; 0 = false; 1 = true
 0.00                                     SHIFTTIME          - the windfield is shifted by this time if WINDAUTOSHIFT = 0

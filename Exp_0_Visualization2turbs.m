@@ -7,9 +7,9 @@ addpath('.\Functions');
 %% Data file (Chage this accordingly)
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2Turbines\';
-basefile = '2Turbines_Baseline_TI6.mat';
-OLfileName = '2Turbines_OL_Helix_TI6_mag3.mat';
-CLfileName = '2Turbines_CL_Helix_TI6_mag3.mat';
+basefile = '2Turbines_Baseline_Shear0.3.mat';
+OLfileName = '2Turbines_OL_Helix_Shear0.3_mag3.mat';
+CLfileName = '2Turbines_CL_Helix_Shear0.3_mag3.mat';
 
 Baseline = load([turbineName caseName basefile]);
 OL = load([turbineName caseName OLfileName]);
@@ -21,6 +21,7 @@ U_inflow = 10;
 timeStep = 0.1;
 filter = 1000;
 simLength = length(Baseline.Cp_store);
+DeadtimeDelay = 112;
 
 % Use this as a reference if want to show sth else 
 % CL.r = zeros(simLength, 2);
@@ -42,8 +43,8 @@ hold on
 plot(t, OL.HF_helixCenter_filtered(filter:end, 2), '--', 'Color',color2,'LineWidth', lw)
 plot(t, CL.HF_helixCenter_filtered(filter:end, 1), 'Color',color1, 'LineWidth', lw)
 plot(t, CL.HF_helixCenter_filtered(filter:end, 2), 'Color',color2, 'LineWidth', lw)
-plot(t, CL.r(filter:end, 2), 'k:', 'LineWidth', lw)
-plot(t, CL.r(filter:end, 2), 'k:', 'LineWidth', lw)
+plot(t, delayseq(CL.r(filter:end, 1), DeadtimeDelay), 'k:', 'LineWidth', lw)
+plot(t, delayseq(CL.r(filter:end, 2), DeadtimeDelay), 'k:', 'LineWidth', lw)
 yline(0, '--', 'LineWidth', lw)
 hold off
 title('Output: Helix Frame')
@@ -51,7 +52,7 @@ xlim([0 t(end)])
 xlabel('Time [s]')
 ylim([-5 15])
 ylabel('Magnitude [m]')
-legend('z^e_b','y^e_b','z^e','y^e','r_z','r_y','Location','southeast')
+legend('z^e_b','y^e_b','z^e','y^e','r_z','r_y','Location','southeastoutside')
 subplot(2, 2, 4)
 plot(t, OL.FF_helixCenter_filtered(filter:end, 1), '--','Color',color1, 'LineWidth', lw)
 hold on
@@ -64,7 +65,7 @@ xlim([0 t(end)])
 xlabel('Time [s]')
 ylim([-50 150])
 ylabel('Position [m]')
-legend('z^e_b','y^e_b','z^e','y^e','Location','southeast')
+legend('z^e_b','y^e_b','z^e','y^e','Location','southeastoutside')
 setfigpaper('Width',[40,0.5],'Interpreter','tex','FontSize',15,'linewidth',lw)
 
 % Control Input
@@ -81,7 +82,7 @@ xlim([0 t(end)])
 xlabel('Time [s]')
 ylim([-1 10])
 ylabel('Magnitude [deg]')
-legend('\beta^e_{tilt,b}','\beta^e_{yaw,b}','\beta^e_{tilt}','\beta^e_{yaw}','Location','southeast')
+legend('\beta^e_{tilt,b}','\beta^e_{yaw,b}','\beta^e_{tilt}','\beta^e_{yaw}','Location','southeastoutside')
 subplot(2, 2, 3)
 plot(t, OL.FF_beta(filter:end, 1), '--','Color',color1, 'LineWidth', lw)
 hold on
@@ -94,7 +95,7 @@ xlim([0 t(end)])
 xlabel('Time [s]')
 ylim([-12.5 12.5])
 ylabel('Magnitude [deg]')
-legend('\beta_{tilt,b}','\beta_{yaw,b}','\beta_{tilt}','\beta_{yaw}','Location','southeast')
+legend('\beta_{tilt,b}','\beta_{yaw,b}','\beta_{tilt}','\beta_{yaw}','Location','southeastoutside')
 setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',15,'linewidth',lw)
 
 %% ============== Hub Jet Trajectory

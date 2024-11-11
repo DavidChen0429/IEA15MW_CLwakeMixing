@@ -14,10 +14,12 @@ sys = buf_sys.OLi;
 G = tf(buf_sys.OLi);        % transfer matrix 
 
 %% Basic system property
-eig(A)
-length(A)
-rank(ctrb(A, B))    
-rank(obsv(A, C))
+fprintf('======== System property \n');
+fprintf(' System Dimension: %.0f \n', size(A, 1));
+fprintf(' Ctrb Matrix Rank: %.0f \n', rank(ctrb(A, B)));
+fprintf(' Obsv Matrix Rank: %.0f \n', rank(obsv(A, C)));
+fprintf(' Eigenvalues of A: \n');
+disp(eig(A));
 
 %% Load data
 trainData = 'train_240min_1bw_noise1%_AzimuthOffset96.mat'; 

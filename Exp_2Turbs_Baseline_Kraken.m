@@ -23,7 +23,7 @@ simTime = 6000;     % in timestep, actual time is simTime*timestep(Q-blade defin
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 saveOption = 'Y';
-windtype = 'TI6'; % Check .sim file (right. bts file) !!!!!!! 
+windtype = 'TI6&Shear0.2'; % Check .sim file (right. bts file) !!!!!!! 
 
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2Turbines\';
