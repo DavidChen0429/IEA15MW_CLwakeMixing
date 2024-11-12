@@ -23,6 +23,9 @@ figure('Name', 'Bandwidth See', 'NumberTitle', 'off', 'Position', [100, 100, 100
 plot(t, Baseline.HF_helixCenter_filtered(filterIndex:end, 1), 'LineWidth',lw);
 hold on
 plot(t, Baseline.HF_helixCenter_filtered(filterIndex:end, 2), 'LineWidth',lw);
+plot(t, Baseline.HF_beta(filterIndex:end, 1), 'k:','LineWidth',lw);
+plot(t, Baseline.HF_beta(filterIndex:end, 2), 'k:','LineWidth',lw);
+
 yline(0, '--', 'LineWidth', 1)
 hold off;
 xlabel('Time [s]')
@@ -30,5 +33,5 @@ ylabel('Magnitude [m]')
 title('Step Response')
 xlim([0 200])
 ylim([-1 5])
-legend('z^{e}', 'y^{e}','Location','southeast')
+legend('z^{e}', 'y^{e}','\beta^e_{tilt}','\beta^e_{yaw}','Location','southeastoutside')
 setfigpaper('Width',[30,0.25],'Interpreter','tex','FontSize',20,'linewidth',2)
