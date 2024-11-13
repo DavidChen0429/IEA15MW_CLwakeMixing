@@ -81,7 +81,7 @@ end
 
 %% Check Result
 showFreqOption = 'N';
-showFreq2Option = 'Y';
+showFreq2Option = 'N';
 showSingularValue = 'N';
 showTimeOption = 'N';
 showNyquist = 'N';
@@ -125,6 +125,8 @@ if strcmp(showFreq2Option, 'Y')
     figure('Name', 'Weight Compliance', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
     bodemag(Wp*S_mimo, Wu*U_mimo)
     legend('S','U','Location','southeast')
+    norm(Wp*S_mimo, inf)
+    norm(Wu*U_mimo, inf)
 end
 
 % Singular Value
