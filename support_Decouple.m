@@ -13,6 +13,10 @@ D = buf_sys.OLi.D;
 sys = buf_sys.OLi;
 G = tf(buf_sys.OLi);        % transfer matrix 
 
+decoupleOption = 'bw'; % ss, bw
+freqOption = 'N';
+timeOption = 'Y';
+
 %% Basic system property
 fprintf('======== System property \n');
 fprintf(' System Dimension: %.0f \n', size(A, 1));
@@ -110,11 +114,14 @@ testCoupling(OLi3, bw, timeStep);
 
 %% Compare result
 yi2_train = lsim(buf_sys.OLi,us,t_train); % testing set
-% yi2d_train = lsim(OLi,us,t_train); % ss decouple 
-yi2d_train = lsim(OLi2,us,t_train); % bw decouple 
 yi2_test = lsim(buf_sys.OLi,us2,t_test); % testing set
-% yi2d_test = lsim(OLi,us2,t_test); % ss decouple 
-yi2d_test = lsim(OLi2,us2,t_test); % bw decouple 
+if strcmp(decoupleOption, 'ss')
+    yi2d_train = lsim(OLi,us,t_train); % ss decouple 
+    yi2d_test = lsim(OLi,us2,t_test); % ss decouple 
+elseif strcmp(decoupleOption, 'bw')
+    yi2d_train = lsim(OLi2,us,t_train); % bw decouple 
+    yi2d_test = lsim(OLi2,us2,t_test); % bw decouple 
+end
 
 % % VAF
 % disp('=================================================')
@@ -128,62 +135,66 @@ yi2d_test = lsim(OLi2,us2,t_test); % bw decouple
 % vaf(ys2, yi2d2_test)  
 
 %% Frequency Domain Fitting Result
-lw = 1;
-[Ga,ws] = spa_avf(us,ys,timeStep,6,[],[],'hamming');
-Ga = frd(Ga,ws);
-figure('Name', 'Frequence Response', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-% bodemag(buf_sys.OLi, OLi, OLi2, Ga);
-% bode(Ga, buf_sys.OLi, OLi, OLi2);
-bode(buf_sys.OLi, OLi, OLi2);
-hold on
-axesHandles = findall(gcf, 'Type', 'axes');
-for k = 1:length(axesHandles)
-    yline(axesHandles(k), 0, 'k--', 'LineWidth', lw);  
+if strcmp(freqOption, 'Y')
+    lw = 2;
+    [Ga,ws] = spa_avf(us,ys,timeStep,6,[],[],'hamming');
+    Ga = frd(Ga,ws);
+    figure('Name', 'Frequence Response', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+    % bodemag(buf_sys.OLi, OLi, OLi2, Ga);
+    % bode(Ga, buf_sys.OLi, OLi, OLi2);
+    bode(buf_sys.OLi, OLi, OLi2);
+    hold on
+    axesHandles = findall(gcf, 'Type', 'axes');
+    for k = 1:length(axesHandles)
+        yline(axesHandles(k), 0, 'k--', 'LineWidth', lw);  
+    end
+    % Don't forget to convert to Hz when using below to show bw !!!
+    xline(axesHandles(3), bw, 'k--', 'LineWidth', lw);
+    xline(axesHandles(5), bw, 'k--', 'LineWidth', lw);
+    xline(axesHandles(7), bw, 'k--', 'LineWidth', lw);
+    xline(axesHandles(9), bw, 'k--', 'LineWidth', lw);
+    xline(axesHandles(2), bw, 'k--', 'LineWidth', lw);
+    xline(axesHandles(4), bw, 'k--', 'LineWidth', lw);
+    xline(axesHandles(6), bw, 'k--', 'LineWidth', lw);
+    xline(axesHandles(8), bw, 'k--', 'LineWidth', lw);
+    hold off;
+    grid on
+    % legend('Real', 'Original Sys','Ss', 'Bw','Location','southeast');
+    legend('Original','Steady-state', 'Bandwidth','Location','southeast');
+    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',15,'linewidth',lw)
+    
+    [U,S,V] = svd(abs(G_bw));
 end
-% Don't forget to convert to Hz when using below to show bw !!!
-xline(axesHandles(3), bw, 'k--', 'LineWidth', lw);
-xline(axesHandles(5), bw, 'k--', 'LineWidth', lw);
-xline(axesHandles(7), bw, 'k--', 'LineWidth', lw);
-xline(axesHandles(9), bw, 'k--', 'LineWidth', lw);
-xline(axesHandles(2), bw, 'k--', 'LineWidth', lw);
-xline(axesHandles(4), bw, 'k--', 'LineWidth', lw);
-xline(axesHandles(6), bw, 'k--', 'LineWidth', lw);
-xline(axesHandles(8), bw, 'k--', 'LineWidth', lw);
-hold off;
-grid on
-% legend('Real', 'Original Sys','Ss', 'Bw','Location','southeast');
-legend('Original','Steady-state', 'Bandwidth','Location','southeast');
-setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',15,'linewidth',lw)
-
-[U,S,V] = svd(abs(G_bw));
 
 %% Test Set
-lw = 1;
-figure('Name', 'Time-domain Response', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-subplot(2, 1, 1)
-plot((1:length(us2)) * timeStep, us2(1, :), 'm', 'LineWidth', lw)
-hold on 
-plot((1:length(us2)) * timeStep, us2(2, :), 'b', 'LineWidth', lw)
-yline(0, '--', 'LineWidth', lw)
-hold off
-xlabel('Time [s]')
-xlim([0, length(us2)*timeStep])
-ylabel('Magnitude [m]')
-legend('\beta^e_{tilt}', '\beta^e_{yaw}','Location','southeast')
-title('Decouple Result -- Input')
-
-% For already decoupled system
-subplot(2, 1, 2)
-plot((1:length(yi2_test)) * timeStep, yi2_test(:, 1),'m--', 'LineWidth', lw)
-hold on
-plot((1:length(yi2_test)) * timeStep, yi2_test(:, 2),'b--', 'LineWidth', lw)
-plot((1:length(yi2d_test)) * timeStep, yi2d_test(:, 1),'m', 'LineWidth', lw)
-plot((1:length(yi2d_test)) * timeStep, yi2d_test(:, 2),'b', 'LineWidth', lw)
-yline(0, '--', 'LineWidth', lw)
-hold off
-xlabel('Time [s]')
-xlim([0, length(yi2_test)*timeStep])
-ylabel('Magnitude [m]')
-legend('z^e','y^e','z^e_d','y^e_d','Location','southeast')
-title('Decouple Result -- Output')
-setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',20,'linewidth',lw)
+if strcmp(timeOption, 'Y')
+    lw = 2;
+    figure('Name', 'Time-domain Response', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+    subplot(2, 1, 1)
+    plot((1:length(us2)) * timeStep, us2(1, :), 'm', 'LineWidth', lw)
+    hold on 
+    plot((1:length(us2)) * timeStep, us2(2, :), 'b', 'LineWidth', lw)
+    yline(0, '--', 'LineWidth', lw)
+    hold off
+    xlabel('Time [s]')
+    xlim([0, length(us2)*timeStep])
+    ylabel('Magnitude [deg]')
+    legend('\beta^e_{tilt}', '\beta^e_{yaw}','Location','southeast')
+    title('Decouple Result -- Input')
+    
+    % For already decoupled system
+    subplot(2, 1, 2)
+    plot((1:length(yi2_test)) * timeStep, yi2_test(:, 1),'m--', 'LineWidth', lw)
+    hold on
+    plot((1:length(yi2_test)) * timeStep, yi2_test(:, 2),'b--', 'LineWidth', lw)
+    plot((1:length(yi2d_test)) * timeStep, yi2d_test(:, 1),'m', 'LineWidth', lw)
+    plot((1:length(yi2d_test)) * timeStep, yi2d_test(:, 2),'b', 'LineWidth', lw)
+    yline(0, '--', 'LineWidth', lw)
+    hold off
+    xlabel('Time [s]')
+    xlim([0, length(yi2_test)*timeStep])
+    ylabel('Magnitude [m]')
+    legend('z^e','y^e','z^e_d','y^e_d','Location','southeast')
+    title('Decouple Result -- Output')
+    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',20,'linewidth',lw)
+end
