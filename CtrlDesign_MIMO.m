@@ -20,6 +20,13 @@ G = tf(buf_sys.OLi);        % transfer matrix
 timeStep = 0.1;
 DesignOption = 'Matrix2';
 
+% Check result option
+showFreqOption = 'Y';       % BD of S, T, U, L
+showFreq2Option = 'N';      % BD of WpS, WuU
+showSingularValue = 'N';    % Singular value of S, T
+showTimeOption = 'N';       % Step response
+showNyquist = 'N';          % Nyquist stability check
+
 % Basic system property
 fprintf('======== System property \n');
 fprintf(' System Dimension: %.0f \n', size(A, 1));
@@ -28,7 +35,7 @@ fprintf(' Obsv Matrix Rank: %.0f \n', rank(obsv(A, C)));
 fprintf(' Eigenvalues of A: \n');
 disp(eig(A));
 
-% H infinity Control Design
+% =========== H infinity Control Design
 if strcmp(DesignOption, 'Matrix1')
     W_p = tf([1, 1.6], [100, 1]);  % Emphasizes performance and disturbance rejection
     W_t = tf([0.01, 1], [6, 1]);   % Emphasizes robustness and noise rejection
@@ -79,13 +86,7 @@ elseif strcmp(DesignOption, 'Matrix2')
     sys_cl = feedback(sys, K);
 end
 
-%% Check Result
-showFreqOption = 'N';
-showFreq2Option = 'N';
-showSingularValue = 'N';
-showTimeOption = 'N';
-showNyquist = 'N';
-
+% =========== Check Result
 % Frequency Response
 bwG11 = calculateBandwidth(G(1, 1));
 bwG22 = calculateBandwidth(G(2, 2));
@@ -100,15 +101,10 @@ L_mimo.OutputName = {'z_e','y_e'};
 % Frequency Response
 if strcmp(showFreqOption, 'Y')
     figure('Name', 'Frequence Result', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-    bode(L_mimo, S_mimo, T_mimo, U_mimo)
+    bodemag(S_mimo, T_mimo, U_mimo)
     hold on
     axesHandles = findall(gcf, 'Type', 'axes');
-    % remember to switch the unit to Hz 
-    xline(axesHandles(2), bw, 'k--', 'LineWidth', 1);
-    xline(axesHandles(4), bw, 'k--', 'LineWidth', 1);
-    xline(axesHandles(6), bw, 'k--', 'LineWidth', 1);
-    xline(axesHandles(8), bw, 'k--', 'LineWidth', 1);
-    
+    % remember to switch the unit to Hz     
     xline(axesHandles(3), bw, 'k--', 'LineWidth', 1);
     xline(axesHandles(5), bw, 'k--', 'LineWidth', 1);
     xline(axesHandles(7), bw, 'k--', 'LineWidth', 1);
@@ -116,7 +112,7 @@ if strcmp(showFreqOption, 'Y')
     hold off
     grid on
     title('Frequency Response of MIMO System')
-    legend('L', 'S', 'T', 'U','\omega_b', 'Location','southeast')
+    legend('S', 'T', 'U','\omega_b', 'Location','southeast')
     % setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',20,'linewidth',2)
 end
 
