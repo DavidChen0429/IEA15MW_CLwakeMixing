@@ -22,7 +22,7 @@ end
 simTime = 6000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
-mag = -1; % 2, 3, 99(customize), -1(doesn't work)
+mag = 3; % 2, 3, 99(customize), -1(doesn't work)
 referenceType = 'ramp&stop'; % step, ramp, ramp&stop, step&step, zero, customize&step, customize&ramp
 Trigger = ceil(simTime/5);      % Time that ctrl is triggered
 HelixCycle = 1/(0.3*10/126) * (1/timeStep);
@@ -132,12 +132,25 @@ yc = zeros(simTime, 2);     % combined output
 xM = zeros(simTime+1, size(decoupled_sys.A, 1));
 xMd = zeros(simTime+1, size(decoupled_delayed_sys.A, 1));
 
-% Controller Design
-W_s = tf([1, 1.6], [100, 1]);  % Emphasizes performance and disturbance rejection
-W_t = tf([1, 1], [5, 1]);  % Emphasizes robustness and noise rejection
-W_s_d = c2d(W_s, timeStep, 'tustin');
-W_t_d = c2d(W_t, timeStep, 'tustin');
-P = augw(decoupled_sys, W_s_d, [], W_t_d);  % augw creates the weighted augmented plant
+% % Controller Design
+Wp = tf([1, 1.6], [100, 1]);  % Emphasizes performance and disturbance rejection
+Wt = tf([1, 1], [5, 1]);  % Emphasizes robustness and noise rejection
+Wp_d = c2d(Wp, timeStep, 'tustin');
+Wt_d = c2d(Wt, timeStep, 'tustin');
+P = augw(decoupled_sys, Wp_d, [], Wt_d);  % augw creates the weighted augmented plant
+
+% H inf 2
+% Mp = 50;                % Bound on high freq
+% Ap = 2;               % Bound on low freq
+% omega_cl = 0.02;        % Closed-loop bandwidth
+% Wp0 = tf([1/Mp, omega_cl], [1, omega_cl*Ap]);   % Emphasizes performance and disturbance rejection
+% Wu0 = tf([1, 1], [50, 1]);
+% Wp_d = c2d(Wp0, timeStep, 'tustin');
+% Wu_d = c2d(Wu0, timeStep, 'tustin');
+% Wp = blkdiag(Wp_d, Wp_d);
+% Wu = blkdiag(Wu_d, Wu_d);
+% P = augw(decoupled_sys, Wp, Wu, 0);  % W1:Wp, W2:Wu, W3:Wt.
+
 ncont = 2; 
 nmeas = 2; 
 [K_hinf,CL,gamma] = hinfsyn(P,nmeas,ncont);
@@ -459,7 +472,7 @@ title('Center HF')
 % legend('z_e', 'y_e', 'z_{e,f}', 'y_{e,f}')
 legend('z_{e,f}', 'y_{e,f}')
 
-ringVisualization2(LiDAR_data, D_NREL5MW)
+% ringVisualization2(LiDAR_data, D_NREL5MW)
 
 %% Unload Library 
 % unloadlibrary 'QBladeDLL'

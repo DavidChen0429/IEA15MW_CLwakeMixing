@@ -6,7 +6,9 @@ clear
 close all
 addpath('.\Functions');
 
-%% Load model
+% Y dB = 20log10(X) 
+
+% Load model
 buf_sys = load('Model\RightTransform_Azimuth96\ModelOrder4_noise1p_opposite_decoupled.mat');
 A = buf_sys.OLi.A;
 B = buf_sys.OLi.B;
@@ -21,65 +23,76 @@ timeStep = 0.1;
 DesignOption = 'Matrix2';
 
 % Check result option
-showFreqOption = 'Y';       % BD of S, T, U, L
+showBasicOption = 'N';      % Basic property
+showController = 'Y';
+showFreqOption = 'N';       % BD of S, T, U, L
 showFreq2Option = 'N';      % BD of WpS, WuU
 showSingularValue = 'N';    % Singular value of S, T
-showTimeOption = 'N';       % Step response
+showTimeOption = 'Y';       % Step response
+showIteraitve = 'N';
 showNyquist = 'N';          % Nyquist stability check
 
 % Basic system property
-fprintf('======== System property \n');
-fprintf(' System Dimension: %.0f \n', size(A, 1));
-fprintf(' Ctrb Matrix Rank: %.0f \n', rank(ctrb(A, B)));
-fprintf(' Obsv Matrix Rank: %.0f \n', rank(obsv(A, C)));
-fprintf(' Eigenvalues of A: \n');
-disp(eig(A));
+if strcmp(showBasicOption, 'Y')
+    fprintf('======== System property \n');
+    fprintf(' System Dimension: %.0f \n', size(A, 1));
+    fprintf(' Ctrb Matrix Rank: %.0f \n', rank(ctrb(A, B)));
+    fprintf(' Obsv Matrix Rank: %.0f \n', rank(obsv(A, C)));
+    fprintf(' Eigenvalues of A: \n');
+    disp(eig(A));
+end
 
-% =========== H infinity Control Design
-if strcmp(DesignOption, 'Matrix1')
-    W_p = tf([1, 1.6], [100, 1]);  % Emphasizes performance and disturbance rejection
-    W_t = tf([0.01, 1], [6, 1]);   % Emphasizes robustness and noise rejection
-    W_u = tf([1, 1], [50, 1]);     % Emphasizes input magnitude  
-    % ====== Working weight function
+% Weight function design
+% ====== Working weight function
     % W_p = tf([1, 1.6], [100, 1]);  % Emphasizes performance and disturbance rejection
     % W_t = tf([0.01, 1], [6, 1]);   % Emphasizes robustness and noise rejection
     % W_u = tf([1, 1], [50, 1]);     % Emphasizes input magnitude 
-    
-    W_p_d = c2d(W_p, timeStep, 'tustin');
-    W_t_d = c2d(W_t, timeStep, 'tustin');
-    W_u_d = c2d(W_u, timeStep, 'tustin');
-    P = augw(sys, W_p_d, W_u_d, W_t_d);  % augw creates the weighted augmented plant
+% ====== Working weight function
+    % Wp0 = tf([1, 0.5], [50, 1]);  % Emphasizes performance and disturbance rejection
+    % Wu0 = tf([1, 1], [50, 1]);     % Emphasizes input magnitude 
+
+% 1. Wp(z)
+Mp = 10;                % Bound on high freq
+Ap = 1.55;               % Bound on low freq
+omega_cl = 0.02;        % Closed-loop bandwidth
+Wp0 = tf([1/Mp, omega_cl], [1, omega_cl*Ap]);   % Emphasizes performance and disturbance rejection
+% 1. Wu(z)
+omega_c = 0.5;
+B = 10;
+Wu0 = 0.4*B^2*tf([1, sqrt(2)*omega_c, omega_c^2], [1, sqrt(2)*B*omega_c, (B*omega_c)^2]);     % Emphasizes input magnitude 
+% 3. Wt(z)
+Wt0 = tf([1, 1], [5, 1]);   % Emphasizes robustness and noise rejection
+
+close all
+% =========== H infinity Control Design
+if strcmp(DesignOption, 'Matrix1')  
+    Wp_d = c2d(Wp0, timeStep, 'tustin');
+    Wt_d = c2d(Wt0, timeStep, 'tustin');
+    Wu_d = c2d(Wu0, timeStep, 'tustin');
+
+    P = augw(sys, Wp_d, Wu_d, Wt_d);  % augw creates the weighted augmented plant
     ncont = 2; 
     nmeas = 2; 
     [K,CL,gamma] = hinfsyn(P,nmeas,ncont);
     sys_cl = feedback(sys, K);
 elseif strcmp(DesignOption, 'Matrix2')
-    close all
-    wb = 0.1;
-    Wp0 = tf([1, 0.5], [50, 1]);  % Emphasizes performance and disturbance rejection
-    Wu0 = tf([1, 1], [50, 1]);     % Emphasizes input magnitude  
-    % Wt0 = tf([1, 0.1], [1, 1]);
-    % ====== Working weight function
-    % Wp0 = tf([1, 0.5], [50, 1]);  % Emphasizes performance and disturbance rejection
-    % Wu0 = tf([1, 1], [50, 1]);     % Emphasizes input magnitude  
     Wp_d = c2d(Wp0, timeStep, 'tustin');
     Wu_d = c2d(Wu0, timeStep, 'tustin');
-    % Wt_d = c2d(Wt0, timeStep, 'tustin');
     Wp = blkdiag(Wp_d, Wp_d);
     Wu = blkdiag(Wu_d, Wu_d);
-    % Wt = blkdiag(Wt_d, Wt_d);
-    
-    % systemnames = 'G Wp Wu';
-    % inputvar = '[w(2); u(2)]';
-    % input_to_G = '[u]';
-    % input_to_Wu = '[u]';
-    % input_to_Wp = '[w-G]';
-    % outputvar = '[Wp; Wu; w-G]';
-    % sysoutname = 'P';
-    % sysic;
     
     P = augw(sys, Wp, Wu, 0);  % W1:Wp, W2:Wu, W3:Wt.
-    % P = augw(sys, Wp, Wu, Wt);  % W1:Wp, W2:Wu, W3:Wt.
+    ncont = 2; 
+    nmeas = 2; 
+    [K,CL,gamma] = hinfsyn(P,nmeas,ncont);
+    sys_cl = feedback(sys, K);
+elseif strcmp(DesignOption, 'Matrix3')
+    Wp_d = c2d(Wp0, timeStep, 'tustin');
+    Wt_d = c2d(Wt0, timeStep, 'tustin');
+    Wp = blkdiag(Wp_d, Wp_d);
+    Wt = blkdiag(Wt_d, Wt_d);
+    
+    P = augw(sys, Wp, 0, Wt);  % W1:Wp, W2:Wu, W3:Wt.
     ncont = 2; 
     nmeas = 2; 
     [K,CL,gamma] = hinfsyn(P,nmeas,ncont);
@@ -98,29 +111,41 @@ U_mimo = feedback(K, G);            % disturbance --- negative control input
 L_mimo.InputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
 L_mimo.OutputName = {'z_e','y_e'};
 
+% Show controller property
+if strcmp(showController, 'Y')
+    K.InputName = {'e_z', 'e_y'};
+    K.OutputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
+    figure('Name', 'Controller BD', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+    bode(K)
+    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',20,'linewidth',2)
+end
+
 % Frequency Response
 if strcmp(showFreqOption, 'Y')
     figure('Name', 'Frequence Result', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
     bodemag(S_mimo, T_mimo, U_mimo)
     hold on
     axesHandles = findall(gcf, 'Type', 'axes');
-    % remember to switch the unit to Hz     
-    xline(axesHandles(3), bw, 'k--', 'LineWidth', 1);
-    xline(axesHandles(5), bw, 'k--', 'LineWidth', 1);
-    xline(axesHandles(7), bw, 'k--', 'LineWidth', 1);
-    xline(axesHandles(9), bw, 'k--', 'LineWidth', 1);
+%     % remember to switch the unit to Hz     
+%     xline(axesHandles(3), bw, 'k--', 'LineWidth', 1);
+%     xline(axesHandles(5), bw, 'k--', 'LineWidth', 1);
+%     xline(axesHandles(7), bw, 'k--', 'LineWidth', 1);
+%     xline(axesHandles(9), bw, 'k--', 'LineWidth', 1);
     hold off
     grid on
     title('Frequency Response of MIMO System')
-    legend('S', 'T', 'U','\omega_b', 'Location','southeast')
+    legend('S','T','U','Location','southeast')
     % setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',20,'linewidth',2)
 end
 
 % Check bounded
 if strcmp(showFreq2Option, 'Y')
     figure('Name', 'Weight Compliance', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-    bodemag(Wp*S_mimo, Wu*U_mimo)
-    legend('S','U','Location','southeast')
+    bodemag(1/Wp, S_mimo)
+    hold on
+    bodemag(1/Wu, U_mimo)
+    hold off
+    legend('1/Wp','S','1/Wu','U','Location','southeast')
     norm(Wp*S_mimo, inf)
     norm(Wu*U_mimo, inf)
 end
@@ -132,7 +157,7 @@ if strcmp(showSingularValue, 'Y')
     hold on
     sigma(T_mimo);
     hold off
-    legend('S','U', 'Location','southeast')
+    legend('S','U','Location','southeast')
     
     % Study the direction 
     [S, wout] = sigma(G); % singular value, rad/s
@@ -156,8 +181,9 @@ if strcmp(showTimeOption, 'Y')
     yline(axesHandles(3), 0, 'k--', 'LineWidth', 2);
     yline(axesHandles(2), 1, 'k--', 'LineWidth', 2);
     hold off
-    legend('OL', 'CL')
-    grid on
+    legend('OL','CL','Location','southeast')
+    xlabel('Time [s]')
+    ylabel('Magnitude [m]')
 %     setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',20,'linewidth',2)
 end
 
@@ -165,6 +191,43 @@ end
 if strcmp(showNyquist, 'Y')
     figure('Name', 'Nyquist Plot', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
     nyquist(L_mimo)
+end
+
+% Check Iterative Time Response
+if strcmp(showIteraitve, 'Y')
+    A_cl = sys_cl.A;
+    B_cl = sys_cl.B;
+    C_cl = sys_cl.C;
+    D_cl = sys_cl.D;
+    t = 0:timeStep:200;
+    x = zeros(length(A_cl), length(t)+1);
+    y = zeros(length(D_cl), length(t)); 
+    r = [5 * ones(1, length(t)+1);
+         2 * ones(1, length(t)+1)];
+    u = r;
+    for i = 1:length(t)
+        x(:, i+1) = A_cl * x(:, i) + B_cl * u(:, i);
+        y(:, i) = C_cl * x(:, i) + D_cl * u(:, i); 
+    end
+    figure('Name', 'Iterative Debug', 'NumberTitle', 'off', 'Position', [500, 450, 400, 300]);
+    plot(t, y(1,:));  % First output
+    hold on;
+    plot(t, y(2,:));  % Second output
+    hold off
+    xlabel('Time (s)');
+    ylabel('System Output');
+    title('Controlled CL System');
+    legend('z_e', 'y_e');
+    grid on;
+end
+
+%% Analyzing the non-minimum phase zero 
+zeros_ij = tzero(G);
+nmp_zeros = zeros_ij(abs(zeros_ij) > 1);
+for k = 1:length(nmp_zeros)
+    zero = nmp_zeros(k);
+    omega = angle(zero);
+    freq_hz = (omega * 1/timeStep) / (2 * pi);
 end
 
 %% Step Response Implementation: Default vs. Iterative
@@ -176,18 +239,13 @@ figure('Name', 'Default Way', 'NumberTitle', 'off', 'Position', [100, 450, 400, 
 [y, tOut] = step(closed_loop_sys, t);
 title('Controlled CL System');
 plot(tOut, y(:, 1) + y(:, 3))
-% plot(tOut, y(:, 1))
 hold on
 plot(tOut, y(:, 2) + y(:, 4))
-% plot(tOut, y(:, 2))
-% plot(tOut, y(:, 3))
-% plot(tOut, y(:, 4))
 hold off
 xlabel('Time (s)');
 ylabel('System Output');
 title('Controlled CL System');
 legend('z_e', 'y_e');
-% legend('\beta^e_{tilt} - z_e', '\beta^e_{tilt} - y_e', '\beta^e_{yaw} - z_e', '\beta^e_{yaw} - y_e');
 grid on;
 
 % Iterative debug (Below code is right)
@@ -198,7 +256,6 @@ D_cl = closed_loop_sys.D;
 t = 0:timeStep:200;
 x = zeros(length(A_cl), length(t)+1);
 y = zeros(length(D_cl), length(t)); 
-r = 1*ones(length(B(1, :)), length(t)+1); 
 r = [5 * ones(1, length(t)+1);
      2 * ones(1, length(t)+1)];
 u = r;
