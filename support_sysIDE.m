@@ -129,14 +129,14 @@ figure('Name', 'Frequence Response', 'NumberTitle', 'off', 'Position', [100, 100
 bode(Ga, OLi);
 hold on
 axesHandles = findall(gcf, 'Type', 'axes');
-yline(axesHandles(3), 0, 'k', 'LineWidth', lw);
-yline(axesHandles(5), 0, 'k', 'LineWidth', lw);
-yline(axesHandles(7), 0, 'k', 'LineWidth', lw);
-yline(axesHandles(9), 0, 'k', 'LineWidth', lw);
-yline(axesHandles(2), 0, 'k', 'LineWidth', lw);
-yline(axesHandles(4), 0, 'k', 'LineWidth', lw);
-yline(axesHandles(6), 0, 'k', 'LineWidth', lw);
-yline(axesHandles(8), 0, 'k', 'LineWidth', lw);
+yline(axesHandles(3), 0, 'k--', 'LineWidth', lw);
+yline(axesHandles(5), 0, 'k--', 'LineWidth', lw);
+yline(axesHandles(7), 0, 'k--', 'LineWidth', lw);
+yline(axesHandles(9), 0, 'k--', 'LineWidth', lw);
+yline(axesHandles(2), 0, 'k--', 'LineWidth', lw);
+yline(axesHandles(4), 0, 'k--', 'LineWidth', lw);
+yline(axesHandles(6), 0, 'k--', 'LineWidth', lw);
+yline(axesHandles(8), 0, 'k--', 'LineWidth', lw);
 % Don't forget to convert to Hz when using below to show bw !!!
 xline(axesHandles(3), bw, 'k--', 'LineWidth', lw);
 xline(axesHandles(5), bw, 'k--', 'LineWidth', lw);
@@ -149,7 +149,7 @@ xline(axesHandles(8), bw, 'k--', 'LineWidth', lw);
 hold off;
 grid on;
 legend('Real','Sys-IDE','f_{bw}','Location','southeast');
-% setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',20,'linewidth',lw)
+setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',20,'linewidth',lw)
 
 %% Time Domain Fitting Result (Only testset)
 yi2 = lsim(OLi,us2,t_test); % testing set

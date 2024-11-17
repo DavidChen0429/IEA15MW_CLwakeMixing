@@ -27,7 +27,7 @@ referenceType = 'ramp&stop'; % step, ramp, ramp&stop, step&step, zero, customize
 Trigger = ceil(simTime/5);      % Time that ctrl is triggered
 HelixCycle = 1/(0.3*10/126) * (1/timeStep);
 Endtime = Trigger + 1*HelixCycle;
-saveOption = 'N';
+saveOption = 'Y';
 
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\1Turbine\';
@@ -140,11 +140,14 @@ Wt_d = c2d(Wt, timeStep, 'tustin');
 P = augw(decoupled_sys, Wp_d, [], Wt_d);  % augw creates the weighted augmented plant
 
 % H inf 2
-% Mp = 50;                % Bound on high freq
-% Ap = 2;               % Bound on low freq
+% Mp = 10;                % Bound on high freq
+% Ap = 1.55;               % Bound on low freq
 % omega_cl = 0.02;        % Closed-loop bandwidth
 % Wp0 = tf([1/Mp, omega_cl], [1, omega_cl*Ap]);   % Emphasizes performance and disturbance rejection
-% Wu0 = tf([1, 1], [50, 1]);
+% % 1. Wu(z)
+% omega_c = 0.5;
+% B = 10;
+% Wu0 = 0.4*B^2*tf([1, sqrt(2)*omega_c, omega_c^2], [1, sqrt(2)*B*omega_c, (B*omega_c)^2]);     % Emphasizes input magnitude 
 % Wp_d = c2d(Wp0, timeStep, 'tustin');
 % Wu_d = c2d(Wu0, timeStep, 'tustin');
 % Wp = blkdiag(Wp_d, Wp_d);

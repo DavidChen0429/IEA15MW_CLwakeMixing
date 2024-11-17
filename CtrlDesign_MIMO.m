@@ -7,6 +7,7 @@ close all
 addpath('.\Functions');
 
 % Y dB = 20log10(X) 
+% s_c = (2 / Ts) * (z_d - 1) / (z_d + 1);
 
 % Load model
 buf_sys = load('Model\RightTransform_Azimuth96\ModelOrder4_noise1p_opposite_decoupled.mat');
@@ -24,13 +25,15 @@ DesignOption = 'Matrix2';
 
 % Check result option
 showBasicOption = 'N';      % Basic property
-showController = 'Y';
+showController = 'N';
+showWeight = 'N';
 showFreqOption = 'N';       % BD of S, T, U, L
-showFreq2Option = 'N';      % BD of WpS, WuU
+showFreq2Option = 'Y';      % BD of WpS, WuU
 showSingularValue = 'N';    % Singular value of S, T
-showTimeOption = 'Y';       % Step response
+showTimeOption = 'N';       % Step response
 showIteraitve = 'N';
 showNyquist = 'N';          % Nyquist stability check
+showPerformance = 'Y';
 
 % Basic system property
 if strcmp(showBasicOption, 'Y')
@@ -42,7 +45,14 @@ if strcmp(showBasicOption, 'Y')
     disp(eig(A));
 end
 
-% Weight function design
+% === RHP zero limitations
+% map the discrete zero back to the continuous zero 
+zd = 1.0074 + 0.0158i;
+sd = (2/timeStep)*(zd-1)/(zd+1);
+freq_rad = imag(sd); % Frequency in radians/sec
+freq_hz = freq_rad / (2 * pi); % Frequency in Hz
+
+% === Weight function design
 % ====== Working weight function
     % W_p = tf([1, 1.6], [100, 1]);  % Emphasizes performance and disturbance rejection
     % W_t = tf([0.01, 1], [6, 1]);   % Emphasizes robustness and noise rejection
@@ -65,7 +75,7 @@ Wt0 = tf([1, 1], [5, 1]);   % Emphasizes robustness and noise rejection
 
 close all
 % =========== H infinity Control Design
-if strcmp(DesignOption, 'Matrix1')  
+if strcmp(DesignOption, 'Matrix1')  % tried
     Wp_d = c2d(Wp0, timeStep, 'tustin');
     Wt_d = c2d(Wt0, timeStep, 'tustin');
     Wu_d = c2d(Wu0, timeStep, 'tustin');
@@ -75,7 +85,7 @@ if strcmp(DesignOption, 'Matrix1')
     nmeas = 2; 
     [K,CL,gamma] = hinfsyn(P,nmeas,ncont);
     sys_cl = feedback(sys, K);
-elseif strcmp(DesignOption, 'Matrix2')
+elseif strcmp(DesignOption, 'Matrix2')  % less robustness
     Wp_d = c2d(Wp0, timeStep, 'tustin');
     Wu_d = c2d(Wu0, timeStep, 'tustin');
     Wp = blkdiag(Wp_d, Wp_d);
@@ -86,7 +96,9 @@ elseif strcmp(DesignOption, 'Matrix2')
     nmeas = 2; 
     [K,CL,gamma] = hinfsyn(P,nmeas,ncont);
     sys_cl = feedback(sys, K);
-elseif strcmp(DesignOption, 'Matrix3')
+elseif strcmp(DesignOption, 'Matrix3') % real implementation
+    Wp0 = tf([1, 1.6], [100, 1]);
+    Wt0 = tf([1, 1], [5, 1]);
     Wp_d = c2d(Wp0, timeStep, 'tustin');
     Wt_d = c2d(Wt0, timeStep, 'tustin');
     Wp = blkdiag(Wp_d, Wp_d);
@@ -110,6 +122,8 @@ T_mimo = feedback(L_mimo, eye(2));  % reference --- output
 U_mimo = feedback(K, G);            % disturbance --- negative control input
 L_mimo.InputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
 L_mimo.OutputName = {'z_e','y_e'};
+S_mimo.InputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
+S_mimo.OutputName = {'z_e','y_e'};
 
 % Show controller property
 if strcmp(showController, 'Y')
@@ -117,7 +131,19 @@ if strcmp(showController, 'Y')
     K.OutputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
     figure('Name', 'Controller BD', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
     bode(K)
+    grid on
     setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',20,'linewidth',2)
+
+    figure('Name', 'Controller & U BD', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+    bodemag(K, U_mimo)
+    grid on
+    legend('K','U','Location','southeast')
+    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',20,'linewidth',2)
+end
+
+if strcmp(showWeight, 'Y')
+    figure('Name', 'Weight Functions', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+    bodemag(Wp, Wu);
 end
 
 % Frequency Response
@@ -126,39 +152,63 @@ if strcmp(showFreqOption, 'Y')
     bodemag(S_mimo, T_mimo, U_mimo)
     hold on
     axesHandles = findall(gcf, 'Type', 'axes');
-%     % remember to switch the unit to Hz     
-%     xline(axesHandles(3), bw, 'k--', 'LineWidth', 1);
-%     xline(axesHandles(5), bw, 'k--', 'LineWidth', 1);
-%     xline(axesHandles(7), bw, 'k--', 'LineWidth', 1);
-%     xline(axesHandles(9), bw, 'k--', 'LineWidth', 1);
     hold off
     grid on
     title('Frequency Response of MIMO System')
     legend('S','T','U','Location','southeast')
-    % setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',20,'linewidth',2)
+    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',20,'linewidth',2)
 end
 
 % Check bounded
 if strcmp(showFreq2Option, 'Y')
+    buf = tf([1/Mp, omega_cl], [1, omega_cl*0.625]);
     figure('Name', 'Weight Compliance', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-    bodemag(1/Wp, S_mimo)
+    bodemag(S_mimo,'m');
     hold on
-    bodemag(1/Wu, U_mimo)
+    bodemag(1/Wp,'m--');
+    bodemag(U_mimo,'c');
+    bodemag(1/Wu,'c--');
     hold off
-    legend('1/Wp','S','1/Wu','U','Location','southeast')
-    norm(Wp*S_mimo, inf)
-    norm(Wu*U_mimo, inf)
+    grid on
+    legend('S','1/Wp','U','1/Wu','Location','southeast')
+    Wp_S_norm = norm(Wp*S_mimo, 'inf');
+    Wu_U_norm = norm(Wu*U_mimo, 'inf');
+    disp('Nominal Performance:');
+    disp(['||Wp * S||_inf = ', num2str(Wp_S_norm)]);
+    disp(['||Wu * U||_inf = ', num2str(Wu_U_norm)]);
+    
+    if Wp_S_norm < 1 && Wu_U_norm < 1
+        disp('Nominal Performance: Satisfied.');
+    else
+        disp('Nominal Performance: NOT satisfied.');
+    end
+    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',20,'linewidth',2)
 end
 
 % Singular Value
 if strcmp(showSingularValue, 'Y')
     figure('Name', 'Singular Value', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+    subplot(2, 1, 1)
     sigma(S_mimo);
     hold on
-    sigma(T_mimo);
+    yline(6,'k--')
     hold off
-    legend('S','U','Location','southeast')
-    
+    ylabel('Magnitude [dB]')
+    ylim([-20 10])
+    legend('S','6dB','Location','southeast')
+    grid on
+    subplot(2, 1, 2)
+    sigma(T_mimo);
+    hold on
+    yline(2,'k--')
+    hold off
+    ylabel('Magnitude [dB]')
+    ylim([-100 10])
+    title('')
+    legend('T','2dB','Location','southeast')
+    grid on
+    setfigpaper('Width',[30,0.4],'Interpreter','tex','FontSize',20,'linewidth',2)
+
     % Study the direction 
     [S, wout] = sigma(G); % singular value, rad/s
     condition_number = max(S) ./ min(S);
@@ -190,7 +240,8 @@ end
 % Check Stability (Nyquist)
 if strcmp(showNyquist, 'Y')
     figure('Name', 'Nyquist Plot', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-    nyquist(L_mimo)
+    Dnyq = eye(size(L_mimo)) + L_mimo;
+    nyquist(det(Dnyq));
 end
 
 % Check Iterative Time Response
