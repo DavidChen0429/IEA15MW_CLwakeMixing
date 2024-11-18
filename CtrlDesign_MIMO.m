@@ -28,12 +28,12 @@ showBasicOption = 'N';      % Basic property
 showController = 'N';
 showWeight = 'N';
 showFreqOption = 'N';       % BD of S, T, U, L
-showFreq2Option = 'Y';      % BD of WpS, WuU
+showFreq2Option = 'N';      % BD of WpS, WuU
 showSingularValue = 'N';    % Singular value of S, T
-showTimeOption = 'N';       % Step response
+showTimeOption = 'Y';       % Step response
 showIteraitve = 'N';
 showNyquist = 'N';          % Nyquist stability check
-showPerformance = 'Y';
+showPerformance = 'N';
 
 % Basic system property
 if strcmp(showBasicOption, 'Y')

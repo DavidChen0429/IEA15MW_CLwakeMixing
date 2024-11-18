@@ -9,7 +9,7 @@ UserPath = 'C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\IEA15MW_CLwakeMixing\';
 QBladePath = 'C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\QBladeEE_2.0.6.4\'; 
 SourcePath = [UserPath 'Source\'];
 DllPath = [QBladePath 'QBladeEE_2.0.6.dll'];
-simFile = [SourcePath 'NREL5MW_2turbines.sim'];
+simFile = [SourcePath 'NREL5MW_2turbines_4D.sim'];
 addpath('.\Functions');
 
 loadlibrary(DllPath,'QBladeLibInclude.h','alias','QBladeDLL') 
@@ -31,8 +31,8 @@ saveOption = 'Y';
 
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2Turbines\';
-fileName = ['2Turbines_OL_Helix','_mag', num2str(mag),'.mat'];
-QprName = ['2Turbines_OL_Helix','_mag', num2str(mag),'.qpr'];
+fileName = ['2Turbines_OL_Helix','_mag', num2str(mag),'_4D.mat'];
+QprName = ['2Turbines_OL_Helix','_mag', num2str(mag),'_4D.qpr'];
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file

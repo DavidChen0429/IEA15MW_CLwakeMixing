@@ -9,7 +9,7 @@ UserPath = 'C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\IEA15MW_CLwakeMixing\';
 QBladePath = 'C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\QBladeEE_2.0.6.4\'; 
 SourcePath = [UserPath 'Source\'];
 DllPath = [QBladePath 'QBladeEE_2.0.6.dll'];
-simFile = [SourcePath 'NREL5MW_2turbines_turbulence.sim'];
+simFile = [SourcePath 'NREL5MW_2turbines_turbulence_4D.sim'];
 addpath('.\Functions');
 
 loadlibrary(DllPath,'QBladeLibInclude.h','alias','QBladeDLL') 
@@ -18,7 +18,7 @@ if isempty(m)
     fprintf('Error')
 end
 
-%% Data file 
+%% Data file (Chage this accordingly)
 simTime = 6000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
@@ -28,12 +28,12 @@ Trigger = ceil(simTime/5);      % Time that ctrl is triggered
 HelixCycle = 1/(0.3*10/126) * (1/timeStep);
 Endtime = Trigger + 1*HelixCycle;
 saveOption = 'Y';
-windtype = 'TI6&Shear0.2'; % Check .sim file (right. bts file) !!!!!!! 
+windtype = 'Shear0.2cheat'; % Check .sim file (right. bts file) !!!!!!! 
 
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2Turbines\';
-fileName = ['2Turbines_CL_Helix_', windtype,'_mag', num2str(mag),'.mat'];
-QprName = ['2Turbines_CL_Helix_',windtype,'_mag', num2str(mag),'.qpr'];
+fileName = ['2Turbines_CL_Helix_', windtype,'_mag', num2str(mag),'_4D.mat'];
+QprName = ['2Turbines_CL_Helix_',windtype,'_mag', num2str(mag),'_4D.qpr'];
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
