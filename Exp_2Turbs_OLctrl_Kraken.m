@@ -28,10 +28,10 @@ Trigger = ceil(simTime/5);      % Time that ctrl is triggered
 HelixCycle = 1/(0.3*10/126) * (1/timeStep);
 Endtime = Trigger + 1*HelixCycle;
 saveOption = 'Y';
-windtype = 'Shear0.2cheat'; % Check .sim file (right. bts file) !!!!!!!  
+windtype = 'TI6&Shear0.2'; % Check .sim file (right. bts file) !!!!!!!  
 
 turbineName = '.\Data\NREL5MW\';
-caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2Turbines\';
+caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesNew\';
 fileName = ['2Turbines_OL_Helix_', windtype,'_mag', num2str(mag),'_4D.mat'];
 QprName = ['2Turbines_OL_Helix_',windtype,'_mag', num2str(mag),'_4D.qpr'];
 

@@ -7,7 +7,7 @@ clc
 %% Data file (Chage this accordingly)
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2Turbines\';
-fileName = '2Turbines_OL_Helix_TI6_mag3.mat';
+fileName = '2Turbines_CL_Helix_Shear0.2Cheat_mag3.mat';
 
 Data = load([turbineName caseName fileName]);
 
@@ -15,7 +15,7 @@ Data = load([turbineName caseName fileName]);
 D_NREL5MW = 126;
 U_inflow = 10;
 timeStep = 0.1;
-filter = 3000;  % Steady-state value
+filter = 3500;  % Steady-state value
 simLength = length(Data.Cp_store);
 
 %% Get Data
@@ -63,16 +63,19 @@ fprintf('========== Controlled \n');
 fprintf('The output of Upstream WT:\n');
 fprintf('    Power Production: %.2f [MW]\n', PowerTurb1);
 fprintf('    DEL:\n');
-fprintf('        Blade1 Flapwise: %.2e  [Nm]\n', DELTurb1(1))
-fprintf('        Blade1 Edgewise: %.2e  [Nm]\n', DELTurb1(2))
-fprintf('        Blade2 Flapwise: %.2e  [Nm]\n', DELTurb1(3))
-fprintf('        Blade2 Edgewise: %.2e  [Nm]\n', DELTurb1(4))
-fprintf('        Blade3 Flapwise: %.2e  [Nm]\n', DELTurb1(5))
-fprintf('        Blade3 Edgewise: %.2e  [Nm]\n', DELTurb1(6))
+% fprintf('        Blade1 Flapwise: %.2e  [Nm]\n', DELTurb1(1))
+% fprintf('        Blade1 Edgewise: %.2e  [Nm]\n', DELTurb1(2))
+% fprintf('        Blade2 Flapwise: %.2e  [Nm]\n', DELTurb1(3))
+% fprintf('        Blade2 Edgewise: %.2e  [Nm]\n', DELTurb1(4))
+% fprintf('        Blade3 Flapwise: %.2e  [Nm]\n', DELTurb1(5))
+% fprintf('        Blade3 Edgewise: %.2e  [Nm]\n', DELTurb1(6))
+fprintf('        Average Flapwise: %.2e  [Nm]\n', (DELTurb1(1)+DELTurb1(3)+DELTurb1(5))/3)
+fprintf('        Average Edgewise: %.2e  [Nm]\n', (DELTurb1(2)+DELTurb1(4)+DELTurb1(6))/3)
 fprintf('    PBD:\n');
-fprintf('        Blade1: %.2e [kNm deg]\n', PBDTurb1(1));
-fprintf('        Blade1: %.2e [kNm deg]\n', PBDTurb1(2));
-fprintf('        Blade1: %.2e [kNm deg]\n', PBDTurb1(3));
+% fprintf('        Blade1: %.2e [kNm deg]\n', PBDTurb1(1));
+% fprintf('        Blade2: %.2e [kNm deg]\n', PBDTurb1(2));
+% fprintf('        Blade3: %.2e [kNm deg]\n', PBDTurb1(3));
+fprintf('        Average: %.2e [kNm deg]\n', mean(PBDTurb1));
 % WT2
 PowerTurb2 = calculatePower(filter,Cpturb2_store,D_NREL5MW,U_inflow); % [MW]
 DELTurb2 = calculateDEL(filter, ...
@@ -87,13 +90,16 @@ PBDTurb2 = calculatePBD(filter,PitchAnglesturb2, ...
 fprintf('The output of Downstream WT:\n');
 fprintf('    Power Production: %.2f [MW]\n', PowerTurb2);
 fprintf('    DEL:\n');
-fprintf('        Blade1 Flapwise: %.2e  [Nm]\n', DELTurb2(1))
-fprintf('        Blade1 Edgewise: %.2e  [Nm]\n', DELTurb2(2))
-fprintf('        Blade2 Flapwise: %.2e  [Nm]\n', DELTurb2(3))
-fprintf('        Blade2 Edgewise: %.2e  [Nm]\n', DELTurb2(4))
-fprintf('        Blade3 Flapwise: %.2e  [Nm]\n', DELTurb2(5))
-fprintf('        Blade3 Edgewise: %.2e  [Nm]\n', DELTurb2(6))
+% fprintf('        Blade1 Flapwise: %.2e  [Nm]\n', DELTurb2(1))
+% fprintf('        Blade1 Edgewise: %.2e  [Nm]\n', DELTurb2(2))
+% fprintf('        Blade2 Flapwise: %.2e  [Nm]\n', DELTurb2(3))
+% fprintf('        Blade2 Edgewise: %.2e  [Nm]\n', DELTurb2(4))
+% fprintf('        Blade3 Flapwise: %.2e  [Nm]\n', DELTurb2(5))
+% fprintf('        Blade3 Edgewise: %.2e  [Nm]\n', DELTurb2(6))
+fprintf('        Average Flapwise: %.2e  [Nm]\n', (DELTurb2(1)+DELTurb2(3)+DELTurb2(5))/3)
+fprintf('        Average Edgewise: %.2e  [Nm]\n', (DELTurb2(2)+DELTurb2(4)+DELTurb2(6))/3)
 fprintf('    PBD:\n');
-fprintf('        Blade1: %.2e [kNm deg]\n', PBDTurb2(1));
-fprintf('        Blade1: %.2e [kNm deg]\n', PBDTurb2(2));
-fprintf('        Blade1: %.2e [kNm deg]\n', PBDTurb2(3));
+% fprintf('        Blade1: %.2e [kNm deg]\n', PBDTurb2(1));
+% fprintf('        Blade2: %.2e [kNm deg]\n', PBDTurb2(2));
+% fprintf('        Blade3: %.2e [kNm deg]\n', PBDTurb2(3));
+fprintf('        Average: %.2e [kNm deg]\n', mean(PBDTurb2));

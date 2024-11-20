@@ -30,9 +30,9 @@ Endtime = Trigger + 1*HelixCycle;
 saveOption = 'Y';
 
 turbineName = '.\Data\NREL5MW\';
-caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2Turbines\';
-fileName = ['2Turbines_CL_Helix_',referenceType,'_mag', num2str(mag),'_4D.mat'];
-QprName = ['2Turbines_CL_Helix_',referenceType,'_mag', num2str(mag),'_4D.qpr'];
+caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesNew\'; % 2 for testing
+fileName = ['2Turbines_CL_Helix_',referenceType,'_mag', num2str(mag),'_4D2.mat'];
+QprName = ['2Turbines_CL_Helix_',referenceType,'_mag', num2str(mag),'_4D2.qpr'];
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file

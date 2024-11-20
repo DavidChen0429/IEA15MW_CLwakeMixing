@@ -7,9 +7,30 @@ addpath('.\Functions');
 %% Data file (Chage this accordingly)
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2Turbines\';
-basefile = '2Turbines_Baseline_4D.mat';
-OLfileName = '2Turbines_OL_Helix_mag3_4D.mat';
-CLfileName = '2Turbines_CL_Helix_ramp&stop_mag3_4D.mat';
+
+% Different case
+windCase = 'Uniform'; % Uniform, Shear, Turb, Both, Shear2
+if strcmp(windCase, 'Uniform')
+    basefile = '2Turbines_Baseline.mat';
+    OLfileName = '2Turbines_OL_Helix_mag3.mat';
+    CLfileName = '2Turbines_CL_Helix_ramp&stop_mag3.mat';
+elseif strcmp(windCase, 'Shear')
+    basefile = '2Turbines_Baseline_Shear0.2.mat';
+    OLfileName = '2Turbines_OL_Helix_Shear0.2_mag3.mat';
+    CLfileName = '2Turbines_CL_Helix_Shear0.2_mag3.mat';
+elseif strcmp(windCase, 'Turb')
+    basefile = '2Turbines_Baseline_TI6.mat';
+    OLfileName = '2Turbines_OL_Helix_TI6_mag3.mat';
+    CLfileName = '2Turbines_CL_Helix_TI6_mag3.mat';    
+elseif strcmp(windCase, 'Both')
+    basefile = '2Turbines_Baseline_TI6&Shear0.2.mat';
+    OLfileName = '2Turbines_OL_Helix_TI6&Shear0.2_mag3.mat';
+    CLfileName = '2Turbines_CL_Helix_TI6&Shear0.2_mag3.mat';   
+elseif strcmp(windCase, 'Shear2')
+    basefile = '2Turbines_Baseline_Shear0.2Cheat.mat';
+    OLfileName = '2Turbines_OL_Helix_Shear0.2_mag3.mat';
+    CLfileName = '2Turbines_CL_Helix_Shear0.2_mag3.mat';    
+end
 
 Baseline = load([turbineName caseName basefile]);
 OL = load([turbineName caseName OLfileName]);
@@ -148,3 +169,7 @@ legend('OL Flapwise', 'OL Edgewise','CL Flapwise', 'CL Edgewise', 'Location','no
 setfigpaper('Width',[20,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 
 % === PBD
+% PBD is only compared between the open-loop and closed-loop because
+% baseline does not have PBD since Helix is not activated
+deltaPBD = mean(OL_result.WT1.PBD) - mean(CL_result.WT1.PBD);
+disp(deltaPBD)

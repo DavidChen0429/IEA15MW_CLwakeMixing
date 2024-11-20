@@ -22,7 +22,7 @@ end
 simTime = 6000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
-mag = 3; % 2, 3, 99(customize), -1(doesn't work)
+mag = 1; % 2, 3, 99(customize), -1(doesn't work)
 referenceType = 'ramp&stop'; % step, ramp, ramp&stop, step&step, zero, customize&step, customize&ramp
 Trigger = ceil(simTime/5);      % Time that ctrl is triggered
 HelixCycle = 1/(0.3*10/126) * (1/timeStep);
@@ -30,7 +30,7 @@ Endtime = Trigger + 1*HelixCycle;
 saveOption = 'Y';
 
 turbineName = '.\Data\NREL5MW\';
-caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2Turbines\';
+caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesNew\';
 fileName = ['2Turbines_OL_Helix','_mag', num2str(mag),'_4D.mat'];
 QprName = ['2Turbines_OL_Helix','_mag', num2str(mag),'_4D.qpr'];
 
