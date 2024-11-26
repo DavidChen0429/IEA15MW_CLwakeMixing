@@ -1,5 +1,5 @@
 %% Data Analysis for Experiments
-clear
+% clear
 % close all 
 addpath('.\Functions');
 %clc
@@ -43,13 +43,13 @@ DELAnalysis = 'N';
 PBDAnalysis = 'Y';
 powerDELAnalysis = 'Y';
 flowAnalysis = 'Y';
-rareDataAnalysis = 'N';
+rareDataAnalysis = 'Y';
 
 % Basic Settings
 D_NREL5MW = 126;
 U_inflow = 10;
 timeStep = 0.1;
-filter = 4000;
+filter = 3000; % Overall as well
 DeadtimeDelay = 112; % change to 112 when showing whole process
 Str = 0.3;                          % Strouhal number              
 Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
@@ -130,7 +130,7 @@ if strcmp(overallOption, 'Y')
     legend('\beta_{tilt,b}','\beta_{yaw,b}','\beta_{tilt}','\beta_{yaw}','Location','southeastoutside')
 %     setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
     
-    filter = 4000;
+    filter = 3000;
     t = (1:(simLength-filter+1)) * timeStep;
 end
 
@@ -182,9 +182,9 @@ if strcmp(rareDataAnalysis, 'Y')
     ylabel('Power [MW]')
     title('Power Production')
     subplot(2, 1, 2)
-    plot(t3, OLadd.TorqueStoreTurb2(filter3:end),'Color',color1,'LineWidth', lw)
+    plot(t3, OL.TorqueStoreTurb2(filter3:end),'Color',color1,'LineWidth', lw)
     hold on
-    plot(t3, CLadd.TorqueStoreTurb2(filter3:end),'Color',color2,'LineWidth', lw)
+    plot(t3, CL.TorqueStoreTurb2(filter3:end),'Color',color2,'LineWidth', lw)
     hold off
     legend('OL','CL')
     xlim([0 t3(end)])
