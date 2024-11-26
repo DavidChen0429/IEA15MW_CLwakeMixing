@@ -6,10 +6,11 @@ addpath('.\Functions');
 
 %% Data file (Chage this accordingly)
 turbineName = '.\Data\NREL5MW\';
-caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesNew\';
+% caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesNew\';
+caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesLonger\';
 
 % Different case
-windCase = 'Shear2'; % Uniform, Shear, Shear2, Turb, Both
+windCase = 'Uniform'; % Uniform, Shear, Turb, Both
 if strcmp(windCase, 'Uniform')
     basefile = '2Turbines_Baseline_4D.mat';
     OLfileName = '2Turbines_OL_Helix_mag3_4D.mat';
@@ -18,10 +19,6 @@ elseif strcmp(windCase, 'Shear')
     basefile = '2Turbines_Baseline_Shear0.2_4D.mat';
     OLfileName = '2Turbines_OL_Helix_Shear0.2_mag3_4D.mat';
     CLfileName = '2Turbines_CL_Helix_Shear0.2_mag3_4D.mat';
-elseif strcmp(windCase, 'Shear2')
-    basefile = '2Turbines_Baseline_Shear0.3_4D.mat';
-    OLfileName = '2Turbines_OL_Helix_Shear0.3_mag3_4D.mat';
-    CLfileName = '2Turbines_CL_Helix_Shear0.3_mag3_4D.mat'; 
 elseif strcmp(windCase, 'Turb')
     basefile = '2Turbines_Baseline_TI6_4D.mat';
     OLfileName = '2Turbines_OL_Helix_TI6_mag3_4D.mat';
@@ -45,15 +42,19 @@ powerAnalysis = 'N';
 DELAnalysis = 'N';
 PBDAnalysis = 'Y';
 powerDELAnalysis = 'Y';
+flowAnalysis = 'Y';
+rareDataAnalysis = 'N';
 
 % Basic Settings
 D_NREL5MW = 126;
 U_inflow = 10;
 timeStep = 0.1;
-filter = 3500;
+filter = 4000;
 DeadtimeDelay = 112; % change to 112 when showing whole process
+Str = 0.3;                          % Strouhal number              
+Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
 
-% Visualization
+%% Visualization
 simLength = length(Baseline.Power_store);
 t = (1:(simLength-filter+1)) * timeStep;
 lw = 2;
@@ -129,8 +130,174 @@ if strcmp(overallOption, 'Y')
     legend('\beta_{tilt,b}','\beta_{yaw,b}','\beta_{tilt}','\beta_{yaw}','Location','southeastoutside')
 %     setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
     
-    filter = 3500;
+    filter = 4000;
     t = (1:(simLength-filter+1)) * timeStep;
+end
+
+% ============== Wind Flow Information
+if strcmp(flowAnalysis, 'Y')
+    filter2 = 1000;
+    t2 = (1:(simLength-filter2+1)) * timeStep;
+    figure('Name', 'Wind', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+    subplot(2, 1, 1)
+    plot(t2, OL.UmeanStore(filter2:end), 'Color',color1,'LineWidth', lw)
+    hold on
+    plot(t2, CL.UmeanStore(filter2:end),'Color',color2,'LineWidth', lw)
+    hold off
+    title('Average U_{inflow}')
+    xlim([0 t2(end)])
+    xlabel('Time [s]')
+%     ylim([-1 5])
+    ylabel('Speed [m/s]')
+    legend('OL','CL','Location','southeast')
+
+    subplot(2, 1, 2)
+    plot(t2, OL.TIStore(filter2:end),'Color',color1,'LineWidth', lw)
+    hold on
+    plot(t2, CL.TIStore(filter2:end),'Color',color2,'LineWidth', lw)
+    hold off
+    title('Turbulence Intensity')
+    xlim([0 t2(end)])
+    xlabel('Time [s]')
+%     ylim([-1 5])
+    ylabel('Value [-]')
+    legend('OL','CL','Location','southeast')    
+end
+
+% ============== Rare Data Visualization
+% Focus on the second wind turbine
+if strcmp(rareDataAnalysis, 'Y')
+    figure('Name', 'Rare Data --- Power', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+    filter3 = 1000;
+    t3 = (1:(simLength-filter3+1)) * timeStep;
+    % Power
+    subplot(2, 1, 1)
+    plot(t3, OL.Powerturb2_store(filter3:end)/1e3,'Color',color1,'LineWidth', lw)
+    hold on
+    plot(t3, CL.Powerturb2_store(filter3:end)/1e3,'Color',color2,'LineWidth', lw)
+    hold off
+    legend('OL','CL')
+    xlim([0 t3(end)])
+    xlabel('Time [s]')
+    ylabel('Power [MW]')
+    title('Power Production')
+    subplot(2, 1, 2)
+    plot(t3, OLadd.TorqueStoreTurb2(filter3:end),'Color',color1,'LineWidth', lw)
+    hold on
+    plot(t3, CLadd.TorqueStoreTurb2(filter3:end),'Color',color2,'LineWidth', lw)
+    hold off
+    legend('OL','CL')
+    xlim([0 t3(end)])
+    xlabel('Time [s]')
+    ylabel('Torque [Nm]')
+    title('Generator Torque')
+
+    figure('Name', 'Rare Data --- Pitch', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+    % Pitch
+    plot(t3, OL.PitchAngles(filter3:end, 1))
+    hold on
+    plot(t3, CL.PitchAngles(filter3:end, 1))
+    hold off
+    legend('OL','CL')
+    xlim([0 t3(end)])
+    xlabel('Time [s]')
+    ylabel('Pitch [deg]')
+    title('Pitch Signal')
+    legend('OL', 'CL')
+    
+    % Fatigue (Time Domain)
+    figure('Name', 'Rare Data --- Fatigue', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+    subplot(3, 2, 1)
+    plot(t3, OL.Moop1turb2_store(filter3:end),'Color',color1,'LineWidth', lw)
+    hold on
+    plot(t3, CL.Moop1turb2_store(filter3:end),'Color',color2,'LineWidth', lw)
+    hold off
+    legend('OL','CL')
+    xlim([0 t3(end)])
+    xlabel('Time [s]')
+    ylabel('Moop - Blade1 [NM]')
+    subplot(3, 2, 3)
+    plot(t3, OL.Moop2turb2_store(filter3:end),'Color',color1,'LineWidth', lw)
+    hold on
+    plot(t3, CL.Moop2turb2_store(filter3:end),'Color',color2,'LineWidth', lw)
+    hold off
+    legend('OL','CL')
+    xlim([0 t3(end)])
+    xlabel('Time [s]')
+    ylabel('Moop - Blade2 [NM]')
+    subplot(3, 2, 5)
+    plot(t3, OL.Moop3turb2_store(filter3:end),'Color',color1,'LineWidth', lw)
+    hold on
+    plot(t3, CL.Moop3turb2_store(filter3:end),'Color',color2,'LineWidth', lw)
+    hold off
+    legend('OL','CL')
+    xlim([0 t3(end)])
+    xlabel('Time [s]')
+    ylabel('Moop - Blade3 [NM]')
+
+    subplot(3, 2, 2)
+    plot(t3, OL.Mip1turb2_store(filter3:end),'Color',color1,'LineWidth', lw)
+    hold on
+    plot(t3, CL.Mip1turb2_store(filter3:end),'Color',color2,'LineWidth', lw)
+    hold off
+    legend('OL','CL')
+    xlim([0 t3(end)])
+    xlabel('Time [s]')
+    ylabel('Mip- Blade1 [NM]')
+    subplot(3, 2, 4)
+    plot(t3, OL.Mip1turb2_store(filter3:end),'Color',color1,'LineWidth', lw)
+    hold on
+    plot(t3, CL.Mip1turb2_store(filter3:end),'Color',color2,'LineWidth', lw)
+    hold off
+    legend('OL','CL')
+    xlim([0 t3(end)])
+    xlabel('Time [s]')
+    ylabel('Mip - Blade2 [NM]')
+    subplot(3, 2, 6)
+    plot(t3, OL.Mip1turb2_store(filter3:end),'Color',color1,'LineWidth', lw)
+    hold on
+    plot(t3, CL.Mip1turb2_store(filter3:end),'Color',color2,'LineWidth', lw)
+    hold off
+    legend('OL','CL')
+    xlim([0 t3(end)])
+    xlabel('Time [s]')
+    ylabel('Mip - Blade3 [NM]')
+
+    % Fatigue (PSD)
+    figure('Name', 'Rare Data --- Fatigue PSD', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+    [MoopM1,Foop1] = pwelch(OL.Moop1turb2_store(filter3:end),[],[],[],1/timeStep);
+    [MoopM2,Foop2] = pwelch(OL.Moop2turb2_store(filter3:end),[],[],[],1/timeStep);
+    [MoopM3,Foop3] = pwelch(OL.Moop3turb2_store(filter3:end),[],[],[],1/timeStep);
+    [MipM1,Fip1] = pwelch(OL.Mip1turb2_store(filter3:end),[],[],[],1/timeStep);
+    [MipM2,Fip2] = pwelch(OL.Mip2turb2_store(filter3:end),[],[],[],1/timeStep);
+    [MipM3,Fip3] = pwelch(OL.Mip3turb2_store(filter3:end),[],[],[],1/timeStep);
+    
+    subplot(1, 2, 1)
+    semilogx(Foop1, mag2db(MoopM1),'LineWidth',lw)
+    hold on
+    semilogx(Foop2, mag2db(MoopM2),'LineWidth',lw)
+    semilogx(Foop3, mag2db(MoopM3),'LineWidth',lw)
+    yline(0, ':', 'LineWidth', lw)
+%     xline(Freq*2*pi, '--', 'LineWidth', lw)
+    hold off
+    grid on
+%     xlabel('Frequency [Hz]');
+    ylabel('Amplitude [dB]');
+    legend('Moop1', 'Moop2','Moop3', 'Location', 'southeast')
+    title('Moop PSD')
+    subplot(1, 2, 2)
+    semilogx(Fip1, mag2db(MipM1),'LineWidth',lw)
+    hold on
+    semilogx(Fip2, mag2db(MipM2),'LineWidth',lw)
+    semilogx(Fip3, mag2db(MipM3),'LineWidth',lw)
+    yline(0, ':', 'LineWidth', lw)
+%     xline(Freq*2*pi, '--', 'LineWidth', lw)
+    hold off
+    grid on
+%     xlabel('Frequency [Hz]');
+    ylabel('Amplitude [dB]');
+    legend('Mip1', 'Mip2','Mip3', 'Location', 'southeast')
+    title('Mip PSD')
 end
 
 % ============== Overeall Detailed Visualization
@@ -359,21 +526,6 @@ if strcmp(powerAnalysis, 'Y')
 end
 
 % === DEL 
-% if strcmp(DELAnalysis, 'Y')
-%     x = [1 2 3];
-%     deltaDEL = [(OL_result.WT1.DEL_flapwise-BL_result.WT1.DEL_flapwise)/(BL_result.WT1.DEL_flapwise) (OL_result.WT2.DEL_flapwise-BL_result.WT2.DEL_flapwise)/(BL_result.WT2.DEL_flapwise) (OL_result.All.DEL_flapwise-BL_result.All.DEL_flapwise)/(BL_result.All.DEL_flapwise);
-%                 (OL_result.WT1.DEL_edgewise-BL_result.WT1.DEL_edgewise)/(BL_result.WT1.DEL_edgewise) (OL_result.WT2.DEL_edgewise-BL_result.WT2.DEL_edgewise)/(BL_result.WT2.DEL_edgewise) (OL_result.All.DEL_edgewise-BL_result.All.DEL_edgewise)/(BL_result.All.DEL_edgewise);
-%                 (CL_result.WT1.DEL_flapwise-BL_result.WT1.DEL_flapwise)/(BL_result.WT1.DEL_flapwise) (CL_result.WT2.DEL_flapwise-BL_result.WT2.DEL_flapwise)/(BL_result.WT2.DEL_flapwise) (CL_result.All.DEL_flapwise-BL_result.All.DEL_flapwise)/(BL_result.All.DEL_flapwise);
-%                 (CL_result.WT1.DEL_edgewise-BL_result.WT1.DEL_edgewise)/(BL_result.WT1.DEL_edgewise) (CL_result.WT2.DEL_edgewise-BL_result.WT2.DEL_edgewise)/(BL_result.WT2.DEL_edgewise) (CL_result.All.DEL_edgewise-BL_result.All.DEL_edgewise)/(BL_result.All.DEL_edgewise)];
-%     figure('Name', 'DEL', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-%     bar(x,deltaDEL*100);
-%     xticks(x); 
-%     xticklabels({'WT1', 'WT2', 'WT1+WT2'}); 
-%     ylabel('\Delta DEL [%]')
-% %     ylim([-0.5 3])
-%     legend('OL Flapwise', 'OL Edgewise','CL Flapwise', 'CL Edgewise', 'Location','northeast')
-%     setfigpaper('Width',[20,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
-% end
 if strcmp(DELAnalysis, 'Y')
     x = [1 2 3];
     deltaDEL = [(CL_result.WT1.DEL_flapwise-OL_result.WT1.DEL_flapwise)/(OL_result.WT1.DEL_flapwise) (CL_result.WT2.DEL_flapwise-OL_result.WT2.DEL_flapwise)/(OL_result.WT2.DEL_flapwise) (CL_result.All.DEL_flapwise-OL_result.All.DEL_flapwise)/(OL_result.All.DEL_flapwise);

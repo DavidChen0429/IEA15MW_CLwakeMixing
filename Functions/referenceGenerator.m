@@ -17,7 +17,7 @@ function [r] = referenceGenerator(simTime,Trigger,endTime,type,mag,plotOption)
     if mag == 2
         reference_magnitude = [5.9435 6.0369];
     elseif mag == 3
-        reference_magnitude = [8.90 9.12];
+        reference_magnitude = [8.85 9.12];
     elseif mag == 1
         reference_magnitude = [1 1];
     end

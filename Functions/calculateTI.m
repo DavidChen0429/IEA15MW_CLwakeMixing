@@ -1,5 +1,5 @@
 function [meanU, TI] = calculateTI(Datablock)
-    windspeedData = Datablock.LiDAR_data;
+    windspeedData = Datablock.WindData;
     meanU = arrayfun(@(x) mean(x.u_los), windspeedData);
 
     TI = zeros(length(windspeedData), 1);

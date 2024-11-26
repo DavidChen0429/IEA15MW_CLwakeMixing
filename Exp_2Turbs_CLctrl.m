@@ -19,20 +19,20 @@ if isempty(m)
 end
 
 %% Data file 
-simTime = 6000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 9000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 mag = 3; % 2, 3, 99(customize), -1(doesn't work)
 referenceType = 'ramp&stop'; % step, ramp, ramp&stop, step&step, zero, customize&step, customize&ramp
-Trigger = ceil(simTime/5);      % Time that ctrl is triggered
+Trigger = 1000;      % Time that ctrl is triggered
 HelixCycle = 1/(0.3*10/126) * (1/timeStep);
 Endtime = Trigger + 1*HelixCycle;
 saveOption = 'Y';
 
 turbineName = '.\Data\NREL5MW\';
-caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesNew\'; % 2 for testing
-fileName = ['2Turbines_CL_Helix_',referenceType,'_mag', num2str(mag),'_4D2.mat'];
-QprName = ['2Turbines_CL_Helix_',referenceType,'_mag', num2str(mag),'_4D2.qpr'];
+caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesLonger\'; % 2 for testing
+fileName = ['2Turbines_CL_Helix_',referenceType,'_mag', num2str(mag),'_4D.mat'];
+QprName = ['2Turbines_CL_Helix_',referenceType,'_mag', num2str(mag),'_4D.qpr'];
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
@@ -75,19 +75,6 @@ decoupled_delayed_sys = ss(decoupled_delayed_sys);
 U_inflow = 10;        % Inflow wind speed, same with the Q-blade setting
 D_NREL5MW = 126;     % Rotor diameter
 Hub_NREL5MW = 90;   % Hub height
-Wind_Height = Hub_NREL5MW;
-dimension = D_NREL5MW;     % span dim*dim meters
-grid_point = 50;     % sqaure grid
-Turb_time = 10;      % Simulation length of the windfield in seconds
-Turb_dt = timeStep;  % Temporal resolution of the windfield
-Turb_class = 'A';    % A, B, C
-Turb_type = 'NTM';   % NTM, ETM, etc   
-seed = 43;
-vertInf = 0;         % Vertical inflow angle in degrees
-horInf = 0;          % Horizontal inflow angle in degrees
-% calllib('QBladeDLL', 'addTurbulentWind', ...
-%     U_inflow,Hub_IEA15MW,Hub_IEA15MW,dimension,grid_point, ...
-%     Turb_time,Turb_dt,Turb_class,Turb_type,seed,vertInf,horInf,1)
 
 %% Defining Torque Control Setting
 % This need to be changed when inflow windspeed is varied
@@ -102,21 +89,8 @@ omega_e = Freq*2*pi;
 AzimuthOffset = 96; % 6 (2\pi) & 96; History -35
 
 t = linspace(1, simLen, simTime);
-% sigTilt_e = Helix_amplitude * ones(simTime, 1);  % basic
-% sigYaw_e = 0 * ones(simTime, 1);                 % basic
-
-% % Step input to test basic properties
-% steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime*2/5) 0*ones(1, simTime*2/5)];
-% steps = [0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 2*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10)];
 sigTilt_e = 0 * ones(simTime, 1);   % steps
 sigYaw_e = 0 * ones(simTime, 1);    % steps
-
-% figure;
-% plot(t, sigTilt_e);
-% hold on
-% plot(t, sigYaw_e);
-% hold off
-% legend('\beta_{tilt,e}', '\beta_{yaw,e}')
 
 %% Define CL Ctrl setting
 e = zeros(simTime, 2);      % error
@@ -160,6 +134,7 @@ LiDAR_x = 1*D_NREL5MW;   % Definition of x is pointing downwind
 LiDAR_y = 0;
 LiDAR_z = Hub_NREL5MW;   % Wind height
 LiDAR_num_sample = 80;   % 5(ring) to speed up sampling, only 4 valid points
+MeasurementPos = 4*D_NREL5MW-50;
 
 %% Simulation
 % pre-define array to speed up code
@@ -200,6 +175,12 @@ Moop3turb2_store = zeros(simTime, 1);
 Mip3turb2_store = zeros(simTime, 1);
 Mflap3turb2_store = zeros(simTime, 1);
 Medge3turb2_store = zeros(simTime, 1);
+
+TorqueStoreTurb1 = zeros(simTime, 1);
+TorqueStoreTurb2 = zeros(simTime, 1);
+
+UmeanStore = zeros(simTime, 1);     % flow info
+TIStore = zeros(simTime, 1);        % flow info
 
 FF_beta = zeros(simTime, 2);
 HF_beta = zeros(simTime, 2);
@@ -283,6 +264,7 @@ for i = 1:1:simTime
 
     % ==================== LiDAR data sampling (Circle) 
     windspeed = Circle_LiDAR_Parallel(LiDAR_x, LiDAR_y, LiDAR_z, D_NREL5MW, LiDAR_num_sample); 
+    windspeed2 = Circle_LiDAR_Parallel(MeasurementPos, LiDAR_y, LiDAR_z, D_NREL5MW, LiDAR_num_sample); 
     wakeCenter = HelixCenter(windspeed, U_inflow, D_NREL5MW);
     FF_helixCenter(i, :) = [wakeCenter(1) wakeCenter(2)]; % Z(tilt), Y(yaw)
     % Get the helix center from the helix frame
@@ -378,6 +360,12 @@ for i = 1:1:simTime
     % Combine output
     yc(i, :) = ybuf_fir(i, :) + y(i, :);
 
+    % ==================== Compute Flow Information
+    Umean = mean(windspeed2.u_los);
+    TI = std(windspeed2.u_los)/Umean;
+    UmeanStore(i) = Umean;
+    TIStore(i) = TI;
+
     % ==================== Store values 
 %     omega_store(i,:) = omega;
 %     genTorqueQB_store(i,:) = genTorqueQB;
@@ -427,16 +415,18 @@ for i = 1:1:simTime
     PitchAnglesturb2(i,:) = [Pitch1_turb2 Pitch2_turb2 Pitch3_turb2];
     FF_helixCenter(i, :) = [wakeCenter(1) wakeCenter(2)]; % Z(tilt), Y(yaw)
     HF_helixCenter(i, :) = [center_e(1) center_e(2)];   % Ze(tilt), Ye(yaw) 
-    LiDAR_data(i) = windspeed;
+%     LiDAR_data(i) = windspeed;
+
+    TorqueStoreTurb1(i) = genTorqueQB;
+    TorqueStoreTurb2(i) = genTorqueQB_turb2;
 
     waitbar(i/simTime, f, sprintf('Simulation Running: %.1f%%', (i/simTime)*100));
 
 end
 close(f)
 if strcmp(saveOption, 'Y')
-    calllib('QBladeDLL','storeProject', [turbineName caseName QprName]) 
-    save([turbineName caseName fileName], 'LiDAR_data', ...
-                                      'FF_helixCenter', ...
+%     calllib('QBladeDLL','storeProject', [turbineName caseName QprName]) 
+    save([turbineName caseName fileName], 'FF_helixCenter', ...
                                       'FF_helixCenter_filtered', ...
                                       'HF_helixCenter', ...
                                       'HF_helixCenter_filtered', ...
@@ -472,13 +462,10 @@ if strcmp(saveOption, 'Y')
                                       'Medge3turb2_store', ...
                                       'PitchAngles', ...
                                       'PitchAnglesturb2', ...
-                                      'u', ...
-                                      'e', ...
-                                      'r', ...
-                                      'y', ...
-                                      'ym', ...
-                                      'ytilda', ...
-                                      'yc');
+                                      'UmeanStore', ...
+                                      'TIStore', ...
+                                      'TorqueStoreTurb1', ...
+                                      'TorqueStoreTurb2');
 end
 calllib('QBladeDLL','closeInstance')
 toc 
