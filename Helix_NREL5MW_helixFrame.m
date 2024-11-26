@@ -9,7 +9,7 @@ UserPath = 'C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\IEA15MW_CLwakeMixing\';
 QBladePath = 'C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\QBladeEE_2.0.6.4\'; 
 SourcePath = [UserPath 'Source\'];
 DllPath = [QBladePath 'QBladeEE_2.0.6.dll'];
-simFile = [SourcePath 'NREL5MW_Torque_Helix.sim'];
+simFile = [SourcePath 'NREL5MW_1turbine.sim'];
 addpath('.\Functions');
 
 loadlibrary(DllPath,'QBladeLibInclude.h','alias','QBladeDLL') 
@@ -20,8 +20,9 @@ end
 
 %% Data file (Chage this accordingly)
 turbineName = '.\Data\NREL5MW\';
-caseName = 'HubJet\';
-fileName = 'St4A3.mat';
+caseName = 'Sth\';
+fileName = 'basic.mat';
+saveOption = 'Y';
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
@@ -29,7 +30,7 @@ calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
 calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
 calllib('QBladeDLL','loadSimDefinition',simFile)
 calllib('QBladeDLL','initializeSimulation')
-simTime = 3000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 1680*2;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 
@@ -59,7 +60,7 @@ seed = 43;
 vertInf = 0;         % Vertical inflow angle in degrees
 horInf = 0;          % Horizontal inflow angle in degrees
 % calllib('QBladeDLL', 'addTurbulentWind', ...
-%     U_inflow,Hub_IEA15MW,Hub_IEA15MW,dimension,grid_point, ...
+%     U_inflow,Hub_NREL5MW,Hub_NREL5MW,dimension,grid_point, ...
 %     Turb_time,Turb_dt,Turb_class,Turb_type,seed,vertInf,horInf,1)
 
 %% Defining Torque Control Setting
@@ -219,20 +220,16 @@ end
 close(f)
 % calllib('QBladeDLL','storeProject', [turbineName caseName QprName]) 
 calllib('QBladeDLL','closeInstance')
-% save([turbineName caseName fileName], 'LiDAR_data', ...
-%                                       'FF_helixCenter', ...
-%                                       'FF_helixCenter_filtered', ...
-%                                       'HF_helixCenter', ...
-%                                       'HF_helixCenter_filtered', ...
-%                                       'FF_beta', ...
-%                                       'HF_beta');
-save([turbineName caseName fileName], 'FF_helixCenter', ...
-                                      'FF_helixCenter_filtered', ...
-                                      'HF_helixCenter', ...
-                                      'HF_helixCenter_filtered', ...
-                                      'FF_beta', ...
-                                      'HF_beta');
 toc 
+if strcmp(saveOption, 'Y')
+    save([turbineName caseName fileName], 'LiDAR_data', ...
+                                          'FF_helixCenter', ...
+                                          'FF_helixCenter_filtered', ...
+                                          'HF_helixCenter', ...
+                                          'HF_helixCenter_filtered', ...
+                                          'FF_beta', ...
+                                          'HF_beta');
+end
 
 %% Visualization
 figure('Name', 'Overall Result', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
@@ -279,7 +276,7 @@ title('Center HF')
 % legend('z_e', 'y_e', 'z_{ef}', 'y_{ef}')
 legend('z_{e2}', 'y_{e2}')
 
-% ringVisualization(LiDAR_data, D_NREL5MW)
+ringVisualization2(LiDAR_data, D_NREL5MW)
 
 %% Unload Library 
 % unloadlibrary 'QBladeDLL'

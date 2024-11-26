@@ -1,15 +1,16 @@
 %% Data Analysis for Experiments
 clear
-% close all 
+close all 
 addpath('.\Functions');
 %clc
 
 %% Data file (Chage this accordingly)
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesNew\';
+additionalCaseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\QBladeDeug\';
 
 % Different case
-windCase = 'Shear2'; % Uniform, Shear, Shear2, Turb, Both
+windCase = 'Turb'; % Uniform, Shear, Shear2, Turb, Both
 if strcmp(windCase, 'Uniform')
     basefile = '2Turbines_Baseline_4D.mat';
     OLfileName = '2Turbines_OL_Helix_mag3_4D.mat';
@@ -50,7 +51,7 @@ powerDELAnalysis = 'Y';
 D_NREL5MW = 126;
 U_inflow = 10;
 timeStep = 0.1;
-filter = 3500;
+filter = 4000;
 DeadtimeDelay = 112; % change to 112 when showing whole process
 
 % Visualization

@@ -1,6 +1,6 @@
-function [] = videoCompare_func(data1, data2, D, fileName)
-dataLiDAR_A = data1.LiDAR_data;
-dataLiDAR_B = data2.LiDAR_data;
+function [] = videoCompare_func2(data1, data2, D, fileName)
+dataLiDAR_A = data1;
+dataLiDAR_B = data2;
 
 data_length = size(dataLiDAR_A);
 interval = 10;

@@ -19,14 +19,15 @@ if isempty(m)
 end
 
 %% Data file 
-simTime = 2000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 1680*2;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
-saveOption = 'N';
+saveOption = 'Y';
+HelixShape = 'basic'; % oval or flower
 
 turbineName = '.\Data\NREL5MW\';
-caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\';
-fileName = 'oval.mat';
+caseName = 'Sth\';
+fileName = 'basic.mat';
 QprName = 'oval.qpr';
 
 %% Load project and Initialize simulation
@@ -86,19 +87,20 @@ AzimuthOffset = 96; % 6 for pi/2 shift ;96 for pi shift (right relationship)
 
 % Genereate the tilt and yaw signal 
 t = linspace(1, simLen, simTime);
-sigTilt = Helix_amplitude * sin(2*pi*Freq*t);          
-sigYaw = Helix_amplitude * sin(2*pi*Freq*t - pi/2);  % CCW
-
-% sigTilt = amplitudeTilt .* sin(2*pi*Freq*t);  
-% sigYaw = amplitudeTilt .* sin(2*pi*Freq*t - pi/2);  % CCW
-% figure()
-% plot(t, sigTilt)
-% hold on
-% plot(t, sigYaw)
-% hold off
-% xlabel('Time [s]')
-% ylabel('Magnitude')
-% legend('\beta_{tilt}','\beta_{yaw}')
+t1 = linspace(1, simLen/4, simTime/4);
+t2 = linspace(simLen/4, simLen/2, simTime/4);
+t3 = linspace(simLen/2, simLen*3/4, simTime/4);
+t4 = linspace(simLen*3/4, simLen, simTime/4);
+if strcmp(HelixShape, 'oval')
+    sigTilt = 3 * sin(2*pi*Freq*t);          
+    sigYaw = 1 * sin(2*pi*Freq*t - pi/2);  % CCW
+elseif strcmp(HelixShape, 'flower')
+    sigTilt = [3*sin(2*pi*Freq*t1) 1*sin(2*pi*Freq*t2) 3*sin(2*pi*Freq*t3) 1*sin(2*pi*Freq*t4)];          
+    sigYaw = [1*sin(2*pi*Freq*t1-pi/2) 3*sin(2*pi*Freq*t2-pi/2) 1*sin(2*pi*Freq*t3-pi/2) 3*sin(2*pi*Freq*t4-pi/2)];  % CCW
+elseif strcmp(HelixShape, 'basic')
+    sigTilt = 3 * sin(2*pi*Freq*t);          
+    sigYaw = 3 * sin(2*pi*Freq*t - pi/2);  % CCW
+end
 
 Trigger = 0;
 
@@ -184,6 +186,8 @@ for i = 1:1:simTime
     invMBC = [1 cosd(Azimuth1+AzimuthOffset) sind(Azimuth1+AzimuthOffset);
               1 cosd(Azimuth2+AzimuthOffset) sind(Azimuth2+AzimuthOffset);
               1 cosd(Azimuth3+AzimuthOffset) sind(Azimuth3+AzimuthOffset)];
+    invR_helix = [cos(omega_e*t(i)) sin(omega_e*t(i)); 
+                  -sin(omega_e*t(i)) cos(omega_e*t(i))];
 
     % ==================== LiDAR data sampling (Circle) 
     windspeed = Circle_LiDAR_Parallel(LiDAR_x, LiDAR_y, LiDAR_z, D_NREL5MW, LiDAR_num_sample); 
@@ -193,24 +197,6 @@ for i = 1:1:simTime
     % LPF the single element
     [FF_helixCenter_filtered(i, 1), filterState1] = filter(b_fir, 1, FF_helixCenter(i, 1), filterState1);
     [FF_helixCenter_filtered(i, 2), filterState2] = filter(b_fir, 1, FF_helixCenter(i, 2), filterState2);
-    % Get the mean
-    meanZ = Hub_NREL5MW;
-    meanY = 0;
-    if i > ws_centering
-        meanZ = mean(FF_helixCenter(i-ws_centering:i, 1));
-        meanY = mean(FF_helixCenter(i-ws_centering:i, 2));
-    end
-    % Low pass filter
-    % Centering
-%     centerZ = wakeCenter(1) - meanZ;
-%     centerY = wakeCenter(2) - meanY;
-    centerZ = wakeCenter(1) - 92.0026;  % data derived from the basecase
-    centerY = wakeCenter(2) + 4.0999;   % data derived from the basecase
-    center_e = invR_helix * [centerZ; centerY];
-    [HF_helixCenter_filtered(i, 1), filterState3] = filter(b_fir, 1, center_e(1), filterState3);
-    [HF_helixCenter_filtered(i, 2), filterState4] = filter(b_fir, 1, center_e(2), filterState4);
-    % Sign change because of opposite model
-    HF_helixCenter_filtered(i, :) = HF_helixCenter_filtered(i, :) * [-1 0; 0 1];
 
     % ==================== Control
     % I. Torque control to maintain optimal TSR of 9 
@@ -254,99 +240,50 @@ for i = 1:1:simTime
     Mflap3_store(i) = Moop3*cosd(Pitch3) + Mip3*sind(Pitch3);
     Medge3_store(i) = -Moop3*sind(Pitch3) + Mip3*cosd(Pitch3);
     
-    FF_beta(i,:) = [betaTiltYaw(1) betaTiltYaw(2)];
-    HF_beta(i,:) = [beta_tilt_e beta_yaw_e];
+    FF_beta(i,:) = [theta_tilt theta_yaw];
 %     AzimuthAngles(i,:) = [Azimuth1 Azimuth2 Azimuth3];
     PitchAngles(i,:) = [Pitch1 Pitch2 Pitch3];
     FF_helixCenter(i, :) = [wakeCenter(1) wakeCenter(2)]; % Z(tilt), Y(yaw)
-    HF_helixCenter(i, :) = [center_e(1) center_e(2)];   % Ze(tilt), Ye(yaw) 
     LiDAR_data(i) = windspeed;
 
     waitbar(i/simTime, f, sprintf('Simulation Running: %.1f%%', (i/simTime)*100));
 
 end
 close(f)
+toc 
 if strcmp(saveOption, 'Y')
-    calllib('QBladeDLL','storeProject', [turbineName caseName QprName]) 
+%     calllib('QBladeDLL','storeProject', [turbineName caseName QprName]) 
+%     save([turbineName caseName fileName], 'LiDAR_data', ...
+%                                           'FF_helixCenter', ...
+%                                           'FF_helixCenter_filtered', ...
+%                                           'FF_beta', ...
+%                                           'Power_store', ...
+%                                           'Cp_store', ...
+%                                           'Moop1_store', ...
+%                                           'Mip1_store', ...
+%                                           'Mflap1_store', ...
+%                                           'Medge1_store', ...
+%                                           'Moop2_store', ...
+%                                           'Mip2_store', ...
+%                                           'Mflap2_store', ...
+%                                           'Medge2_store', ...
+%                                           'Moop3_store', ...
+%                                           'Mip3_store', ...
+%                                           'Mflap3_store', ...
+%                                           'Medge3_store', ...
+%                                           'PitchAngles');
     save([turbineName caseName fileName], 'LiDAR_data', ...
                                           'FF_helixCenter', ...
                                           'FF_helixCenter_filtered', ...
-                                          'HF_helixCenter', ...
-                                          'HF_helixCenter_filtered', ...
-                                          'FF_beta', ...
-                                          'HF_beta', ...
-                                          'Power_store', ...
-                                          'Cp_store', ...
-                                          'Moop1_store', ...
-                                          'Mip1_store', ...
-                                          'Mflap1_store', ...
-                                          'Medge1_store', ...
-                                          'Moop2_store', ...
-                                          'Mip2_store', ...
-                                          'Mflap2_store', ...
-                                          'Medge2_store', ...
-                                          'Moop3_store', ...
-                                          'Mip3_store', ...
-                                          'Mflap3_store', ...
-                                          'Medge3_store', ...
-                                          'PitchAngles');
+                                          'FF_beta');
 end
 calllib('QBladeDLL','closeInstance')
-toc 
 
 %% Visualization
 trigger_time = Trigger * timeStep;
 
-% Overall input and output
-figure('Name', 'Overall Result', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-subplot(2, 2, 1)
-plot((1:length(FF_beta)) * timeStep, FF_beta(:, 1));
-hold on;
-plot((1:length(FF_beta)) * timeStep, FF_beta(:, 2));
-xline(trigger_time, '--k', 'Activate CL Ctrl', 'LabelOrientation', 'horizontal', 'LineWidth', 1);
-hold off;
-xlabel('Time [s]')
-title('\beta FF')
-legend('\beta_{tilt}', '\beta_{yaw}')
-subplot(2, 2, 3);
-plot((1:length(HF_beta)) * timeStep, HF_beta(:, 1));
-hold on;
-plot((1:length(HF_beta)) * timeStep, HF_beta(: ,2));
-xline(trigger_time, '--k', 'Activate CL Ctrl', 'LabelOrientation', 'horizontal', 'LineWidth', 1);
-hold off;
-xlabel('Time [s]')
-title('\beta_e HF')
-legend('\beta^e_{tilt}', '\beta^e_{yaw}')
-subplot(2, 2, 2)
-plot((1:length(HF_beta)) * timeStep, FF_helixCenter(:, 1));
-hold on;
-plot((1:length(HF_beta)) * timeStep, FF_helixCenter(:, 2));
-plot((1:length(HF_beta)) * timeStep, FF_helixCenter_filtered(:, 1));
-plot((1:length(HF_beta)) * timeStep, FF_helixCenter_filtered(:, 2));
-xline(trigger_time, '--k', 'Activate CL Ctrl', 'LabelOrientation', 'horizontal', 'LineWidth', 1);
-hold off;
-xlabel('Time [s]')
-title('Center FF')
-legend('z', 'y', 'z_f', 'y_f')
-subplot(2, 2, 4)
-% plot((1:length(HF_beta)) * timeStep, HF_helixCenter(:, 1));
-% hold on;
-% plot((1:length(HF_beta)) * timeStep, HF_helixCenter(:, 2));
-plot((1:length(HF_beta)) * timeStep, HF_helixCenter_filtered(:, 1));
-hold on
-plot((1:length(HF_beta)) * timeStep, HF_helixCenter_filtered(:, 2));
-plot((1:length(r)) * timeStep, delayseq(r(:, 1), DeadtimeDelay),'m--','LineWidth', 0.5)
-plot((1:length(r)) * timeStep, delayseq(r(:, 2), DeadtimeDelay),'k--','LineWidth', 0.5)
-xline(trigger_time, '--k', 'Activate CL Ctrl', 'LabelOrientation', 'horizontal', 'LineWidth', 1);
-yline(0, '--', 'LineWidth', 1)
-hold off;
-xlabel('Time [s]')
-title('Center HF')
-% legend('z_e', 'y_e', 'z_{e,f}', 'y_{e,f}')
-legend('z_{e,f}', 'y_{e,f}')
-
-ringVisualization(LiDAR_data, D_NREL5MW)
-
-
-%% Unload Library 
-% unloadlibrary 'QBladeDLL'
+filter = 1000;
+plot(FF_helixCenter_filtered(filter:end, 2), FF_helixCenter_filtered(filter:end, 1))
+xlim([-24 14])
+ylim([70 110])
+% ringVisualization2(LiDAR_data, D_NREL5MW)
