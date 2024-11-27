@@ -1,0 +1,194 @@
+Limtatation: Practiality for simulation about real-time control(anything about online control technique), whereas offline state estimation is not a problem
+
+=========== Research questions
+* How to integrate LIDAR and the helix approach for closed-loop active wake mixing control for wind farms? (WWH)
+	-> What: Use LIDAR as a feedback mechanism to achieve closed-loop control of helix approach.
+	-> Why: The lack of information and the complicated dynamic inside the wind farm makes accurate control impossible to achieve without feedback. Plus, the surrogate model used in open-loop control is only accurate in particular situations and do not suffice for all conditions relevant throughout the annual operation of the wind farm.
+	-> How: Downwind facing LIDAR sampling windspeed data, a pipeline to process data, an optimal controller to rectify control. Furthermore, relation of wake and power production of downstream turbine is studied. This furthermore create data-driven control.
+
+** Which LIDAR configuration to use?\
+	-> ZX TM LIDAR (commerical realization) 
+		Scan: Continuous Wave
+		Sample rate: 50Hz
+		Range: 10m-550m
+		Half cone angle: 15 degrees 
+		
+** What features in the wake should be extracted for control purposes?
+** How to use LIDAR measurement to obtain information about those features?
+** How to design the control system to rectify active wake mixing?
+** How can a deeper understanding of active wake mixing from LIDAR be combined with data-driven control strategies to enhance WFFC?
+
+=========== Practical Tool ================
+Q-Blade
+
+=================================================== Progress 
+=========== OpenFAST ===========
+Downwind-facing LIDAR: https://forums.nrel.gov/search?q=LIDAR
+
+=================================================== Feedback
+=========== Weekly Meeting 03/07/2024 ===========
+Control the wake center through changing Mtilt and Myaw magnitude --- Steps:
+	1. Simulation of different cases
+	2. Find relationship between the Mtilt and Myaw to the position of wake center
+	3. Find the way to solve the time-delay problem of control
+	4. Design a double PI controllers to deal with the problem
+	5. Learning-based MPC
+
+Simulation Purpose:
+	1. Find a right resolution to discretize the space to get the wake center
+	2. See what the wake center look like under turbulence and different wind speed
+	3. Explore the relationship between Mtilt and Myaw (or the new transfered one) and the wake center
+	4. Explore a way to handle the time-delay (lookup table, learn the dynamic, and etc)
+
+Simulation cases:
+	1. Look at the resolution
+	2. Different windspeed and turbulence
+			Uni 	[7,8,9,10]
+			NTM-C 	[7,8,9,10]
+			NTM-B 	[7,8,9,10]
+			NTM-A 	[7,8,9,10]
+	3. Add the wake center calculation in the code and see the result		Done
+	
+	
+
+=========== Weekly Meeting 21/05/2024 ===========
+Framework of Control:
+	Use control to regulate the features that determine the power production of the downstream turbine in a close-loop setting
+
+Q-Blade stage:
+	.qpr to .sim for simulation 							Done
+	simulate in under-rated windspeed						Done (change windspeed in the .sim
+	simulate in turbulent windspeed							Done (better to change in .sim configuration	
+	implement the k*omega^2 controller						Done
+	LiDAR implemenetation 									Done
+		Projection from streamwise to LOS					Done
+		Check why the wind speed is that weird				Done (Sign is fucking wrong before)
+	LiDAR in the basic scenario(without any Helix			Done
+	Helix in the script										Done
+	LiDAR data processing									Done
+		Visualization of the ring single snapshot			Done
+		Visualization of the ring overall time				Done
+		Single point data analysis							Done 
+		FFT													Done
+	LiDAR simulation and sampling							Done
+		Baseline											Done
+		Helix 1Hz 50										Done
+		Helix 1Hz 1D										Done
+		Helix 1Hz 2D										Done
+		Helix 1HZ 1.86D										Done		
+		Helix 50Hz perfect x 1.86D							Done 
+		Turbulence Helix 1Hz 1.86D							Done
+		
+	Helix approach experiment paper (attention: feature		Done
+	Feature extraction of wake								Done -- wake center
+	Control input identification							Done -- Magnitude of Mtilt and Myaw
+	Prepare slide for midterm presentation					Ongoing
+	
+	Construct the Control Loop
+		LiDAR sampling
+		Real-time data processing
+			Feature extraction
+		Dynamic learning 
+		Wake evolution model 
+		Controller design
+		Testing
+		Load Analyasis and Power generation analysis
+	
+	PID
+	Data-driven MPC
+	Load analysis
+
+=========== Marion LiDAR & Daniel Q-Blade Meeting 17/05/2024 ================
+LIDAR:
+	It only scans a circle, literally a circle without information in between
+	It should be placed in a position of 1D to 2D 
+	y and z component of the wind speed can be negelected
+
+Q-blade:
+	Helix in script can be acquired similar to what k*omega^2 do, Mtilt & Myaw -> MBC -> Feed in loop 
+	.dll and .in should be overwritten when calling control
+	
+=========== Weekly Meeting 16/05/2024 ================
+Nothing much going on, chill as fuck
+
+=========== Monthly Meeting 30/04/2024 ================
+Agenda:
+	1. Downwind facing LIDAR details explanation
+	2. My final research proposal, and research questions
+	3. Current progress 
+			a. Literature Survey
+			b. Q-blade
+			c. LIDAR selection
+	4. Q-blade progress 
+			a. Helix recreate IEA15MW 
+			b. LIDAR insert
+			c. Controller
+	5. Literature Survey 
+	6. Master thesis agreement
+	
+Feedback:
+	1. Testing of controller is done in another paper (Steff not published one)
+	2. Helix is used for below rated WT, that means a torque controller will be combined with the helix controller when implemented in the reality.
+	3. For Q-Blade:
+		a. figure out the controller setup:
+			1) What is in the .dll soure code 
+			2) The relationship between the .dll and script controller 
+			3) How to implement Helix in the script
+			4) Play around with the simulation condition, add turbulence 
+	4. For the learning method
+		a. Check the Daniel's paper 
+		b. The GPR model
+
+=========== Literature Review Draft
+	1. Expand the too concised topic (wake, helix, lidar) and include more focused paper, at the same time, explain it more so that people who don't know shit understand
+	2. Shorten the phase synchronization chapter 
+	3. Define the problem throughly (wait for confirmation from Mees)
+	4. Add connection among chapters
+	5. Re-size figures
+	
+=========== Daniel Meeting 26/04/2024
+Questions:
+	1. How to use new turbine in q-blade for simulation 
+		A: Import the project file and then simulation setup
+	2. LIDAR(CW) & wake
+		A. Configure in the turbine setting
+	3. Why the hell I can't see any result from the TSR follow controller, is it because of the EE and CE version?
+			calllib('QBladeDLL','advanceController_at_num',[0 0 0 0 0],0)
+		A: This is fine because this is how this function is constructed
+	4. Why my MATLAB keeps breaking when doing helix?
+		A. By putting some files in the controllerFile, things work, I don't know how but that shit just worked
+	
+Feeedback:
+	The idea is fine, and all things can be done in Q-blade. Enterprise version is on the way (if not then write him an email).
+	To get to learn Q-blade, read Daniel's paper for setup the simulation, as well as the doc (https://docs.qblade.org/)
+	When saving the simulation file, simulation -> export data -> .sim (in the file that turbine exist)
+	1. Helix 
+	2. Recreate LIDAR
+	3. Controller
+	
+=========== Marion Meeting 22/04/2024
+Choose one LIDAR configuration to focus on
+	Goldwind 
+	Paper from Marion
+	The offshore wind tubrine 2025, something that the industry is using
+Q-Blade
+=========== Weekly Meeting 17/04/2024
+Nothing 
+=========== Monthly Meeting 02/04/2024 ================
+LIDAR openfast module (priority
+Backward looking LIDAR details (priority Stephen
+Partial wake information, so no DMD 
+DeePC, data-driven technique for modeling the dynamic in the helical wake 
+Economic MPC
+concern: simulation speed  
+Focus on the backward looking LIDAR in Helix phase synchronization
+Biggest hurdle: Data acquistion and simulation setup
+
+To do:
+	Check the LIDAR module for OpenFAST											(p1 done
+	Check detailed info about the backward looking LIDAR for wake steering 		(p1 done
+	Check simulation environment OLAF											(p1
+	Literature Review 															(p2
+	DeePC & Economic MPC Learning												(p2
+	Data-driven technique for modeling the dynamic in the helical wake 			(p2
+	

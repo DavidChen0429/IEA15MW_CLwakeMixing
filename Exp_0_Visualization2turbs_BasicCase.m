@@ -9,32 +9,29 @@ turbineName = '.\Data\NREL5MW\';
 % caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesNew\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesLonger\';
 
+ControlOption = 'Helix'; % None, Helix
 % Different case
-windCase = 'Uniform'; % Uniform, Shear, Turb, Both
-if strcmp(windCase, 'Uniform')
-    basefile = '2Turbines_Baseline_4D.mat';
-    OLfileName = '2Turbines_OL_Helix_mag3_4D.mat';
-    CLfileName = '2Turbines_CL_Helix_ramp&stop_mag3_4D.mat';
-elseif strcmp(windCase, 'Shear')
-    basefile = '2Turbines_Baseline_Shear0.2_4D.mat';
+if strcmp(ControlOption, 'Helix')
+    basefile = '2Turbines_OL_Helix_mag3_4D.mat';
     OLfileName = '2Turbines_OL_Helix_Shear0.2_mag3_4D.mat';
-    CLfileName = '2Turbines_CL_Helix_Shear0.2_mag3_4D.mat';
-elseif strcmp(windCase, 'Turb')
-    basefile = '2Turbines_Baseline_TI6_4D.mat';
-    OLfileName = '2Turbines_OL_Helix_TI6_mag3_4D.mat';
-    CLfileName = '2Turbines_CL_Helix_TI6_mag3_4D.mat';    
-elseif strcmp(windCase, 'Both')
-    basefile = '2Turbines_Baseline_TI6&Shear0.2_4D.mat';
-    OLfileName = '2Turbines_OL_Helix_TI6&Shear0.2_mag3_4D.mat';
-    CLfileName = '2Turbines_CL_Helix_TI6&Shear0.2_mag3_4D.mat';  
-end
+    CLfileName = '2Turbines_OL_Helix_TI6_mag3_4D.mat';
+    FKfileName = '2Turbines_OL_Helix_TI6&Shear0.2_mag3_4D';
+elseif strcmp(ControlOption, 'None')
+    basefile = '2Turbines_Baseline_4D.mat';
+    OLfileName = '2Turbines_Baseline_Shear0.2_4D.mat';
+    CLfileName = '2Turbines_Baseline_TI6&Shear0.2_4D.mat';
+    FKfileName = '2Turbines_Baseline_TI6&Shear0.2_4D';
+end 
 
 Baseline = load([turbineName caseName basefile]);
 OL = load([turbineName caseName OLfileName]);
 CL = load([turbineName caseName CLfileName]);
+FL = load([turbineName caseName FKfileName]);
 
 %% Overall Settings
-overallOption = 'Y';
+overallOption = 'N';
+flowAnalysis = 'Y';
+rareDataAnalysis = 'Y';
 overallDetailOption = 'Y';
 trajOption = 'Y';
 videoOption = 'N';
@@ -42,17 +39,14 @@ powerAnalysis = 'N';
 DELAnalysis = 'N';
 PBDAnalysis = 'Y';
 powerDELAnalysis = 'Y';
-flowAnalysis = 'Y';
-rareDataAnalysis = 'Y';
 
 % Basic Settings
 D_NREL5MW = 126;
 U_inflow = 10;
 timeStep = 0.1;
 filter = 3000;  % Overall as well
-filter0 = 1000; % Overall result
-filter2 = 1000; % Wind info
-filter3 = 1000; % Rare data
+filter2 = 3000; % Wind info
+filter3 = 3000; % Rare data
 DeadtimeDelay = 112; % change to 112 when showing whole process
 Str = 0.3;                          % Strouhal number              
 Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
@@ -65,37 +59,37 @@ Font = 20;
 color0 = [0.4660 0.6740 0.1880];
 color1 = [0, 0.4470, 0.7410];
 color2 = [0.8500, 0.3250, 0.0980];
+color3 = [0.3010 0.7450 0.9330];
 
 % ============== Overall Result (Input & Output)
 % Hub Jet
 if strcmp(overallOption, 'Y')
-    t0 = (1:(simLength-filter0+1)) * timeStep;
+    filter = 1000;
+    t = (1:(simLength-filter+1)) * timeStep;
     figure('Name', 'Experiment Input-Output', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
     subplot(2, 2, 2)
-    plot(t0, OL.HF_helixCenter_filtered(filter0:end, 1), '--','Color',color1,'LineWidth', lw)
+    plot(t, OL.HF_helixCenter_filtered(filter:end, 1), '--','Color',color1,'LineWidth', lw)
     hold on
-    plot(t0, OL.HF_helixCenter_filtered(filter0:end, 2), '--', 'Color',color2,'LineWidth', lw)
-    plot(t0, CL.HF_helixCenter_filtered(filter0:end, 1), 'Color',color1, 'LineWidth', lw)
-    plot(t0, CL.HF_helixCenter_filtered(filter0:end, 2), 'Color',color2, 'LineWidth', lw)
-    plot(t0, delayseq(CL.r(filter0:end, 1), DeadtimeDelay), 'k:', 'LineWidth', lw)
-    plot(t0, delayseq(CL.r(filter0:end, 2), DeadtimeDelay), 'k:', 'LineWidth', lw)
+    plot(t, OL.HF_helixCenter_filtered(filter:end, 2), '--', 'Color',color2,'LineWidth', lw)
+    plot(t, CL.HF_helixCenter_filtered(filter:end, 1), 'Color',color1, 'LineWidth', lw)
+    plot(t, CL.HF_helixCenter_filtered(filter:end, 2), 'Color',color2, 'LineWidth', lw)
     yline(0, '--', 'LineWidth', lw)
     hold off
     title('Output: Helix Frame')
-    xlim([0 t0(end)])
+    xlim([0 t(end)])
     xlabel('Time [s]')
     ylim([-1 20])
     ylabel('Magnitude [m]')
-    legend('z^e_b','y^e_b','z^e','y^e','r_z','r_y','Location','southeastoutside')
+    legend('z^e_b','y^e_b','z^e','y^e','Location','southeastoutside')
     subplot(2, 2, 4)
-    plot(t0, OL.FF_helixCenter_filtered(filter0:end, 1), '--','Color',color1, 'LineWidth', lw)
+    plot(t, OL.FF_helixCenter_filtered(filter:end, 1), '--','Color',color1, 'LineWidth', lw)
     hold on
-    plot(t0, OL.FF_helixCenter_filtered(filter0:end, 2), '--','Color',color2, 'LineWidth', lw)
-    plot(t0, CL.FF_helixCenter_filtered(filter0:end, 1),'Color',color1,'LineWidth', lw)
-    plot(t0, CL.FF_helixCenter_filtered(filter0:end, 2),'Color',color2,'LineWidth', lw)
+    plot(t, OL.FF_helixCenter_filtered(filter:end, 2), '--','Color',color2, 'LineWidth', lw)
+    plot(t, CL.FF_helixCenter_filtered(filter:end, 1),'Color',color1,'LineWidth', lw)
+    plot(t, CL.FF_helixCenter_filtered(filter:end, 2),'Color',color2,'LineWidth', lw)
     hold off
     title('Output: Fixed Frame')
-    xlim([0 t0(end)])
+    xlim([0 t(end)])
     xlabel('Time [s]')
     ylim([-50 150])
     ylabel('Position [m]')
@@ -105,32 +99,35 @@ if strcmp(overallOption, 'Y')
     % Control Input
     % figure('Name', 'Experiment Result: Hub Jet', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
     subplot(2, 2, 1)
-    plot(t0, OL.HF_beta(filter0:end, 1), '--','Color',color1, 'LineWidth', lw)
+    plot(t, OL.HF_beta(filter:end, 1), '--','Color',color1, 'LineWidth', lw)
     hold on
-    plot(t0, OL.HF_beta(filter0:end, 2), '--','Color',color2, 'LineWidth', lw)
-    plot(t0, CL.u(filter0:end, 1), 'Color',color1, 'LineWidth', lw)
-    plot(t0, CL.u(filter0:end, 2), 'Color',color2, 'LineWidth', lw)
+    plot(t, OL.HF_beta(filter:end, 2), '--','Color',color2, 'LineWidth', lw)
+    plot(t, CL.HF_beta(filter:end, 1), 'Color',color1, 'LineWidth', lw)
+    plot(t, CL.HF_beta(filter:end, 2), 'Color',color2, 'LineWidth', lw)
     hold off
     title('Input: Helix Frame')
-    xlim([0 t0(end)])
+    xlim([0 t(end)])
     xlabel('Time [s]')
     ylim([-1 10])
     ylabel('Magnitude [deg]')
     legend('\beta^e_{tilt,b}','\beta^e_{yaw,b}','\beta^e_{tilt}','\beta^e_{yaw}','Location','southeastoutside')
     subplot(2, 2, 3)
-    plot(t0, OL.FF_beta(filter0:end, 1), '--','Color',color1, 'LineWidth', lw)
+    plot(t, OL.FF_beta(filter:end, 1), '--','Color',color1, 'LineWidth', lw)
     hold on
-    plot(t0, OL.FF_beta(filter0:end, 2), '--','Color',color2, 'LineWidth', lw)
-    plot(t0, CL.FF_beta(filter0:end, 1), 'Color',color1, 'LineWidth', lw)
-    plot(t0, CL.FF_beta(filter0:end, 2), 'Color',color2, 'LineWidth', lw)
+    plot(t, OL.FF_beta(filter:end, 2), '--','Color',color2, 'LineWidth', lw)
+    plot(t, CL.FF_beta(filter:end, 1), 'Color',color1, 'LineWidth', lw)
+    plot(t, CL.FF_beta(filter:end, 2), 'Color',color2, 'LineWidth', lw)
     hold off
     title('Input: Fixed Frame')
-    xlim([0 t0(end)])
+    xlim([0 t(end)])
     xlabel('Time [s]')
     ylim([-12.5 12.5])
     ylabel('Magnitude [deg]')
     legend('\beta_{tilt,b}','\beta_{yaw,b}','\beta_{tilt}','\beta_{yaw}','Location','southeastoutside')
 %     setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+    
+    filter = 3000;
+    t = (1:(simLength-filter+1)) * timeStep;
 end
 
 % ============== Wind Flow Information
@@ -138,28 +135,33 @@ if strcmp(flowAnalysis, 'Y')
     t2 = (1:(simLength-filter2+1)) * timeStep;
     figure('Name', 'Wind', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
     subplot(2, 1, 1)
-    plot(t2, OL.UmeanStore(filter2:end), 'Color',color1,'LineWidth', lw)
+    plot(t2, Baseline.UmeanStore(filter2:end),'Color',color0,'LineWidth', lw)
     hold on
+    plot(t2, OL.UmeanStore(filter2:end), 'Color',color1,'LineWidth', lw)
     plot(t2, CL.UmeanStore(filter2:end),'Color',color2,'LineWidth', lw)
+    plot(t2, FL.UmeanStore(filter2:end),'Color',color3,'LineWidth', lw)
     hold off
     title('Average U_{inflow}')
     xlim([0 t2(end)])
     xlabel('Time [s]')
 %     ylim([-1 5])
     ylabel('Speed [m/s]')
-    legend('OL','CL','Location','southeast')
+    legend('Uniform','Shear','Turbulence','S&T','Location','southeast')
 
     subplot(2, 1, 2)
-    plot(t2, OL.TIStore(filter2:end),'Color',color1,'LineWidth', lw)
+    plot(t2, Baseline.TIStore(filter2:end),'Color',color0,'LineWidth', lw)
     hold on
+    plot(t2, OL.TIStore(filter2:end),'Color',color1,'LineWidth', lw)
     plot(t2, CL.TIStore(filter2:end),'Color',color2,'LineWidth', lw)
+    plot(t2, FL.TIStore(filter2:end),'Color',color3,'LineWidth', lw)
     hold off
     title('Turbulence Intensity')
     xlim([0 t2(end)])
     xlabel('Time [s]')
 %     ylim([-1 5])
     ylabel('Value [-]')
-    legend('OL','CL','Location','southeast')    
+    legend('Uniform','Shear','Turbulence','S&T','Location','southeast')  
+    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 end
 
 % ============== Rare Data Visualization
@@ -173,7 +175,7 @@ if strcmp(rareDataAnalysis, 'Y')
     hold on
     plot(t3, CL.Powerturb2_store(filter3:end)/1e3,'Color',color2,'LineWidth', lw)
     hold off
-    legend('OL','CL')
+    legend('Shear','Turbulence')
     xlim([0 t3(end)])
     xlabel('Time [s]')
     ylabel('Power [MW]')
@@ -183,7 +185,7 @@ if strcmp(rareDataAnalysis, 'Y')
     hold on
     plot(t3, CL.TorqueStoreTurb2(filter3:end),'Color',color2,'LineWidth', lw)
     hold off
-    legend('OL','CL')
+    legend('Shear','Turbulence')
     xlim([0 t3(end)])
     xlabel('Time [s]')
     ylabel('Torque [Nm]')
@@ -195,12 +197,12 @@ if strcmp(rareDataAnalysis, 'Y')
     hold on
     plot(t3, CL.PitchAngles(filter3:end, 1))
     hold off
-    legend('OL','CL')
+    legend('Shear','Turbulence')
     xlim([0 t3(end)])
     xlabel('Time [s]')
     ylabel('Pitch [deg]')
     title('Pitch Signal')
-    legend('OL', 'CL')
+    legend('Shear','Turbulence')
     
     % Fatigue (Time Domain)
     figure('Name', 'Rare Data --- Fatigue', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
@@ -209,7 +211,7 @@ if strcmp(rareDataAnalysis, 'Y')
     hold on
     plot(t3, CL.Moop1turb2_store(filter3:end),'Color',color2,'LineWidth', lw)
     hold off
-    legend('OL','CL')
+    legend('Shear','Turbulence')
     xlim([0 t3(end)])
     xlabel('Time [s]')
     ylabel('Moop - Blade1 [NM]')
@@ -218,7 +220,7 @@ if strcmp(rareDataAnalysis, 'Y')
     hold on
     plot(t3, CL.Moop2turb2_store(filter3:end),'Color',color2,'LineWidth', lw)
     hold off
-    legend('OL','CL')
+    legend('Shear','Turbulence')
     xlim([0 t3(end)])
     xlabel('Time [s]')
     ylabel('Moop - Blade2 [NM]')
@@ -227,7 +229,7 @@ if strcmp(rareDataAnalysis, 'Y')
     hold on
     plot(t3, CL.Moop3turb2_store(filter3:end),'Color',color2,'LineWidth', lw)
     hold off
-    legend('OL','CL')
+    legend('Shear','Turbulence')
     xlim([0 t3(end)])
     xlabel('Time [s]')
     ylabel('Moop - Blade3 [NM]')
@@ -237,7 +239,7 @@ if strcmp(rareDataAnalysis, 'Y')
     hold on
     plot(t3, CL.Mip1turb2_store(filter3:end),'Color',color2,'LineWidth', lw)
     hold off
-    legend('OL','CL')
+    legend('Shear','Turbulence')
     xlim([0 t3(end)])
     xlabel('Time [s]')
     ylabel('Mip- Blade1 [NM]')
@@ -246,7 +248,7 @@ if strcmp(rareDataAnalysis, 'Y')
     hold on
     plot(t3, CL.Mip1turb2_store(filter3:end),'Color',color2,'LineWidth', lw)
     hold off
-    legend('OL','CL')
+    legend('Shear','Turbulence')
     xlim([0 t3(end)])
     xlabel('Time [s]')
     ylabel('Mip - Blade2 [NM]')
@@ -255,7 +257,7 @@ if strcmp(rareDataAnalysis, 'Y')
     hold on
     plot(t3, CL.Mip1turb2_store(filter3:end),'Color',color2,'LineWidth', lw)
     hold off
-    legend('OL','CL')
+    legend('Shear','Turbulence')
     xlim([0 t3(end)])
     xlabel('Time [s]')
     ylabel('Mip - Blade3 [NM]')
@@ -299,66 +301,14 @@ end
 
 % ============== Overeall Detailed Visualization
 if strcmp(overallDetailOption, 'Y')
-    % Input Hub Jet
-    figure('Name', 'Input HF', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-    subplot(2, 1, 2)
-    plot(t, OL.HF_beta(filter:end, 1),'Color',color0,'LineWidth', lw)
-    hold on
-    plot(t, CL.u(filter:end, 1), 'Color',color1, 'LineWidth', lw)
-    hold off
-    title('\beta^e_{yaw}')
-    xlim([0 t(end)])
-    xlabel('Time [s]')
-    ylim([-1 5])
-    ylabel('Magnitude [deg]')
-    legend('OL','CL','Location','southeast')
-    subplot(2, 1, 1)
-    hold on
-    plot(t, OL.HF_beta(filter:end, 2),'Color',color0,'LineWidth', lw)
-    plot(t, CL.u(filter:end, 2),'Color',color2, 'LineWidth', lw)
-    hold off
-    title('\beta^e_{tilt}')
-    xlim([0 t(end)])
-    xlabel('Time [s]')
-    ylim([-1 5])
-    ylabel('Magnitude [deg]')
-    legend('OL','CL','Location','southeast')
-%     setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
-
-    % Input Fixed Frame
-    figure('Name', 'Input FF', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-    subplot(2, 1, 2)
-    plot(t, OL.FF_beta(filter:end, 1),'Color',color0,'LineWidth', lw)
-    hold on
-    plot(t, CL.FF_beta(filter:end, 1), 'Color',color1, 'LineWidth', lw)
-    hold off
-    title('\beta_{yaw}')
-    xlim([0 t(end)])
-    xlabel('Time [s]')
-%     ylim([-1 5])
-    ylabel('Magnitude [deg]')
-    legend('OL','CL','Location','southeast')
-    subplot(2, 1, 1)
-    hold on
-    plot(t, OL.FF_beta(filter:end, 2),'Color',color0,'LineWidth', lw)
-    plot(t, CL.FF_beta(filter:end, 2),'Color',color2, 'LineWidth', lw)
-    hold off
-    title('\beta_{tilt}')
-    xlim([0 t(end)])
-    xlabel('Time [s]')
-%     ylim([-1 5])
-    ylabel('Magnitude [deg]')
-    legend('OL','CL','Location','southeast')
-%     setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
-
     % hub Jet Helix Frame
-    r1 = ones(simLength-filter+1, 1)*8.5606;
     figure('Name', 'Output Detail', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
     subplot(2, 1, 2)
-    plot(t, OL.HF_helixCenter_filtered(filter:end, 1),'Color',color0,'LineWidth', lw)
+    plot(t, Baseline.HF_helixCenter_filtered(filter:end, 1),'Color',color0,'LineWidth', lw)
     hold on
-    plot(t, CL.HF_helixCenter_filtered(filter:end, 1),'Color',color1,'LineWidth', lw)
-    plot(t, r1, 'k:', 'LineWidth', lw)
+    plot(t, OL.HF_helixCenter_filtered(filter:end, 1), 'Color',color1,'LineWidth', lw)
+    plot(t, CL.HF_helixCenter_filtered(filter:end, 1), 'Color',color2,'LineWidth', lw)
+    plot(t, FL.HF_helixCenter_filtered(filter:end, 1), 'Color',color3,'LineWidth', lw)
     yline(0, '--', 'LineWidth', lw)
     hold off
     title('y^e')
@@ -366,22 +316,22 @@ if strcmp(overallDetailOption, 'Y')
     xlabel('Time [s]')
     ylim([-1 15])
     ylabel('Magnitude [m]')
-    legend('OL','CL','r','Location','southeast')
+    legend('Uniform','Shear','Turbulence','S&T','Location','southeast')
     subplot(2, 1, 1)
-    r2 = ones(simLength-filter+1, 1)*9.0661;
-    plot(t, OL.HF_helixCenter_filtered(filter:end, 2),'Color',color0,'LineWidth', lw)
+    plot(t, Baseline.HF_helixCenter_filtered(filter:end, 2),'Color',color0,'LineWidth', lw)
     hold on
-    plot(t, CL.HF_helixCenter_filtered(filter:end, 2),'Color',color2,'LineWidth', lw)
-    plot(t, r2, 'k:', 'LineWidth', lw)
+    plot(t, OL.HF_helixCenter_filtered(filter:end, 2), 'Color',color1,'LineWidth', lw)
+    plot(t, CL.HF_helixCenter_filtered(filter:end, 2), 'Color',color2,'LineWidth', lw)
+    plot(t, FL.HF_helixCenter_filtered(filter:end, 2), 'Color',color3,'LineWidth', lw)
     yline(0, '--', 'LineWidth', lw)
     hold off
     title('z^e')
     xlim([0 t(end)])
     xlabel('Time [s]')
     ylim([-1 15])
-    ylabel('Position [m]')
-    legend('OL','CL','r','Location','southeast')
-%     setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+    ylabel('Magnitude [m]')
+    legend('Uniform','Shear','Turbulence','S&T','Location','southeast')
+    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 end
 
 % ============== Hub Jet Trajectory
@@ -389,13 +339,29 @@ if strcmp(trajOption, 'Y')
     center_bl = mean(Baseline.FF_helixCenter_filtered(3000:end, :));
     center_ol = mean(OL.FF_helixCenter_filtered(filter:end, :));
     center_cl = mean(CL.FF_helixCenter_filtered(filter:end, :));
-    figure('Name', 'HubJet Trajectory', 'NumberTitle', 'off', 'Position', [100, 100, 600, 600]);
+    center_fl = mean(FL.FF_helixCenter_filtered(filter:end, :));
+    
+    figure('Name', 'HubJet Trajectory', 'NumberTitle', 'off', 'Position', [100, 100, 1050, 300]);
+    subplot(1, 3, 1)
     plot(Baseline.FF_helixCenter_filtered(filter:end, 2), Baseline.FF_helixCenter_filtered(filter:end, 1), 'Color',color0, 'LineWidth', lw)
     hold on
     plot(OL.FF_helixCenter_filtered(filter:end, 2), OL.FF_helixCenter_filtered(filter:end, 1), 'Color',color1, 'LineWidth', lw)
-    plot(CL.FF_helixCenter_filtered(filter:end, 2), CL.FF_helixCenter_filtered(filter:end, 1), 'Color',color2, 'LineWidth', lw)
     plot(center_bl(2), center_bl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color0);
     plot(center_ol(2), center_ol(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color1);
+    plot(0, 90, 'k*', 'MarkerSize', 10);
+    hold off
+    title('Hub Jet Trajectory')
+    xlabel('y [m]')
+    ylabel('z [m]')
+    xlim([-30 20])
+    ylim([67 117])
+    legend('Uniform', 'Shear', 'Location','southeast')
+
+    subplot(1, 3, 2)
+    plot(Baseline.FF_helixCenter_filtered(filter:end, 2), Baseline.FF_helixCenter_filtered(filter:end, 1), 'Color',color0, 'LineWidth', lw)
+    hold on
+    plot(CL.FF_helixCenter_filtered(filter:end, 2), CL.FF_helixCenter_filtered(filter:end, 1), 'Color',color2, 'LineWidth', lw)
+    plot(center_bl(2), center_bl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color0);
     plot(center_cl(2), center_cl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color2);
     plot(0, 90, 'k*', 'MarkerSize', 10);
     hold off
@@ -404,8 +370,23 @@ if strcmp(trajOption, 'Y')
     ylabel('z [m]')
     xlim([-30 20])
     ylim([67 117])
-    legend('Baseline', 'OL', 'CL', 'Location','southeast')
-%     setfigpaper('Width',[15,1],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+    legend('Uniform', 'Turbulence', 'Location','southeast')
+
+    subplot(1, 3, 3)
+    plot(Baseline.FF_helixCenter_filtered(filter:end, 2), Baseline.FF_helixCenter_filtered(filter:end, 1), 'Color',color0, 'LineWidth', lw)
+    hold on
+    plot(FL.FF_helixCenter_filtered(filter:end, 2), FL.FF_helixCenter_filtered(filter:end, 1), 'Color',color3, 'LineWidth', lw)
+    plot(center_bl(2), center_bl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color0);
+    plot(center_fl(2), center_fl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color2);
+    plot(0, 90, 'k*', 'MarkerSize', 10);
+    hold off
+    title('Hub Jet Trajectory')
+    xlabel('y [m]')
+    ylabel('z [m]')
+    xlim([-30 20])
+    ylim([67 117])
+    legend('Uniform', 'S&T', 'Location','southeast')
+    setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 end
 
 % ============== Video comparison
@@ -416,7 +397,7 @@ end
 
 % ============== Power and Fatigue Analysis
 % Note!!! Open-loop is used as benchmark rather than baseline
-% =========== Baseline
+% =========== Uniform
 % Upstream WT1
 BL_result.WT1.power = calculatePower(filter,Baseline.Power_store,D_NREL5MW,U_inflow); % [MW]
 BL_result.WT1.DEL = calculateDEL(filter, ...
@@ -448,7 +429,7 @@ BL_result.All.DEL_flapwise = BL_result.WT1.DEL_flapwise + BL_result.WT2.DEL_flap
 BL_result.All.DEL_edgewise = BL_result.WT1.DEL_edgewise + BL_result.WT2.DEL_edgewise;
 BL_result.All.PBD = BL_result.WT1.PBD + BL_result.WT2.PBD;
 
-% =========== Open-Loop
+% =========== Shear
 OL_result.WT1.power = calculatePower(filter,OL.Power_store,D_NREL5MW,U_inflow); % [MW]
 OL_result.WT1.DEL = calculateDEL(filter, ...
     OL.Mflap1_store,OL.Medge1_store, ...
@@ -479,7 +460,7 @@ OL_result.All.DEL_flapwise = OL_result.WT1.DEL_flapwise + OL_result.WT2.DEL_flap
 OL_result.All.DEL_edgewise = OL_result.WT1.DEL_edgewise + OL_result.WT2.DEL_edgewise;
 OL_result.All.PBD = OL_result.WT1.PBD + OL_result.WT2.PBD;
 
-% =========== Closed-Loop
+% =========== Turbulence
 CL_result.WT1.power = calculatePower(filter,CL.Power_store,D_NREL5MW,U_inflow); % [MW]
 CL_result.WT1.DEL = calculateDEL(filter, ...
     CL.Mflap1_store,CL.Medge1_store, ...
@@ -510,82 +491,101 @@ CL_result.All.DEL_flapwise = CL_result.WT1.DEL_flapwise + CL_result.WT2.DEL_flap
 CL_result.All.DEL_edgewise = CL_result.WT1.DEL_edgewise + CL_result.WT2.DEL_edgewise;
 CL_result.All.PBD = CL_result.WT1.PBD + CL_result.WT2.PBD;
 
-% === Power 
-if strcmp(powerAnalysis, 'Y')
-    x = [1 2 3];
-    deltaPower = [(OL_result.WT1.power-BL_result.WT1.power)/(BL_result.WT1.power) (OL_result.WT2.power-BL_result.WT2.power)/(BL_result.WT2.power) (OL_result.All.power-BL_result.All.power)/(BL_result.All.power);
-                  (CL_result.WT1.power-BL_result.WT1.power)/(BL_result.WT1.power) (CL_result.WT2.power-BL_result.WT2.power)/(BL_result.WT2.power) (CL_result.All.power-BL_result.All.power)/(BL_result.All.power)];
-    figure('Name', 'Power', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-    bar(x,deltaPower*100); % convert to 100%
-    xticks(x); 
-    xticklabels({'WT1', 'WT2', 'WT1+WT2'}); 
-    ylabel('\Delta Power [%]')
-    legend('OL', 'CL', 'Location','northeast')
-%     setfigpaper('Width',[20,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
-end
-
-% === DEL 
-if strcmp(DELAnalysis, 'Y')
-    x = [1 2 3];
-    deltaDEL = [(CL_result.WT1.DEL_flapwise-OL_result.WT1.DEL_flapwise)/(OL_result.WT1.DEL_flapwise) (CL_result.WT2.DEL_flapwise-OL_result.WT2.DEL_flapwise)/(OL_result.WT2.DEL_flapwise) (CL_result.All.DEL_flapwise-OL_result.All.DEL_flapwise)/(OL_result.All.DEL_flapwise);
-                (CL_result.WT1.DEL_edgewise-OL_result.WT1.DEL_edgewise)/(OL_result.WT1.DEL_edgewise) (CL_result.WT2.DEL_edgewise-OL_result.WT2.DEL_edgewise)/(OL_result.WT2.DEL_edgewise) (CL_result.All.DEL_edgewise-OL_result.All.DEL_edgewise)/(OL_result.All.DEL_edgewise)];
-    figure('Name', 'DEL', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-    bar(x,deltaDEL*100);
-    xticks(x); 
-    xticklabels({'WT1', 'WT2', 'WT1+WT2'}); 
-    ylabel('\Delta DEL [%]')
-    legend('BR flapwise', 'BR Edgewise', 'Location','southeast')
-%     setfigpaper('Width',[20,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
-end
+% =========== Shear & Turbulence
+FL_result.WT1.power = calculatePower(filter,FL.Power_store,D_NREL5MW,U_inflow); % [MW]
+FL_result.WT1.DEL = calculateDEL(filter, ...
+    FL.Mflap1_store,FL.Medge1_store, ...
+    FL.Mflap2_store,FL.Medge2_store, ...
+    FL.Mflap3_store,FL.Medge3_store, ...
+    timeStep); % [Nm]
+FL_result.WT1.PBD = calculatePBD(filter,FL.PitchAngles, ...
+    FL.Mflap1_store,FL.Medge1_store, ...
+    FL.Mflap2_store,FL.Medge2_store, ...
+    FL.Mflap3_store,FL.Medge3_store); % [kNm deg]
+% Downstream WT2
+FL_result.WT2.power = calculatePower(filter,FL.Powerturb2_store,D_NREL5MW,U_inflow); % [MW]
+FL_result.WT2.DEL = calculateDEL(filter, ...
+    FL.Mflap1turb2_store,FL.Medge1turb2_store, ...
+    FL.Mflap2turb2_store,FL.Medge2turb2_store, ...
+    FL.Mflap3turb2_store,FL.Medge3turb2_store, ...
+    timeStep); % [Nm]
+FL_result.WT2.PBD = calculatePBD(filter,FL.PitchAnglesturb2, ...
+    FL.Mflap1turb2_store,FL.Medge1turb2_store, ...
+    FL.Mflap2turb2_store,FL.Medge2turb2_store, ...
+    FL.Mflap3turb2_store,FL.Medge3turb2_store); % [kNm deg]
+FL_result.WT1.DEL_flapwise = mean(FL_result.WT1.DEL(1)+FL_result.WT1.DEL(3)+FL_result.WT1.DEL(5));
+FL_result.WT1.DEL_edgewise = mean(FL_result.WT1.DEL(2)+FL_result.WT1.DEL(4)+FL_result.WT1.DEL(6));
+FL_result.WT2.DEL_flapwise = mean(FL_result.WT2.DEL(1)+FL_result.WT2.DEL(3)+FL_result.WT2.DEL(5));
+FL_result.WT2.DEL_edgewise = mean(FL_result.WT2.DEL(2)+FL_result.WT2.DEL(4)+FL_result.WT2.DEL(6));
+FL_result.All.power = FL_result.WT1.power + FL_result.WT2.power;
+FL_result.All.DEL_flapwise = FL_result.WT1.DEL_flapwise + FL_result.WT2.DEL_flapwise;
+FL_result.All.DEL_edgewise = FL_result.WT1.DEL_edgewise + FL_result.WT2.DEL_edgewise;
+FL_result.All.PBD = FL_result.WT1.PBD + FL_result.WT2.PBD;
 
 % === Power and DEL (Result Make Sense or Not)
 if strcmp(powerDELAnalysis, 'Y')
+    customColors = [0, 0.4470, 0.7410;  % Blue
+                    0.8500, 0.3250, 0.0980;  % Orange
+                    0.3010, 0.7450, 0.9330]; % Yellow
     filter2 = 2000;
     x = [1 2 3];
     deltaPower = [(OL_result.WT1.power-BL_result.WT1.power)/(BL_result.WT1.power) (OL_result.WT2.power-BL_result.WT2.power)/(BL_result.WT2.power) (OL_result.All.power-BL_result.All.power)/(BL_result.All.power);
-                  (CL_result.WT1.power-BL_result.WT1.power)/(BL_result.WT1.power) (CL_result.WT2.power-BL_result.WT2.power)/(BL_result.WT2.power) (CL_result.All.power-BL_result.All.power)/(BL_result.All.power)];
+                  (CL_result.WT1.power-BL_result.WT1.power)/(BL_result.WT1.power) (CL_result.WT2.power-BL_result.WT2.power)/(BL_result.WT2.power) (CL_result.All.power-BL_result.All.power)/(BL_result.All.power);
+                  (FL_result.WT1.power-BL_result.WT1.power)/(BL_result.WT1.power) (FL_result.WT2.power-BL_result.WT2.power)/(BL_result.WT2.power) (FL_result.All.power-BL_result.All.power)/(BL_result.All.power)];
     deltaDELf = [(OL_result.WT1.DEL_flapwise-BL_result.WT1.DEL_flapwise)/(BL_result.WT1.DEL_flapwise) (OL_result.WT2.DEL_flapwise-BL_result.WT2.DEL_flapwise)/(BL_result.WT2.DEL_flapwise) (OL_result.All.DEL_flapwise-BL_result.All.DEL_flapwise)/(BL_result.All.DEL_flapwise);
-                 (CL_result.WT1.DEL_flapwise-BL_result.WT1.DEL_flapwise)/(BL_result.WT1.DEL_flapwise) (CL_result.WT2.DEL_flapwise-BL_result.WT2.DEL_flapwise)/(BL_result.WT2.DEL_flapwise) (CL_result.All.DEL_flapwise-BL_result.All.DEL_flapwise)/(BL_result.All.DEL_flapwise)];
+                 (CL_result.WT1.DEL_flapwise-BL_result.WT1.DEL_flapwise)/(BL_result.WT1.DEL_flapwise) (CL_result.WT2.DEL_flapwise-BL_result.WT2.DEL_flapwise)/(BL_result.WT2.DEL_flapwise) (CL_result.All.DEL_flapwise-BL_result.All.DEL_flapwise)/(BL_result.All.DEL_flapwise);
+                 (FL_result.WT1.DEL_flapwise-BL_result.WT1.DEL_flapwise)/(BL_result.WT1.DEL_flapwise) (FL_result.WT2.DEL_flapwise-BL_result.WT2.DEL_flapwise)/(BL_result.WT2.DEL_flapwise) (FL_result.All.DEL_flapwise-BL_result.All.DEL_flapwise)/(BL_result.All.DEL_flapwise)];
     deltaDELe = [(OL_result.WT1.DEL_edgewise-BL_result.WT1.DEL_edgewise)/(BL_result.WT1.DEL_edgewise) (OL_result.WT2.DEL_edgewise-BL_result.WT2.DEL_edgewise)/(BL_result.WT2.DEL_edgewise) (OL_result.All.DEL_edgewise-BL_result.All.DEL_edgewise)/(BL_result.All.DEL_edgewise);
-                 (CL_result.WT1.DEL_edgewise-BL_result.WT1.DEL_edgewise)/(BL_result.WT1.DEL_edgewise) (CL_result.WT2.DEL_edgewise-BL_result.WT2.DEL_edgewise)/(BL_result.WT2.DEL_edgewise) (CL_result.All.DEL_edgewise-BL_result.All.DEL_edgewise)/(BL_result.All.DEL_edgewise)];
+                 (CL_result.WT1.DEL_edgewise-BL_result.WT1.DEL_edgewise)/(BL_result.WT1.DEL_edgewise) (CL_result.WT2.DEL_edgewise-BL_result.WT2.DEL_edgewise)/(BL_result.WT2.DEL_edgewise) (CL_result.All.DEL_edgewise-BL_result.All.DEL_edgewise)/(BL_result.All.DEL_edgewise);
+                 (FL_result.WT1.DEL_edgewise-BL_result.WT1.DEL_edgewise)/(BL_result.WT1.DEL_edgewise) (FL_result.WT2.DEL_edgewise-BL_result.WT2.DEL_edgewise)/(BL_result.WT2.DEL_edgewise) (FL_result.All.DEL_edgewise-BL_result.All.DEL_edgewise)/(BL_result.All.DEL_edgewise)];
     
     figure('Name', 'Power & DEL', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
     subplot(1, 3, 1)
-    bar(x,deltaPower*100);
+    b = bar(x,deltaPower*100);
+    for i = 1:length(b)
+        b(i).FaceColor = 'flat';
+        b(i).CData = repmat(customColors(i, :), size(deltaPower, 1), 1); % Apply custom colors
+    end
     xticks(x); 
     xticklabels({'WT1', 'WT2', 'WT1+WT2'}); 
-%     ylim([-10 35])
     ylabel('\Delta Power [%]')
-    legend('OL', 'CL', 'Location','northeast')
+    legend('S', 'T','S&T', 'Location','southeast')
     title('Power')
 
     subplot(1, 3, 2)
-    bar(x,deltaDELf*100);
+    b = bar(x,deltaDELf*100);
+    for i = 1:length(b)
+        b(i).FaceColor = 'flat';
+        b(i).CData = repmat(customColors(i, :), size(deltaPower, 1), 1); % Apply custom colors
+    end
     xticks(x); 
     xticklabels({'WT1', 'WT2', 'WT1+WT2'}); 
-%     ylim([-100 2000])
     ylabel('\Delta DEL [%]')
-    legend('OL', 'CL', 'Location','northeast')
+    legend('S', 'T','S&T', 'Location','southeast')
     title('DEL Flapwise')
     
     subplot(1, 3, 3)
-    bar(x,deltaDELe*100);
+    b = bar(x,deltaDELe*100);
+    for i = 1:length(b)
+        b(i).FaceColor = 'flat';
+        b(i).CData = repmat(customColors(i, :), size(deltaPower, 1), 1); % Apply custom colors
+    end
     xticks(x); 
     xticklabels({'WT1', 'WT2', 'WT1+WT2'}); 
-%     ylim([-100 2000])
     ylabel('\Delta DEL [%]')
-    legend('OL', 'CL', 'Location','northeast')
+    legend('S', 'T','S&T', 'Location','southeast')
     title('DEL Edgewise')
-%     setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+    setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 end
 
 % === PBD
 % PBD is only compared between the open-loop and closed-loop because
 % baseline does not have PBD since Helix is not activated
 if strcmp(PBDAnalysis, 'Y')
-    deltaPBD = mean(CL_result.WT1.PBD) - mean(OL_result.WT1.PBD);
-    disp(deltaPBD)
-    
+    disp(mean(OL_result.WT1.PBD) - mean(BL_result.WT1.PBD))
+    disp(mean(CL_result.WT1.PBD) - mean(BL_result.WT1.PBD))
+    disp(mean(FL_result.WT1.PBD) - mean(BL_result.WT1.PBD))
+
 %     figure('Name', 'PBD', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
 %     PBD_list = [mean(OL_result.WT1.PBD) mean(CL_result.WT1.PBD)];
 %     bar([1,2], PBD_list);
