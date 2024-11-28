@@ -174,8 +174,9 @@ if strcmp(rareDataAnalysis, 'Y')
     plot(t3, OL.Powerturb2_store(filter3:end)/1e3,'Color',color1,'LineWidth', lw)
     hold on
     plot(t3, CL.Powerturb2_store(filter3:end)/1e3,'Color',color2,'LineWidth', lw)
+    plot(t3, Baseline.Powerturb2_store(filter3:end)/1e3,'Color',color0,'LineWidth', lw)
     hold off
-    legend('Shear','Turbulence')
+    legend('Shear','Turbulence','Uniform')
     xlim([0 t3(end)])
     xlabel('Time [s]')
     ylabel('Power [MW]')
@@ -184,25 +185,13 @@ if strcmp(rareDataAnalysis, 'Y')
     plot(t3, OL.TorqueStoreTurb2(filter3:end),'Color',color1,'LineWidth', lw)
     hold on
     plot(t3, CL.TorqueStoreTurb2(filter3:end),'Color',color2,'LineWidth', lw)
+    plot(t3, Baseline.TorqueStoreTurb2(filter3:end),'Color',color0,'LineWidth', lw)
     hold off
-    legend('Shear','Turbulence')
+    legend('Shear','Turbulence','Uniform')
     xlim([0 t3(end)])
     xlabel('Time [s]')
     ylabel('Torque [Nm]')
     title('Generator Torque')
-
-    figure('Name', 'Rare Data --- Pitch', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-    % Pitch
-    plot(t3, OL.PitchAngles(filter3:end, 1))
-    hold on
-    plot(t3, CL.PitchAngles(filter3:end, 1))
-    hold off
-    legend('Shear','Turbulence')
-    xlim([0 t3(end)])
-    xlabel('Time [s]')
-    ylabel('Pitch [deg]')
-    title('Pitch Signal')
-    legend('Shear','Turbulence')
     
     % Fatigue (Time Domain)
     figure('Name', 'Rare Data --- Fatigue', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
@@ -210,8 +199,9 @@ if strcmp(rareDataAnalysis, 'Y')
     plot(t3, OL.Moop1turb2_store(filter3:end),'Color',color1,'LineWidth', lw)
     hold on
     plot(t3, CL.Moop1turb2_store(filter3:end),'Color',color2,'LineWidth', lw)
+    plot(t3, Baseline.Moop1turb2_store(filter3:end),'Color',color0,'LineWidth', lw)
     hold off
-    legend('Shear','Turbulence')
+    legend('Shear','Turbulence','Uniform')
     xlim([0 t3(end)])
     xlabel('Time [s]')
     ylabel('Moop - Blade1 [NM]')
@@ -219,8 +209,9 @@ if strcmp(rareDataAnalysis, 'Y')
     plot(t3, OL.Moop2turb2_store(filter3:end),'Color',color1,'LineWidth', lw)
     hold on
     plot(t3, CL.Moop2turb2_store(filter3:end),'Color',color2,'LineWidth', lw)
+    plot(t3, Baseline.Moop2turb2_store(filter3:end),'Color',color0,'LineWidth', lw)
     hold off
-    legend('Shear','Turbulence')
+    legend('Shear','Turbulence','Uniform')
     xlim([0 t3(end)])
     xlabel('Time [s]')
     ylabel('Moop - Blade2 [NM]')
@@ -228,8 +219,9 @@ if strcmp(rareDataAnalysis, 'Y')
     plot(t3, OL.Moop3turb2_store(filter3:end),'Color',color1,'LineWidth', lw)
     hold on
     plot(t3, CL.Moop3turb2_store(filter3:end),'Color',color2,'LineWidth', lw)
+    plot(t3, Baseline.Moop3turb2_store(filter3:end),'Color',color0,'LineWidth', lw)
     hold off
-    legend('Shear','Turbulence')
+    legend('Shear','Turbulence','Uniform')
     xlim([0 t3(end)])
     xlabel('Time [s]')
     ylabel('Moop - Blade3 [NM]')
@@ -238,26 +230,29 @@ if strcmp(rareDataAnalysis, 'Y')
     plot(t3, OL.Mip1turb2_store(filter3:end),'Color',color1,'LineWidth', lw)
     hold on
     plot(t3, CL.Mip1turb2_store(filter3:end),'Color',color2,'LineWidth', lw)
+    plot(t3, Baseline.Mip1turb2_store(filter3:end),'Color',color0,'LineWidth', lw)
     hold off
-    legend('Shear','Turbulence')
+    legend('Shear','Turbulence','Uniform')
     xlim([0 t3(end)])
     xlabel('Time [s]')
     ylabel('Mip- Blade1 [NM]')
     subplot(3, 2, 4)
-    plot(t3, OL.Mip1turb2_store(filter3:end),'Color',color1,'LineWidth', lw)
+    plot(t3, OL.Mip2turb2_store(filter3:end),'Color',color1,'LineWidth', lw)
     hold on
-    plot(t3, CL.Mip1turb2_store(filter3:end),'Color',color2,'LineWidth', lw)
+    plot(t3, CL.Mip2turb2_store(filter3:end),'Color',color2,'LineWidth', lw)
+    plot(t3, Baseline.Mip2turb2_store(filter3:end),'Color',color0,'LineWidth', lw)
     hold off
-    legend('Shear','Turbulence')
+    legend('Shear','Turbulence','Uniform')
     xlim([0 t3(end)])
     xlabel('Time [s]')
     ylabel('Mip - Blade2 [NM]')
     subplot(3, 2, 6)
-    plot(t3, OL.Mip1turb2_store(filter3:end),'Color',color1,'LineWidth', lw)
+    plot(t3, OL.Mip3turb2_store(filter3:end),'Color',color1,'LineWidth', lw)
     hold on
-    plot(t3, CL.Mip1turb2_store(filter3:end),'Color',color2,'LineWidth', lw)
+    plot(t3, CL.Mip3turb2_store(filter3:end),'Color',color2,'LineWidth', lw)
+    plot(t3, Baseline.Mip3turb2_store(filter3:end),'Color',color0,'LineWidth', lw)
     hold off
-    legend('Shear','Turbulence')
+    legend('Shear','Turbulence','Uniform')
     xlim([0 t3(end)])
     xlabel('Time [s]')
     ylabel('Mip - Blade3 [NM]')
@@ -276,26 +271,26 @@ if strcmp(rareDataAnalysis, 'Y')
     hold on
     semilogx(Foop2, mag2db(MoopM2),'LineWidth',lw)
     semilogx(Foop3, mag2db(MoopM3),'LineWidth',lw)
-    yline(0, ':', 'LineWidth', lw)
-%     xline(Freq*2*pi, '--', 'LineWidth', lw)
+    xline(Freq, '--', 'LineWidth', lw)
+    xline(8/60, '--', 'LineWidth', lw)
     hold off
     grid on
-%     xlabel('Frequency [Hz]');
+    xlabel('Frequency [Hz]');
     ylabel('Amplitude [dB]');
-    legend('Moop1', 'Moop2','Moop3', 'Location', 'southeast')
+    legend('Moop1', 'Moop2','Moop3','f_e','1P','Location','southeast')
     title('Moop PSD')
     subplot(1, 2, 2)
     semilogx(Fip1, mag2db(MipM1),'LineWidth',lw)
     hold on
     semilogx(Fip2, mag2db(MipM2),'LineWidth',lw)
     semilogx(Fip3, mag2db(MipM3),'LineWidth',lw)
-    yline(0, ':', 'LineWidth', lw)
-%     xline(Freq*2*pi, '--', 'LineWidth', lw)
+    xline(Freq, '--', 'LineWidth', lw)
+    xline(8/60, '--', 'LineWidth', lw)
     hold off
     grid on
-%     xlabel('Frequency [Hz]');
+    xlabel('Frequency [Hz]');
     ylabel('Amplitude [dB]');
-    legend('Mip1', 'Mip2','Mip3', 'Location', 'southeast')
+    legend('Mip1', 'Mip2','Mip3','f_e','1P','Location','southeast')
     title('Mip PSD')
 end
 

@@ -6,15 +6,18 @@ addpath('.\Functions');
 
 %% Data file (Chage this accordingly)
 turbineName = '.\Data\NREL5MW\';
-% caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesNew\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesLonger\';
 
 % Different case
-windCase = 'Uniform'; % Uniform, Shear, Turb, Both
+windCase = 'Uniform'; % Uniform, Uniform2, Shear, Turb, Both
 if strcmp(windCase, 'Uniform')
     basefile = '2Turbines_Baseline_4D.mat';
     OLfileName = '2Turbines_OL_Helix_mag3_4D.mat';
     CLfileName = '2Turbines_CL_Helix_ramp&stop_mag3_4D.mat';
+elseif strcmp(windCase, 'Uniform2')
+    basefile = '2Turbines_Baseline_4D.mat';
+    OLfileName = '2Turbines_OL_Helix_mag3_4D.mat';
+    CLfileName = '2Turbines_OL_Helix_mag3.1_4D.mat';
 elseif strcmp(windCase, 'Shear')
     basefile = '2Turbines_Baseline_Shear0.2_4D.mat';
     OLfileName = '2Turbines_OL_Helix_Shear0.2_mag3_4D.mat';
@@ -34,22 +37,22 @@ OL = load([turbineName caseName OLfileName]);
 CL = load([turbineName caseName CLfileName]);
 
 %% Overall Settings
-overallOption = 'Y';
-overallDetailOption = 'Y';
-trajOption = 'Y';
+overallOption = 'N';
+flowAnalysis = 'Y';
+rareDataAnalysis = 'Y';
+overallDetailOption = 'N';
+trajOption = 'N';
 videoOption = 'N';
 powerAnalysis = 'N';
 DELAnalysis = 'N';
 PBDAnalysis = 'Y';
 powerDELAnalysis = 'Y';
-flowAnalysis = 'Y';
-rareDataAnalysis = 'Y';
 
 % Basic Settings
 D_NREL5MW = 126;
 U_inflow = 10;
 timeStep = 0.1;
-filter = 3000;  % Overall as well
+filter = 3000;
 filter0 = 1000; % Overall result
 filter2 = 1000; % Wind info
 filter3 = 1000; % Rare data
@@ -130,7 +133,7 @@ if strcmp(overallOption, 'Y')
     ylim([-12.5 12.5])
     ylabel('Magnitude [deg]')
     legend('\beta_{tilt,b}','\beta_{yaw,b}','\beta_{tilt}','\beta_{yaw}','Location','southeastoutside')
-%     setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 end
 
 % ============== Wind Flow Information
@@ -148,6 +151,8 @@ if strcmp(flowAnalysis, 'Y')
 %     ylim([-1 5])
     ylabel('Speed [m/s]')
     legend('OL','CL','Location','southeast')
+%     disp(mean(OL.UmeanStore(filter2:end)))
+%     disp(mean(CL.UmeanStore(filter2:end)))
 
     subplot(2, 1, 2)
     plot(t2, OL.TIStore(filter2:end),'Color',color1,'LineWidth', lw)
@@ -159,7 +164,8 @@ if strcmp(flowAnalysis, 'Y')
     xlabel('Time [s]')
 %     ylim([-1 5])
     ylabel('Value [-]')
-    legend('OL','CL','Location','southeast')    
+    legend('OL','CL','Location','southeast')
+    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 end
 
 % ============== Rare Data Visualization
@@ -188,6 +194,7 @@ if strcmp(rareDataAnalysis, 'Y')
     xlabel('Time [s]')
     ylabel('Torque [Nm]')
     title('Generator Torque')
+    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 
     figure('Name', 'Rare Data --- Pitch', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
     % Pitch
@@ -201,6 +208,7 @@ if strcmp(rareDataAnalysis, 'Y')
     ylabel('Pitch [deg]')
     title('Pitch Signal')
     legend('OL', 'CL')
+    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
     
     % Fatigue (Time Domain)
     figure('Name', 'Rare Data --- Fatigue', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
@@ -274,32 +282,32 @@ if strcmp(rareDataAnalysis, 'Y')
     hold on
     semilogx(Foop2, mag2db(MoopM2),'LineWidth',lw)
     semilogx(Foop3, mag2db(MoopM3),'LineWidth',lw)
-    yline(0, ':', 'LineWidth', lw)
-%     xline(Freq*2*pi, '--', 'LineWidth', lw)
+    xline(Freq, '--', 'LineWidth', lw)
+    xline(8.5/60, '--', 'LineWidth', lw)
     hold off
     grid on
-%     xlabel('Frequency [Hz]');
+    xlabel('Frequency [Hz]');
     ylabel('Amplitude [dB]');
-    legend('Moop1', 'Moop2','Moop3', 'Location', 'southeast')
+    legend('Moop1','Moop2','Moop3','f_e','1P','Location','southeast')
     title('Moop PSD')
     subplot(1, 2, 2)
     semilogx(Fip1, mag2db(MipM1),'LineWidth',lw)
     hold on
     semilogx(Fip2, mag2db(MipM2),'LineWidth',lw)
     semilogx(Fip3, mag2db(MipM3),'LineWidth',lw)
-    yline(0, ':', 'LineWidth', lw)
-%     xline(Freq*2*pi, '--', 'LineWidth', lw)
+    xline(Freq, '--', 'LineWidth', lw)
+    xline(8.5/60, '--', 'LineWidth', lw)
     hold off
     grid on
-%     xlabel('Frequency [Hz]');
+    xlabel('Frequency [Hz]');
     ylabel('Amplitude [dB]');
-    legend('Mip1', 'Mip2','Mip3', 'Location', 'southeast')
+    legend('Mip1','Mip2','Mip3','f_e','1P','Location','southeast')
     title('Mip PSD')
 end
 
 % ============== Overeall Detailed Visualization
 if strcmp(overallDetailOption, 'Y')
-    % Input Hub Jet
+    % Input Helix Frame
     figure('Name', 'Input HF', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
     subplot(2, 1, 2)
     plot(t, OL.HF_beta(filter:end, 1),'Color',color0,'LineWidth', lw)
@@ -323,7 +331,7 @@ if strcmp(overallDetailOption, 'Y')
     ylim([-1 5])
     ylabel('Magnitude [deg]')
     legend('OL','CL','Location','southeast')
-%     setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 
     % Input Fixed Frame
     figure('Name', 'Input FF', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
@@ -349,11 +357,11 @@ if strcmp(overallDetailOption, 'Y')
 %     ylim([-1 5])
     ylabel('Magnitude [deg]')
     legend('OL','CL','Location','southeast')
-%     setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 
-    % hub Jet Helix Frame
+    % Output Helix Frame
     r1 = ones(simLength-filter+1, 1)*8.5606;
-    figure('Name', 'Output Detail', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+    figure('Name', 'Output Detail HF', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
     subplot(2, 1, 2)
     plot(t, OL.HF_helixCenter_filtered(filter:end, 1),'Color',color0,'LineWidth', lw)
     hold on
@@ -381,7 +389,32 @@ if strcmp(overallDetailOption, 'Y')
     ylim([-1 15])
     ylabel('Position [m]')
     legend('OL','CL','r','Location','southeast')
-%     setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+
+    % Output Fixed Frame
+    figure('Name', 'Output Detail FF', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+    subplot(2, 1, 2)
+    plot(t, OL.FF_helixCenter_filtered(filter:end, 1),'Color',color0,'LineWidth', lw)
+    hold on
+    plot(t, CL.FF_helixCenter_filtered(filter:end, 1),'Color',color1,'LineWidth', lw)
+    hold off
+    title('z')
+    xlim([0 t(end)])
+    xlabel('Time [s]')
+    ylabel('Magnitude [m]')
+    legend('OL','CL','Location','southeast')
+    subplot(2, 1, 1)
+    r2 = ones(simLength-filter+1, 1)*9.0661;
+    plot(t, OL.FF_helixCenter_filtered(filter:end, 2),'Color',color0,'LineWidth', lw)
+    hold on
+    plot(t, CL.FF_helixCenter_filtered(filter:end, 2),'Color',color2,'LineWidth', lw)
+    hold off
+    title('y')
+    xlim([0 t(end)])
+    xlabel('Time [s]')
+    ylabel('Position [m]')
+    legend('OL','CL','Location','southeast')
+    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 end
 
 % ============== Hub Jet Trajectory
@@ -405,7 +438,7 @@ if strcmp(trajOption, 'Y')
     xlim([-30 20])
     ylim([67 117])
     legend('Baseline', 'OL', 'CL', 'Location','southeast')
-%     setfigpaper('Width',[15,1],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+    setfigpaper('Width',[15,1],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 end
 
 % ============== Video comparison
@@ -510,34 +543,6 @@ CL_result.All.DEL_flapwise = CL_result.WT1.DEL_flapwise + CL_result.WT2.DEL_flap
 CL_result.All.DEL_edgewise = CL_result.WT1.DEL_edgewise + CL_result.WT2.DEL_edgewise;
 CL_result.All.PBD = CL_result.WT1.PBD + CL_result.WT2.PBD;
 
-% === Power 
-if strcmp(powerAnalysis, 'Y')
-    x = [1 2 3];
-    deltaPower = [(OL_result.WT1.power-BL_result.WT1.power)/(BL_result.WT1.power) (OL_result.WT2.power-BL_result.WT2.power)/(BL_result.WT2.power) (OL_result.All.power-BL_result.All.power)/(BL_result.All.power);
-                  (CL_result.WT1.power-BL_result.WT1.power)/(BL_result.WT1.power) (CL_result.WT2.power-BL_result.WT2.power)/(BL_result.WT2.power) (CL_result.All.power-BL_result.All.power)/(BL_result.All.power)];
-    figure('Name', 'Power', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-    bar(x,deltaPower*100); % convert to 100%
-    xticks(x); 
-    xticklabels({'WT1', 'WT2', 'WT1+WT2'}); 
-    ylabel('\Delta Power [%]')
-    legend('OL', 'CL', 'Location','northeast')
-%     setfigpaper('Width',[20,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
-end
-
-% === DEL 
-if strcmp(DELAnalysis, 'Y')
-    x = [1 2 3];
-    deltaDEL = [(CL_result.WT1.DEL_flapwise-OL_result.WT1.DEL_flapwise)/(OL_result.WT1.DEL_flapwise) (CL_result.WT2.DEL_flapwise-OL_result.WT2.DEL_flapwise)/(OL_result.WT2.DEL_flapwise) (CL_result.All.DEL_flapwise-OL_result.All.DEL_flapwise)/(OL_result.All.DEL_flapwise);
-                (CL_result.WT1.DEL_edgewise-OL_result.WT1.DEL_edgewise)/(OL_result.WT1.DEL_edgewise) (CL_result.WT2.DEL_edgewise-OL_result.WT2.DEL_edgewise)/(OL_result.WT2.DEL_edgewise) (CL_result.All.DEL_edgewise-OL_result.All.DEL_edgewise)/(OL_result.All.DEL_edgewise)];
-    figure('Name', 'DEL', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-    bar(x,deltaDEL*100);
-    xticks(x); 
-    xticklabels({'WT1', 'WT2', 'WT1+WT2'}); 
-    ylabel('\Delta DEL [%]')
-    legend('BR flapwise', 'BR Edgewise', 'Location','southeast')
-%     setfigpaper('Width',[20,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
-end
-
 % === Power and DEL (Result Make Sense or Not)
 if strcmp(powerDELAnalysis, 'Y')
     filter2 = 2000;
@@ -554,7 +559,6 @@ if strcmp(powerDELAnalysis, 'Y')
     bar(x,deltaPower*100);
     xticks(x); 
     xticklabels({'WT1', 'WT2', 'WT1+WT2'}); 
-%     ylim([-10 35])
     ylabel('\Delta Power [%]')
     legend('OL', 'CL', 'Location','northeast')
     title('Power')
@@ -563,7 +567,6 @@ if strcmp(powerDELAnalysis, 'Y')
     bar(x,deltaDELf*100);
     xticks(x); 
     xticklabels({'WT1', 'WT2', 'WT1+WT2'}); 
-%     ylim([-100 2000])
     ylabel('\Delta DEL [%]')
     legend('OL', 'CL', 'Location','northeast')
     title('DEL Flapwise')
@@ -572,11 +575,10 @@ if strcmp(powerDELAnalysis, 'Y')
     bar(x,deltaDELe*100);
     xticks(x); 
     xticklabels({'WT1', 'WT2', 'WT1+WT2'}); 
-%     ylim([-100 2000])
     ylabel('\Delta DEL [%]')
     legend('OL', 'CL', 'Location','northeast')
     title('DEL Edgewise')
-%     setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+    setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 end
 
 % === PBD
