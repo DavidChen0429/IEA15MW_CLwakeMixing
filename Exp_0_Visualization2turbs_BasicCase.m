@@ -44,9 +44,10 @@ powerDELAnalysis = 'Y';
 D_NREL5MW = 126;
 U_inflow = 10;
 timeStep = 0.1;
-filter = 3000;  % Overall as well
-filter2 = 3000; % Wind info
-filter3 = 3000; % Rare data
+filter = 3000;
+filter0 = 1;    % Overall
+filter2 = 1;    % Wind info
+filter3 = 1;    % Rare data
 DeadtimeDelay = 112; % change to 112 when showing whole process
 Str = 0.3;                          % Strouhal number              
 Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
@@ -64,70 +65,65 @@ color3 = [0.3010 0.7450 0.9330];
 % ============== Overall Result (Input & Output)
 % Hub Jet
 if strcmp(overallOption, 'Y')
-    filter = 1000;
-    t = (1:(simLength-filter+1)) * timeStep;
+    t0 = (1:(simLength-filter0+1)) * timeStep;
     figure('Name', 'Experiment Input-Output', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
     subplot(2, 2, 2)
-    plot(t, OL.HF_helixCenter_filtered(filter:end, 1), '--','Color',color1,'LineWidth', lw)
+    plot(t0, OL.HF_helixCenter_filtered(filter0:end, 1), '--','Color',color1,'LineWidth', lw)
     hold on
-    plot(t, OL.HF_helixCenter_filtered(filter:end, 2), '--', 'Color',color2,'LineWidth', lw)
-    plot(t, CL.HF_helixCenter_filtered(filter:end, 1), 'Color',color1, 'LineWidth', lw)
-    plot(t, CL.HF_helixCenter_filtered(filter:end, 2), 'Color',color2, 'LineWidth', lw)
+    plot(t0, OL.HF_helixCenter_filtered(filter0:end, 2), '--', 'Color',color2,'LineWidth', lw)
+    plot(t0, CL.HF_helixCenter_filtered(filter0:end, 1), 'Color',color1, 'LineWidth', lw)
+    plot(t0, CL.HF_helixCenter_filtered(filter0:end, 2), 'Color',color2, 'LineWidth', lw)
     yline(0, '--', 'LineWidth', lw)
     hold off
     title('Output: Helix Frame')
-    xlim([0 t(end)])
+    xlim([0 t0(end)])
     xlabel('Time [s]')
     ylim([-1 20])
     ylabel('Magnitude [m]')
     legend('z^e_b','y^e_b','z^e','y^e','Location','southeastoutside')
     subplot(2, 2, 4)
-    plot(t, OL.FF_helixCenter_filtered(filter:end, 1), '--','Color',color1, 'LineWidth', lw)
+    plot(t0, OL.FF_helixCenter_filtered(filter0:end, 1), '--','Color',color1, 'LineWidth', lw)
     hold on
-    plot(t, OL.FF_helixCenter_filtered(filter:end, 2), '--','Color',color2, 'LineWidth', lw)
-    plot(t, CL.FF_helixCenter_filtered(filter:end, 1),'Color',color1,'LineWidth', lw)
-    plot(t, CL.FF_helixCenter_filtered(filter:end, 2),'Color',color2,'LineWidth', lw)
+    plot(t0, OL.FF_helixCenter_filtered(filter0:end, 2), '--','Color',color2, 'LineWidth', lw)
+    plot(t0, CL.FF_helixCenter_filtered(filter0:end, 1),'Color',color1,'LineWidth', lw)
+    plot(t0, CL.FF_helixCenter_filtered(filter0:end, 2),'Color',color2,'LineWidth', lw)
     hold off
     title('Output: Fixed Frame')
-    xlim([0 t(end)])
+    xlim([0 t0(end)])
     xlabel('Time [s]')
     ylim([-50 150])
     ylabel('Position [m]')
     legend('z^e_b','y^e_b','z^e','y^e','Location','southeastoutside')
-%     setfigpaper('Width',[40,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
     
     % Control Input
     % figure('Name', 'Experiment Result: Hub Jet', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
     subplot(2, 2, 1)
-    plot(t, OL.HF_beta(filter:end, 1), '--','Color',color1, 'LineWidth', lw)
+    plot(t0, OL.HF_beta(filter0:end, 1), '--','Color',color1, 'LineWidth', lw)
     hold on
-    plot(t, OL.HF_beta(filter:end, 2), '--','Color',color2, 'LineWidth', lw)
-    plot(t, CL.HF_beta(filter:end, 1), 'Color',color1, 'LineWidth', lw)
-    plot(t, CL.HF_beta(filter:end, 2), 'Color',color2, 'LineWidth', lw)
+    plot(t0, OL.HF_beta(filter0:end, 2), '--','Color',color2, 'LineWidth', lw)
+    plot(t0, CL.HF_beta(filter0:end, 1), 'Color',color1, 'LineWidth', lw)
+    plot(t0, CL.HF_beta(filter0:end, 2), 'Color',color2, 'LineWidth', lw)
     hold off
     title('Input: Helix Frame')
-    xlim([0 t(end)])
+    xlim([0 t0(end)])
     xlabel('Time [s]')
     ylim([-1 10])
     ylabel('Magnitude [deg]')
     legend('\beta^e_{tilt,b}','\beta^e_{yaw,b}','\beta^e_{tilt}','\beta^e_{yaw}','Location','southeastoutside')
     subplot(2, 2, 3)
-    plot(t, OL.FF_beta(filter:end, 1), '--','Color',color1, 'LineWidth', lw)
+    plot(t0, OL.FF_beta(filter0:end, 1), '--','Color',color1, 'LineWidth', lw)
     hold on
-    plot(t, OL.FF_beta(filter:end, 2), '--','Color',color2, 'LineWidth', lw)
-    plot(t, CL.FF_beta(filter:end, 1), 'Color',color1, 'LineWidth', lw)
-    plot(t, CL.FF_beta(filter:end, 2), 'Color',color2, 'LineWidth', lw)
+    plot(t0, OL.FF_beta(filter0:end, 2), '--','Color',color2, 'LineWidth', lw)
+    plot(t0, CL.FF_beta(filter0:end, 1), 'Color',color1, 'LineWidth', lw)
+    plot(t0, CL.FF_beta(filter0:end, 2), 'Color',color2, 'LineWidth', lw)
     hold off
     title('Input: Fixed Frame')
-    xlim([0 t(end)])
+    xlim([0 t0(end)])
     xlabel('Time [s]')
     ylim([-12.5 12.5])
     ylabel('Magnitude [deg]')
     legend('\beta_{tilt,b}','\beta_{yaw,b}','\beta_{tilt}','\beta_{yaw}','Location','southeastoutside')
-%     setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
-    
-    filter = 3000;
-    t = (1:(simLength-filter+1)) * timeStep;
+    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 end
 
 % ============== Wind Flow Information

@@ -40,22 +40,22 @@ CL = load([turbineName caseName CLfileName]);
 overallOption = 'N';
 flowAnalysis = 'Y';
 rareDataAnalysis = 'Y';
-overallDetailOption = 'N';
+overallDetailOption = 'Y';
 trajOption = 'N';
 videoOption = 'N';
 powerAnalysis = 'N';
 DELAnalysis = 'N';
-PBDAnalysis = 'Y';
-powerDELAnalysis = 'Y';
+PBDAnalysis = 'N';
+powerDELAnalysis = 'N';
 
 % Basic Settings
 D_NREL5MW = 126;
 U_inflow = 10;
 timeStep = 0.1;
-filter = 3000;
-filter0 = 1000; % Overall result
-filter2 = 1000; % Wind info
-filter3 = 1000; % Rare data
+filter = 1; % 3000 for steady-state
+filter0 = 1; % Overall result
+filter2 = 1; % Wind info
+filter3 = 1; % Rare data
 DeadtimeDelay = 112; % change to 112 when showing whole process
 Str = 0.3;                          % Strouhal number              
 Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
@@ -103,7 +103,6 @@ if strcmp(overallOption, 'Y')
     ylim([-50 150])
     ylabel('Position [m]')
     legend('z^e_b','y^e_b','z^e','y^e','Location','southeastoutside')
-%     setfigpaper('Width',[40,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
     
     % Control Input
     % figure('Name', 'Experiment Result: Hub Jet', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
