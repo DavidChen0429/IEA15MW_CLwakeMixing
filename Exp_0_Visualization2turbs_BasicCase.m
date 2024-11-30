@@ -9,7 +9,7 @@ turbineName = '.\Data\NREL5MW\';
 % caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesNew\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesLonger\';
 
-ControlOption = 'Helix'; % None, Helix
+ControlOption = 'None'; % None, Helix
 % Different case
 if strcmp(ControlOption, 'Helix')
     basefile = '2Turbines_OL_Helix_mag3_4D.mat';
@@ -19,8 +19,8 @@ if strcmp(ControlOption, 'Helix')
 elseif strcmp(ControlOption, 'None')
     basefile = '2Turbines_Baseline_4D.mat';
     OLfileName = '2Turbines_Baseline_Shear0.2_4D.mat';
-    CLfileName = '2Turbines_Baseline_TI6&Shear0.2_4D.mat';
-    FKfileName = '2Turbines_Baseline_TI6&Shear0.2_4D';
+    CLfileName = '2Turbines_Baseline_TI6_4D.mat';
+    FKfileName = '2Turbines_Baseline_TI6&Shear0.2_4D.mat';
 end 
 
 Baseline = load([turbineName caseName basefile]);
@@ -31,9 +31,9 @@ FL = load([turbineName caseName FKfileName]);
 %% Overall Settings
 overallOption = 'N';
 flowAnalysis = 'Y';
-rareDataAnalysis = 'Y';
-overallDetailOption = 'Y';
-trajOption = 'Y';
+rareDataAnalysis = 'N';
+overallDetailOption = 'N';
+trajOption = 'N';
 videoOption = 'N';
 powerAnalysis = 'N';
 DELAnalysis = 'N';
@@ -140,22 +140,20 @@ if strcmp(flowAnalysis, 'Y')
     title('Average U_{inflow}')
     xlim([0 t2(end)])
     xlabel('Time [s]')
-%     ylim([-1 5])
     ylabel('Speed [m/s]')
     legend('Uniform','Shear','Turbulence','S&T','Location','southeast')
 
     subplot(2, 1, 2)
-    plot(t2, Baseline.TIStore(filter2:end),'Color',color0,'LineWidth', lw)
+    plot(t2, Baseline.TIStore(filter2:end)*100,'Color',color0,'LineWidth', lw)
     hold on
-    plot(t2, OL.TIStore(filter2:end),'Color',color1,'LineWidth', lw)
-    plot(t2, CL.TIStore(filter2:end),'Color',color2,'LineWidth', lw)
-    plot(t2, FL.TIStore(filter2:end),'Color',color3,'LineWidth', lw)
+    plot(t2, OL.TIStore(filter2:end)*100,'Color',color1,'LineWidth', lw)
+    plot(t2, CL.TIStore(filter2:end)*100,'Color',color2,'LineWidth', lw)
+    plot(t2, FL.TIStore(filter2:end)*100,'Color',color3,'LineWidth', lw)
     hold off
     title('Turbulence Intensity')
     xlim([0 t2(end)])
     xlabel('Time [s]')
-%     ylim([-1 5])
-    ylabel('Value [-]')
+    ylabel('Value [%]')
     legend('Uniform','Shear','Turbulence','S&T','Location','southeast')  
     setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 end
@@ -189,7 +187,7 @@ if strcmp(rareDataAnalysis, 'Y')
     ylabel('Torque [Nm]')
     title('Generator Torque')
     
-    % Fatigue (Time Domain)
+    % Fatigue WT2 (Time Domain)
     figure('Name', 'Rare Data --- Fatigue', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
     subplot(3, 2, 1)
     plot(t3, OL.Moop1turb2_store(filter3:end),'Color',color1,'LineWidth', lw)
@@ -387,7 +385,6 @@ if strcmp(videoOption, 'Y')
 end
 
 % ============== Power and Fatigue Analysis
-% Note!!! Open-loop is used as benchmark rather than baseline
 % =========== Uniform
 % Upstream WT1
 BL_result.WT1.power = calculatePower(filter,Baseline.Power_store,D_NREL5MW,U_inflow); % [MW]
@@ -532,7 +529,7 @@ if strcmp(powerDELAnalysis, 'Y')
     
     figure('Name', 'Power & DEL', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
     subplot(1, 3, 1)
-    b = bar(x,deltaPower*100);
+    b = bar(x,deltaPower'*100);
     for i = 1:length(b)
         b(i).FaceColor = 'flat';
         b(i).CData = repmat(customColors(i, :), size(deltaPower, 1), 1); % Apply custom colors
@@ -540,11 +537,12 @@ if strcmp(powerDELAnalysis, 'Y')
     xticks(x); 
     xticklabels({'WT1', 'WT2', 'WT1+WT2'}); 
     ylabel('\Delta Power [%]')
+%     ylim([-15 10])
     legend('S', 'T','S&T', 'Location','southeast')
     title('Power')
 
     subplot(1, 3, 2)
-    b = bar(x,deltaDELf*100);
+    b = bar(x,deltaDELf'*100);
     for i = 1:length(b)
         b(i).FaceColor = 'flat';
         b(i).CData = repmat(customColors(i, :), size(deltaPower, 1), 1); % Apply custom colors
@@ -556,7 +554,7 @@ if strcmp(powerDELAnalysis, 'Y')
     title('DEL Flapwise')
     
     subplot(1, 3, 3)
-    b = bar(x,deltaDELe*100);
+    b = bar(x,deltaDELe'*100);
     for i = 1:length(b)
         b(i).FaceColor = 'flat';
         b(i).CData = repmat(customColors(i, :), size(deltaPower, 1), 1); % Apply custom colors
@@ -576,13 +574,4 @@ if strcmp(PBDAnalysis, 'Y')
     disp(mean(OL_result.WT1.PBD) - mean(BL_result.WT1.PBD))
     disp(mean(CL_result.WT1.PBD) - mean(BL_result.WT1.PBD))
     disp(mean(FL_result.WT1.PBD) - mean(BL_result.WT1.PBD))
-
-%     figure('Name', 'PBD', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-%     PBD_list = [mean(OL_result.WT1.PBD) mean(CL_result.WT1.PBD)];
-%     bar([1,2], PBD_list);
-%     xticks(x); 
-%     xticklabels({'WT1 OL', 'WT1 CL'}); 
-%     ylabel('PBD [kNm deg]')
-%     title('PBD')
-
 end

@@ -4,4 +4,5 @@ function [PowerAvg] = calculatePower(filter,Power_store,D_NREL5MW,U_inflow)
 %     PowerAvg = mean(Power2)/1e6; % MW
 
     PowerAvg = mean(Power_store(filter:end, :))/1e3;
+%     PowerAvg = mean(Power_store(filter+1000:filter+4000, :))/1e3;
 end
