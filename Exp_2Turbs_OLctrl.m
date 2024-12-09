@@ -22,7 +22,7 @@ end
 simTime = 9000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
-mag = 3.1; % 2, 3, 99(customize), -1(doesn't work)
+mag = 3; % 2, 3, 99(customize), -1(doesn't work)
 referenceType = 'ramp&stop'; % step, ramp, ramp&stop, step&step, zero, customize&step, customize&ramp
 Trigger = 1000;      % Time that ctrl is triggered
 HelixCycle = 1/(0.3*10/126) * (1/timeStep);
@@ -31,7 +31,7 @@ saveOption = 'Y';
 
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesLonger\';
-fileName = ['2Turbines_OL_Helix','_mag', num2str(mag),'_4D.mat'];
+fileName = ['2Turbines_OL_Helix','_mag', num2str(mag),'_4D_1inflowAngle.mat'];
 QprName = ['2Turbines_OL_Helix','_mag', num2str(mag),'_4D.qpr'];
 
 %% Load project and Initialize simulation
@@ -253,10 +253,10 @@ for i = 1:1:simTime
     end
     % Low pass filter
     % Centering
-    centerZ = wakeCenter(1) - meanZ;  % 91.2632
-    centerY = wakeCenter(2) - meanY;  % -4.9713
-%     centerZ = wakeCenter(1) - 92.0026;  % data derived from the basecase
-%     centerY = wakeCenter(2) + 4.0999;   % data derived from the basecase
+%     centerZ = wakeCenter(1) - meanZ;  % 91.2632
+%     centerY = wakeCenter(2) - meanY;  % -4.9713
+    centerZ = wakeCenter(1) - 92.4522;  % data derived from the basecase
+    centerY = wakeCenter(2) + 4.1492;   % data derived from the basecase
     center_e = invR_helix * [centerZ; centerY];
     [HF_helixCenter_filtered(i, 1), filterState3] = filter(b_fir, 1, center_e(1), filterState3);
     [HF_helixCenter_filtered(i, 2), filterState4] = filter(b_fir, 1, center_e(2), filterState4);
