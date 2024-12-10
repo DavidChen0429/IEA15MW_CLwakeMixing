@@ -6,7 +6,6 @@ addpath('.\Functions');
 
 %% Data file (Chage this accordingly)
 turbineName = '.\Data\NREL5MW\';
-% caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesNew\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesLonger\';
 
 ControlOption = 'None'; % None, Helix
@@ -29,11 +28,11 @@ CL = load([turbineName caseName CLfileName]);
 FL = load([turbineName caseName FKfileName]);
 
 %% Overall Settings
-overallOption = 'N';
+overallOption = 'Y';
 flowAnalysis = 'Y';
 rareDataAnalysis = 'N';
 overallDetailOption = 'N';
-trajOption = 'N';
+trajOption = 'Y';
 videoOption = 'N';
 powerAnalysis = 'N';
 DELAnalysis = 'N';
@@ -325,7 +324,7 @@ end
 
 % ============== Hub Jet Trajectory
 if strcmp(trajOption, 'Y')
-    center_bl = mean(Baseline.FF_helixCenter_filtered(3000:end, :));
+    center_bl = mean(Baseline.FF_helixCenter_filtered(filter:end, :));
     center_ol = mean(OL.FF_helixCenter_filtered(filter:end, :));
     center_cl = mean(CL.FF_helixCenter_filtered(filter:end, :));
     center_fl = mean(FL.FF_helixCenter_filtered(filter:end, :));

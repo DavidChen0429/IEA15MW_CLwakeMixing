@@ -23,7 +23,7 @@ simTime = 9000;     % in timestep, actual time is simTime*timestep(Q-blade defin
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 saveOption = 'Y';
-windtype = 'NearlyUni'; % Check .sim file (right. bts file) !!!!!!!
+windtype = 'Skewed1ReCenter'; % Check .sim file (right. bts file) !!!!!!!
 % Check the turbine definition for 4D or 3D
 
 turbineName = '.\Data\NREL5MW\';
@@ -236,10 +236,10 @@ for i = 1:1:simTime
     end
     % Low pass filter
     % Centering
-    centerZ = wakeCenter(1) - meanZ;  % 91.2632
-    centerY = wakeCenter(2) - meanY;  % -4.9713
-%     centerZ = wakeCenter(1) - 92.4286;  % data derived from the basecase
-%     centerY = wakeCenter(2) + 4.1468;   % data derived from the basecase
+%     centerZ = wakeCenter(1) - meanZ;  % 91.2632
+%     centerY = wakeCenter(2) - meanY;  % -4.9713
+    centerZ = wakeCenter(1) - 92.4522;  % data derived from the basecase
+    centerY = wakeCenter(2) + 4.1492;   % data derived from the basecase
     center_e = invR_helix * [centerZ; centerY];
     [HF_helixCenter_filtered(i, 1), filterState3] = filter(b_fir, 1, center_e(1), filterState3);
     [HF_helixCenter_filtered(i, 2), filterState4] = filter(b_fir, 1, center_e(2), filterState4);
