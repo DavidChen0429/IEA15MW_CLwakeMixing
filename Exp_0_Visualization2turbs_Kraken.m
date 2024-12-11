@@ -9,9 +9,10 @@ turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesLonger\';
 
 % Different case
-windCase = 'ShearRC';
-% Uniform, Shear, Turb, Both, Skewed, ShearRC, SkewedRC
+windCase = 'Uniform';
+% Uniform, Shear, Turb, Both, ShearRC, SkewedRC, BothRC
 
+veryBaseOLfile = '2Turbines_OL_Helix_mag3_4D.mat';
 if strcmp(windCase, 'Uniform')
     basefile = '2Turbines_Baseline_4D.mat';
     OLfileName = '2Turbines_OL_Helix_mag3_4D.mat';
@@ -20,6 +21,10 @@ elseif strcmp(windCase, 'Shear')
     basefile = '2Turbines_Baseline_Shear0.2_4D.mat';
     OLfileName = '2Turbines_OL_Helix_Shear0.2_mag3_4D.mat';
     CLfileName = '2Turbines_CL_Helix_Shear0.2_mag3_4D.mat';
+elseif strcmp(windCase, 'ShearRC')
+    basefile = '2Turbines_Baseline_ShearReCenter_4D.mat';
+    OLfileName = '2Turbines_OL_Helix_ShearReCenter_mag3_4D.mat';
+    CLfileName = '2Turbines_CL_Helix_ShearReCenter_mag3_4D.mat';
 elseif strcmp(windCase, 'Turb')
     basefile = '2Turbines_Baseline_TI6_4D.mat';
     OLfileName = '2Turbines_OL_Helix_TI6_mag3_4D.mat';
@@ -28,25 +33,23 @@ elseif strcmp(windCase, 'Both')
     basefile = '2Turbines_Baseline_TI6&Shear0.2_4D.mat';
     OLfileName = '2Turbines_OL_Helix_TI6&Shear0.2_mag3_4D.mat';
     CLfileName = '2Turbines_CL_Helix_TI6&Shear0.2_mag3_4D.mat';
-elseif strcmp(windCase, 'Skewed')
-    basefile = '2Turbines_Baseline_4D_1inflowAngle.mat';
-    OLfileName = '2Turbines_OL_Helix_mag3_4D_1inflowAngle.mat';
-    CLfileName = '2Turbines_CL_Helix_ramp&stop_mag3_4D_1inflowAngle.mat'; 
-elseif strcmp(windCase, 'ShearRC')
-    basefile = '2Turbines_Baseline_ShearReCenter_4D.mat';
-    OLfileName = '2Turbines_OL_Helix_ShearReCenter_mag3_4D.mat';
-    CLfileName = '2Turbines_CL_Helix_ShearReCenter_mag3_4D.mat'; 
+elseif strcmp(windCase, 'SkewedRC')
+    basefile = '2Turbines_Baseline_Skewed1ReCenter_4D.mat';
+    OLfileName = '2Turbines_OL_Helix_Skewed1ReCenter_mag3_4D.mat';
+    CLfileName = '2Turbines_CL_Helix_Skewed1ReCenter_mag3_4D.mat';  
 end
 
+veryBase = load([turbineName caseName veryBaseOLfile]);
 Baseline = load([turbineName caseName basefile]);
 OL = load([turbineName caseName OLfileName]);
 CL = load([turbineName caseName CLfileName]);
 
 %% Overall Settings
 overallOption = 'N';
-flowAnalysis = 'Y';
+flowAnalysis = 'N';
 rareDataAnalysis = 'N';
 overallDetailOption = 'Y';
+coorFrame = 'HF';
 trajOption = 'Y';
 videoOption = 'N';
 powerAnalysis = 'N';
@@ -74,72 +77,6 @@ Font = 20;
 color0 = [0.4660 0.6740 0.1880];
 color1 = [0, 0.4470, 0.7410];
 color2 = [0.8500, 0.3250, 0.0980];
-
-% ============== Overall Result (Input & Output)
-% Hub Jet
-if strcmp(overallOption, 'Y')
-    t0 = (1:(simLength-filter0+1)) * timeStep;
-    figure('Name', 'Experiment Input-Output', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-    subplot(2, 2, 2)
-    plot(t0, OL.HF_helixCenter_filtered(filter0:end, 1), '--','Color',color1,'LineWidth', lw)
-    hold on
-    plot(t0, OL.HF_helixCenter_filtered(filter0:end, 2), '--', 'Color',color2,'LineWidth', lw)
-    plot(t0, CL.HF_helixCenter_filtered(filter0:end, 1), 'Color',color1, 'LineWidth', lw)
-    plot(t0, CL.HF_helixCenter_filtered(filter0:end, 2), 'Color',color2, 'LineWidth', lw)
-    plot(t0, delayseq(CL.r(filter0:end, 1), DeadtimeDelay), 'k:', 'LineWidth', lw)
-    plot(t0, delayseq(CL.r(filter0:end, 2), DeadtimeDelay), 'k:', 'LineWidth', lw)
-    yline(0, '--', 'LineWidth', lw)
-    hold off
-    title('Output: Helix Frame')
-    xlim([0 t0(end)])
-    xlabel('Time [s]')
-    ylim([-1 20])
-    ylabel('Magnitude [m]')
-    legend('z^e_b','y^e_b','z^e','y^e','r_z','r_y','Location','southeastoutside')
-    subplot(2, 2, 4)
-    plot(t0, OL.FF_helixCenter_filtered(filter0:end, 1), '--','Color',color1, 'LineWidth', lw)
-    hold on
-    plot(t0, OL.FF_helixCenter_filtered(filter0:end, 2), '--','Color',color2, 'LineWidth', lw)
-    plot(t0, CL.FF_helixCenter_filtered(filter0:end, 1),'Color',color1,'LineWidth', lw)
-    plot(t0, CL.FF_helixCenter_filtered(filter0:end, 2),'Color',color2,'LineWidth', lw)
-    hold off
-    title('Output: Fixed Frame')
-    xlim([0 t0(end)])
-    xlabel('Time [s]')
-    ylim([-50 150])
-    ylabel('Position [m]')
-    legend('z^e_b','y^e_b','z^e','y^e','Location','southeastoutside')
-    
-    % Control Input
-    % figure('Name', 'Experiment Result: Hub Jet', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-    subplot(2, 2, 1)
-    plot(t0, OL.HF_beta(filter0:end, 1), '--','Color',color1, 'LineWidth', lw)
-    hold on
-    plot(t0, OL.HF_beta(filter0:end, 2), '--','Color',color2, 'LineWidth', lw)
-    plot(t0, CL.u(filter0:end, 1), 'Color',color1, 'LineWidth', lw)
-    plot(t0, CL.u(filter0:end, 2), 'Color',color2, 'LineWidth', lw)
-    hold off
-    title('Input: Helix Frame')
-    xlim([0 t0(end)])
-    xlabel('Time [s]')
-    ylim([-1 10])
-    ylabel('Magnitude [deg]')
-    legend('\beta^e_{tilt,b}','\beta^e_{yaw,b}','\beta^e_{tilt}','\beta^e_{yaw}','Location','southeastoutside')
-    subplot(2, 2, 3)
-    plot(t0, OL.FF_beta(filter0:end, 1), '--','Color',color1, 'LineWidth', lw)
-    hold on
-    plot(t0, OL.FF_beta(filter0:end, 2), '--','Color',color2, 'LineWidth', lw)
-    plot(t0, CL.FF_beta(filter0:end, 1), 'Color',color1, 'LineWidth', lw)
-    plot(t0, CL.FF_beta(filter0:end, 2), 'Color',color2, 'LineWidth', lw)
-    hold off
-    title('Input: Fixed Frame')
-    xlim([0 t0(end)])
-    xlabel('Time [s]')
-    ylim([-12.5 12.5])
-    ylabel('Magnitude [deg]')
-    legend('\beta_{tilt,b}','\beta_{yaw,b}','\beta_{tilt}','\beta_{yaw}','Location','southeastoutside')
-    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
-end
 
 % ============== Wind Flow Information
 if strcmp(flowAnalysis, 'Y')
@@ -310,122 +247,121 @@ end
 
 % ============== Overeall Detailed Visualization
 if strcmp(overallDetailOption, 'Y')
-    % Input Helix Frame
-    figure('Name', 'Input HF', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-    subplot(2, 1, 2)
-    plot(t, OL.HF_beta(filter:end, 1),'Color',color0,'LineWidth', lw)
-    hold on
-    plot(t, CL.u(filter:end, 1), 'Color',color1, 'LineWidth', lw)
-    hold off
-    title('\beta^e_{yaw}')
-    xlim([0 t(end)])
-    xlabel('Time [s]')
-    ylim([-1 5])
-    ylabel('Magnitude [deg]')
-    legend('OL','CL','Location','southeast')
-    subplot(2, 1, 1)
-    hold on
-    plot(t, OL.HF_beta(filter:end, 2),'Color',color0,'LineWidth', lw)
-    plot(t, CL.u(filter:end, 2),'Color',color2, 'LineWidth', lw)
-    hold off
-    title('\beta^e_{tilt}')
-    xlim([0 t(end)])
-    xlabel('Time [s]')
-    ylim([-1 5])
-    ylabel('Magnitude [deg]')
-    legend('OL','CL','Location','southeast')
-    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+    t0 = (1:(simLength-filter0+1)) * timeStep;
+    if strcmp(coorFrame,'HF')
+        % Input
+        figure('Name', 'Input HF', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+        subplot(2, 1, 2)
+        plot(t0, OL.HF_beta(filter0:end, 1),'Color',color0,'LineWidth', lw)
+        hold on
+        plot(t0, CL.u(filter0:end, 1), 'Color',color1, 'LineWidth', lw)
+        hold off
+        title('\beta^e_{yaw}')
+        xlim([0 t0(end)])
+        xlabel('Time [s]')
+        ylim([-1 5])
+        ylabel('Magnitude [deg]')
+        legend('OL','CL','Location','southeast')
+        subplot(2, 1, 1)
+        hold on
+        plot(t0, OL.HF_beta(filter0:end, 2),'Color',color0,'LineWidth', lw)
+        plot(t0, CL.u(filter0:end, 2),'Color',color2, 'LineWidth', lw)
+        hold off
+        title('\beta^e_{tilt}')
+        xlim([0 t0(end)])
+        xlabel('Time [s]')
+        ylim([-1 5])
+        ylabel('Magnitude [deg]')
+        legend('OL','CL','Location','southeast')
+        setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+        
+        % Output
+        r1 = ones(simLength-filter0+1, 1)*8.5606;
+        figure('Name', 'Output Detail HF', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+        subplot(2, 1, 2)
+        plot(t0, OL.HF_helixCenter_filtered(filter0:end, 1),'Color',color0,'LineWidth', lw)
+        hold on
+        plot(t0, CL.HF_helixCenter_filtered(filter0:end, 1),'Color',color1,'LineWidth', lw)
+        plot(t0, r1, 'k:', 'LineWidth', lw)
+        yline(0, '--', 'LineWidth', lw)
+        hold off
+        title('y^e')
+        xlim([0 t0(end)])
+        xlabel('Time [s]')
+        ylim([-10 20])
+        ylabel('Position [m]')
+        legend('OL','CL','r','Location','southeast')
+        subplot(2, 1, 1)
+        r2 = ones(simLength-filter0+1, 1)*9.0661;
+        plot(t0, OL.HF_helixCenter_filtered(filter0:end, 2),'Color',color0,'LineWidth', lw)
+        hold on
+        plot(t0, CL.HF_helixCenter_filtered(filter0:end, 2),'Color',color2,'LineWidth', lw)
+        plot(t0, r2, 'k:', 'LineWidth', lw)
+        yline(0, '--', 'LineWidth', lw)
+        hold off
+        title('z^e')
+        xlim([0 t0(end)])
+        xlabel('Time [s]')
+        ylim([-10 20])
+        ylabel('Position [m]')
+        legend('OL','CL','r','Location','southeast')
+        setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+    elseif strcmp(coorFrame, 'FF')
+        % Input
+        figure('Name', 'Input FF', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+        subplot(2, 1, 2)
+        plot(t0, OL.FF_beta(filter0:end, 1),'Color',color0,'LineWidth', lw)
+        hold on
+        plot(t0, CL.FF_beta(filter0:end, 1), 'Color',color1, 'LineWidth', lw)
+        hold off
+        title('\beta_{yaw}')
+        xlim([0 t0(end)])
+        xlabel('Time [s]')
+        ylabel('Magnitude [deg]')
+        legend('OL','CL','Location','southeast')
+        subplot(2, 1, 1)
+        hold on
+        plot(t0, OL.FF_beta(filter0:end, 2),'Color',color0,'LineWidth', lw)
+        plot(t0, CL.FF_beta(filter0:end, 2),'Color',color2, 'LineWidth', lw)
+        hold off
+        title('\beta_{tilt}')
+        xlim([0 t0(end)])
+        xlabel('Time [s]')
+        ylabel('Magnitude [deg]')
+        legend('OL','CL','Location','southeast')
+        setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 
-    % Input Fixed Frame
-    figure('Name', 'Input FF', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-    subplot(2, 1, 2)
-    plot(t, OL.FF_beta(filter:end, 1),'Color',color0,'LineWidth', lw)
-    hold on
-    plot(t, CL.FF_beta(filter:end, 1), 'Color',color1, 'LineWidth', lw)
-    hold off
-    title('\beta_{yaw}')
-    xlim([0 t(end)])
-    xlabel('Time [s]')
-%     ylim([-1 5])
-    ylabel('Magnitude [deg]')
-    legend('OL','CL','Location','southeast')
-    subplot(2, 1, 1)
-    hold on
-    plot(t, OL.FF_beta(filter:end, 2),'Color',color0,'LineWidth', lw)
-    plot(t, CL.FF_beta(filter:end, 2),'Color',color2, 'LineWidth', lw)
-    hold off
-    title('\beta_{tilt}')
-    xlim([0 t(end)])
-    xlabel('Time [s]')
-%     ylim([-1 5])
-    ylabel('Magnitude [deg]')
-    legend('OL','CL','Location','southeast')
-    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
-
-    % Output Helix Frame
-    r1 = ones(simLength-filter+1, 1)*8.5606;
-    figure('Name', 'Output Detail HF', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-    subplot(2, 1, 2)
-    plot(t, OL.HF_helixCenter_filtered(filter:end, 1),'Color',color0,'LineWidth', lw)
-    hold on
-    plot(t, CL.HF_helixCenter_filtered(filter:end, 1),'Color',color1,'LineWidth', lw)
-    plot(t, r1, 'k:', 'LineWidth', lw)
-    yline(0, '--', 'LineWidth', lw)
-    hold off
-    title('y^e')
-    xlim([0 t(end)])
-    xlabel('Time [s]')
-    ylim([-1 15])
-    ylabel('Magnitude [m]')
-    legend('OL','CL','r','Location','southeast')
-    subplot(2, 1, 1)
-    r2 = ones(simLength-filter+1, 1)*9.0661;
-    plot(t, OL.HF_helixCenter_filtered(filter:end, 2),'Color',color0,'LineWidth', lw)
-    hold on
-    plot(t, CL.HF_helixCenter_filtered(filter:end, 2),'Color',color2,'LineWidth', lw)
-    plot(t, r2, 'k:', 'LineWidth', lw)
-    yline(0, '--', 'LineWidth', lw)
-    hold off
-    title('z^e')
-    xlim([0 t(end)])
-    xlabel('Time [s]')
-    ylim([-1 15])
-    ylabel('Position [m]')
-    legend('OL','CL','r','Location','southeast')
-    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
-
-    % Output Fixed Frame
-    figure('Name', 'Output Detail FF', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-    subplot(2, 1, 2)
-    plot(t, OL.FF_helixCenter_filtered(filter:end, 1),'Color',color0,'LineWidth', lw)
-    hold on
-    plot(t, CL.FF_helixCenter_filtered(filter:end, 1),'Color',color1,'LineWidth', lw)
-    hold off
-    title('z')
-    xlim([0 t(end)])
-    xlabel('Time [s]')
-    ylabel('Magnitude [m]')
-    legend('OL','CL','Location','southeast')
-    subplot(2, 1, 1)
-    r2 = ones(simLength-filter+1, 1)*9.0661;
-    plot(t, OL.FF_helixCenter_filtered(filter:end, 2),'Color',color0,'LineWidth', lw)
-    hold on
-    plot(t, CL.FF_helixCenter_filtered(filter:end, 2),'Color',color2,'LineWidth', lw)
-    hold off
-    title('y')
-    xlim([0 t(end)])
-    xlabel('Time [s]')
-    ylabel('Position [m]')
-    legend('OL','CL','Location','southeast')
-    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+        % Output
+        figure('Name', 'Output Detail FF', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+        subplot(2, 1, 2)
+        plot(t0, OL.FF_helixCenter_filtered(filter0:end, 1),'Color',color0,'LineWidth', lw)
+        hold on
+        plot(t0, CL.FF_helixCenter_filtered(filter0:end, 1),'Color',color1,'LineWidth', lw)
+        hold off
+        title('z')
+        xlim([0 t0(end)])
+        xlabel('Time [s]')
+        ylabel('Position [m]')
+        legend('OL','CL','Location','southeast')
+        subplot(2, 1, 1)
+        r2 = ones(simLength-filter0+1, 1)*9.0661;
+        plot(t0, OL.FF_helixCenter_filtered(filter0:end, 2),'Color',color0,'LineWidth', lw)
+        hold on
+        plot(t0, CL.FF_helixCenter_filtered(filter0:end, 2),'Color',color2,'LineWidth', lw)
+        hold off
+        title('y')
+        xlim([0 t0(end)])
+        xlabel('Time [s]')
+        ylabel('Position [m]')
+        legend('OL','CL','Location','southeast')
+        setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+    end
 end
 
 % ============== Hub Jet Trajectory
 if strcmp(trajOption, 'Y')
-%     theta = linspace(0, 2*pi, 30);
-%     y_ref = 0 + (D_NREL5MW/2) * cos(theta);
-%     z_ref = 90 + (D_NREL5MW/2) * sin(theta);
-    center_bl = mean(Baseline.FF_helixCenter_filtered(3000:end, :));
+    center_blb = mean(veryBase.FF_helixCenter_filtered(filter:end, :));
+    center_bl = mean(Baseline.FF_helixCenter_filtered(filter:end, :));
     center_ol = mean(OL.FF_helixCenter_filtered(filter:end, :));
     center_cl = mean(CL.FF_helixCenter_filtered(filter:end, :));
     figure('Name', 'HubJet Trajectory', 'NumberTitle', 'off', 'Position', [100, 100, 600, 600]);
@@ -436,8 +372,8 @@ if strcmp(trajOption, 'Y')
     plot(center_bl(2), center_bl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color0);
     plot(center_ol(2), center_ol(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color1);
     plot(center_cl(2), center_cl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color2);
+    plot(center_blb(2), center_blb(1), 'k+');
     plot(0, 90, 'k*', 'MarkerSize', 10);
-%     plot(y_ref, z_ref, "k-", 'LineWidth',2);
     hold off
     title('Hub Jet Trajectory')
     xlabel('y [m]')

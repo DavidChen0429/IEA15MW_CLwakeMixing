@@ -25,7 +25,7 @@ DesignOption = 'Matrix2';
 
 % Check result option
 showBasicOption = 'N';      % Basic property
-showController = 'N';
+showController = 'Y';
 showWeight = 'N';
 showFreqOption = 'N';       % BD of S, T, U, L
 showFreq2Option = 'N';      % BD of WpS, WuU
@@ -282,118 +282,118 @@ for k = 1:length(nmp_zeros)
 end
 
 %% Step Response Implementation: Default vs. Iterative
-% close all
-% 1. Default
-closed_loop_sys = feedback(sys, K);
-t = 0:timeStep:200;  % Time vector for simulation
-figure('Name', 'Default Way', 'NumberTitle', 'off', 'Position', [100, 450, 400, 300]);
-[y, tOut] = step(closed_loop_sys, t);
-title('Controlled CL System');
-plot(tOut, y(:, 1) + y(:, 3))
-hold on
-plot(tOut, y(:, 2) + y(:, 4))
-hold off
-xlabel('Time (s)');
-ylabel('System Output');
-title('Controlled CL System');
-legend('z_e', 'y_e');
-grid on;
-
-% Iterative debug (Below code is right)
-A_cl = closed_loop_sys.A;
-B_cl = closed_loop_sys.B;
-C_cl = closed_loop_sys.C;
-D_cl = closed_loop_sys.D;
-t = 0:timeStep:200;
-x = zeros(length(A_cl), length(t)+1);
-y = zeros(length(D_cl), length(t)); 
-r = [5 * ones(1, length(t)+1);
-     2 * ones(1, length(t)+1)];
-u = r;
-for i = 1:length(t)
-    x(:, i+1) = A_cl * x(:, i) + B_cl * u(:, i);
-    y(:, i) = C_cl * x(:, i) + D_cl * u(:, i); 
-end
-figure('Name', 'Iterative Debug', 'NumberTitle', 'off', 'Position', [500, 450, 400, 300]);
-plot(t, y(1,:));  % First output
-hold on;
-plot(t, y(2,:));  % Second output
-hold off
-xlabel('Time (s)');
-ylabel('System Output');
-title('Controlled CL System');
-legend('z_e', 'y_e');
-grid on;
-
-% 2. Iterative
-A_K = K.A;
-B_K = K.B;
-C_K = K.C;
-D_K = K.D;
-t = 0:timeStep:200;
-x = zeros(length(A), length(t)+1);
-u = zeros(length(B(1, :)), length(t));
-e = zeros(length(C(:, 1)), length(t));
-y = zeros(length(C(:, 1)), length(t));
-xk = zeros(length(A_K), length(t)+1);
-uk = y; % property of H inf
-yk = zeros(length(C_K(:, 1)), length(t)); % property of H inf  
-r = [5; 2]; 
-for i = 2:length(t)
-    e(:, i) = r - yk(:, i-1);
-    % Update system
-    x(:, i+1) = A * x(:, i) + B * e(:, i);
-    y(:, i) = C * x(:, i) + D * e(:, i); 
-    % Update controller
-    xk(:, i+1) = A_K * xk(:, i) + B_K * y(:, i);
-    yk(:, i) = C_K * xk(:, i) + D_K * y(:, i);
-end
-figure('Name', 'Iterative 1.0', 'NumberTitle', 'off', 'Position', [100, 50, 400, 300]);
-plot(t, y(1,:));  % First output
-hold on;
-plot(t, y(2,:));  % Second output
-plot(t, r(1, :)*ones(1, length(t)), 'k--');
-plot(t, r(2, :)*ones(1, length(t)), 'k--');
-hold off
-xlabel('Time (s)');
-ylabel('System Output');
-title('Controlled CL System');
-legend('z_e', 'y_e');
-grid on;
-
-% 3. Iterative Alternative
-A_K = K.A;
-B_K = K.B;
-C_K = K.C;
-D_K = K.D;
-t = 0:timeStep:200;
-x = zeros(length(A), length(t)+1);
-u = zeros(length(B(1, :)), length(t));
-e = zeros(length(C(:, 1)), length(t));
-y = zeros(length(C(:, 1)), length(t));
-xk = zeros(length(A_K), length(t)+1);
-uk = y; % property of H inf
-yk = zeros(length(C_K(:, 1)), length(t)); % property of H inf  
-r = [5; 2]; 
-for i = 2:length(t)
-    % Update controller
-    xk(:, i+1) = A_K * xk(:, i) + B_K * y(:, i-1);
-    yk(:, i) = C_K * xk(:, i) + D_K * y(:, i-1);
-    % Get error 
-    e(:, i) = r - yk(:, i);
-    % Update system
-    x(:, i+1) = A * x(:, i) + B * e(:, i);
-    y(:, i) = C * x(:, i) + D * e(:, i); 
-end
-figure('Name', 'Iterative 2.0', 'NumberTitle', 'off', 'Position', [500, 50, 400, 300]);
-plot(t, y(1,:));  % First output
-hold on;
-plot(t, y(2,:));  % Second output
-plot(t, r(1, :)*ones(1, length(t)), 'k--');
-plot(t, r(2, :)*ones(1, length(t)), 'k--');
-hold off
-xlabel('Time (s)');
-ylabel('System Output');
-title('Controlled CL System');
-legend('z_e', 'y_e');
-grid on;
+% % close all
+% % 1. Default
+% closed_loop_sys = feedback(sys, K);
+% t = 0:timeStep:200;  % Time vector for simulation
+% figure('Name', 'Default Way', 'NumberTitle', 'off', 'Position', [100, 450, 400, 300]);
+% [y, tOut] = step(closed_loop_sys, t);
+% title('Controlled CL System');
+% plot(tOut, y(:, 1) + y(:, 3))
+% hold on
+% plot(tOut, y(:, 2) + y(:, 4))
+% hold off
+% xlabel('Time (s)');
+% ylabel('System Output');
+% title('Controlled CL System');
+% legend('z_e', 'y_e');
+% grid on;
+% 
+% % Iterative debug (Below code is right)
+% A_cl = closed_loop_sys.A;
+% B_cl = closed_loop_sys.B;
+% C_cl = closed_loop_sys.C;
+% D_cl = closed_loop_sys.D;
+% t = 0:timeStep:200;
+% x = zeros(length(A_cl), length(t)+1);
+% y = zeros(length(D_cl), length(t)); 
+% r = [5 * ones(1, length(t)+1);
+%      2 * ones(1, length(t)+1)];
+% u = r;
+% for i = 1:length(t)
+%     x(:, i+1) = A_cl * x(:, i) + B_cl * u(:, i);
+%     y(:, i) = C_cl * x(:, i) + D_cl * u(:, i); 
+% end
+% figure('Name', 'Iterative Debug', 'NumberTitle', 'off', 'Position', [500, 450, 400, 300]);
+% plot(t, y(1,:));  % First output
+% hold on;
+% plot(t, y(2,:));  % Second output
+% hold off
+% xlabel('Time (s)');
+% ylabel('System Output');
+% title('Controlled CL System');
+% legend('z_e', 'y_e');
+% grid on;
+% 
+% % 2. Iterative
+% A_K = K.A;
+% B_K = K.B;
+% C_K = K.C;
+% D_K = K.D;
+% t = 0:timeStep:200;
+% x = zeros(length(A), length(t)+1);
+% u = zeros(length(B(1, :)), length(t));
+% e = zeros(length(C(:, 1)), length(t));
+% y = zeros(length(C(:, 1)), length(t));
+% xk = zeros(length(A_K), length(t)+1);
+% uk = y; % property of H inf
+% yk = zeros(length(C_K(:, 1)), length(t)); % property of H inf  
+% r = [5; 2]; 
+% for i = 2:length(t)
+%     e(:, i) = r - yk(:, i-1);
+%     % Update system
+%     x(:, i+1) = A * x(:, i) + B * e(:, i);
+%     y(:, i) = C * x(:, i) + D * e(:, i); 
+%     % Update controller
+%     xk(:, i+1) = A_K * xk(:, i) + B_K * y(:, i);
+%     yk(:, i) = C_K * xk(:, i) + D_K * y(:, i);
+% end
+% figure('Name', 'Iterative 1.0', 'NumberTitle', 'off', 'Position', [100, 50, 400, 300]);
+% plot(t, y(1,:));  % First output
+% hold on;
+% plot(t, y(2,:));  % Second output
+% plot(t, r(1, :)*ones(1, length(t)), 'k--');
+% plot(t, r(2, :)*ones(1, length(t)), 'k--');
+% hold off
+% xlabel('Time (s)');
+% ylabel('System Output');
+% title('Controlled CL System');
+% legend('z_e', 'y_e');
+% grid on;
+% 
+% % 3. Iterative Alternative
+% A_K = K.A;
+% B_K = K.B;
+% C_K = K.C;
+% D_K = K.D;
+% t = 0:timeStep:200;
+% x = zeros(length(A), length(t)+1);
+% u = zeros(length(B(1, :)), length(t));
+% e = zeros(length(C(:, 1)), length(t));
+% y = zeros(length(C(:, 1)), length(t));
+% xk = zeros(length(A_K), length(t)+1);
+% uk = y; % property of H inf
+% yk = zeros(length(C_K(:, 1)), length(t)); % property of H inf  
+% r = [5; 2]; 
+% for i = 2:length(t)
+%     % Update controller
+%     xk(:, i+1) = A_K * xk(:, i) + B_K * y(:, i-1);
+%     yk(:, i) = C_K * xk(:, i) + D_K * y(:, i-1);
+%     % Get error 
+%     e(:, i) = r - yk(:, i);
+%     % Update system
+%     x(:, i+1) = A * x(:, i) + B * e(:, i);
+%     y(:, i) = C * x(:, i) + D * e(:, i); 
+% end
+% figure('Name', 'Iterative 2.0', 'NumberTitle', 'off', 'Position', [500, 50, 400, 300]);
+% plot(t, y(1,:));  % First output
+% hold on;
+% plot(t, y(2,:));  % Second output
+% plot(t, r(1, :)*ones(1, length(t)), 'k--');
+% plot(t, r(2, :)*ones(1, length(t)), 'k--');
+% hold off
+% xlabel('Time (s)');
+% ylabel('System Output');
+% title('Controlled CL System');
+% legend('z_e', 'y_e');
+% grid on;

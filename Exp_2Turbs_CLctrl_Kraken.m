@@ -28,7 +28,8 @@ Trigger = 1000;      % Time that ctrl is triggered
 HelixCycle = 1/(0.3*10/126) * (1/timeStep);
 Endtime = Trigger + 1*HelixCycle;
 saveOption = 'Y';
-windtype = 'Skewed1ReCenter'; % Check .sim file (right. bts file) !!!!!!! 
+windtype = 'ShearRC2'; % Check .sim file (right. bts file) !!!!!!! 
+gain = 1;
 
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesLonger\';
@@ -319,6 +320,7 @@ for i = 1:1:simTime
         u(i, :) = r(i, :) - yk(i, :);
     end
 
+    u(i, :) = gain*u(i, :);
     % 1. Get tilt and yaw signals
     beta_tilt_e = u(i, 1);
     beta_yaw_e = u(i, 2);
