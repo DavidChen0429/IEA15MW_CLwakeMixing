@@ -48,6 +48,9 @@ C_mimo = [Cpi1, 0;
           0, 0];
 C_mimo2 = [0, 0;
            0, Cpi1];
+C_mimo3 = [Cpi1, 0;
+           0, Cpi1];
+
 
 %%%
 % Open loop transfer matrix becomes
@@ -56,6 +59,7 @@ C_mimo2 = [0, 0;
 %%%
 OL_ctrl = C_mimo*G;
 OL_ctrl2 = C_mimo2*G;
+OL_ctrl3 = C_mimo3*G;
 
 % ==== Check Controller
 % Frequency Domain
@@ -141,27 +145,38 @@ set(h, 'XLim', [0 200], 'YLim', [-0.5 1.5]);
 xticks(0:50:200);
 setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',20,'linewidth',2)
 
+% Time Domain: Step Response2
+closed_loop_sys3 = feedback(OL_ctrl3, eye(2));
+closed_loop_sys3.InputName = {'\beta^e_{tilt}', '\beta^e_{yaw}'};
+closed_loop_sys3.OutputName = {'z_e','y_e'};
+t = 0:timeStep:249;  % Time vector for simulation
+figure('Name', 'After Control CL Step', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+step(closed_loop_sys3, t);
+h = findall(gcf, 'Type', 'axes');
+% xticks(0:50:200);
+setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',20,'linewidth',2)
+
 %% Explane the sequential SIMO control
-C_mimo = [Cpi1, 0;
-          0, 0];
-OL_ctrl = C_mimo*G;
-C_mimo2 = [0, 0;
-           0, Cpi1];
-OL_ctrl2 = C_mimo2*G;
-C_mimo3 = [Cpi1, 0;
-           0, Cpi1];
-OL_ctrl3 = C_mimo3*G;
-
-figure('Name', 'BD Controllers', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-bode(OL_ctrl, OL_ctrl2, OL_ctrl3)
-axesHandles = findall(gcf, 'Type', 'axes');
-legend('OL1', 'OL2','OL3','Location','southeast');
-
-margin(OL_ctrl3(1,1))
-margin(OL_ctrl3(1, 2))
-
-margin(OL_ctrl3(2, 2))
-margin(OL_ctrl3(2, 1))
+% C_mimo = [Cpi1, 0;
+%           0, 0];
+% OL_ctrl = C_mimo*G;
+% C_mimo2 = [0, 0;
+%            0, Cpi1];
+% OL_ctrl2 = C_mimo2*G;
+% C_mimo3 = [Cpi1, 0;
+%            0, Cpi1];
+% OL_ctrl3 = C_mimo3*G;
+% 
+% figure('Name', 'BD Controllers', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+% bode(OL_ctrl, OL_ctrl2, OL_ctrl3)
+% axesHandles = findall(gcf, 'Type', 'axes');
+% legend('OL1', 'OL2','OL3','Location','southeast');
+% 
+% margin(OL_ctrl3(1,1))
+% margin(OL_ctrl3(1, 2))
+% 
+% margin(OL_ctrl3(2, 2))
+% margin(OL_ctrl3(2, 1))
 
 %% Faster tuning
 % close all
@@ -195,51 +210,51 @@ margin(OL_ctrl(1, 2)); % Fucked
 % zpk(G(2,2))
 
 %% Step simulation (Iterative way of implementing PI controller)
-% Default way
-closed_loop_sys = feedback(OL_ctrl, eye(2));
-t = 0:timeStep:200;  % Time vector for simulation
-figure('Name', 'As a whole', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-[y, tOut] = step(closed_loop_sys, t);
-title('Controlled CL System');
-plot(tOut, y(:, 2))
-hold on
-plot(tOut, y(:, 4))
-hold off
-xlabel('Time (s)');
-ylabel('System Output');
-title('Controlled CL System');
-legend('z_e', 'y_e');
-grid on;
-
-% iterative way
-t = 0:timeStep:200;  % Time vector for simulation
-OL_sys = buf_sys.OLi;
-x = zeros(4, length(t)+1);
-u = zeros(2, length(t));
-e = zeros(2, length(t));
-y = zeros(2, length(t));
-r = [0; 1];
-Kp = 0.557;     % 0.557; 0
-Ki = 0.0327;    % 0.0327; 0.0113           
-Kp_matrix = [0 0; 
-             0 Kp];
-Ki_matrix = [0 0; 
-             0 Ki];
-%%%!!! The problem is the way PI is implemented iteratively
-for i = 2:length(t)
-    e(:, i) = r - y(:, i-1);
-    delta_u = Ki_matrix * e(:, i) * timeStep;
-    u(:, i) = Kp_matrix * (e(:, i)-e(:, i-1)) + u(:, i-1) + delta_u;
-    x(:, i+1) = OL_sys.A * x(:, i) + OL_sys.B * u(:, i);  
-    y(:, i) = OL_sys.C * x(:, i) + OL_sys.D * u(:, i);
-end
-figure('Name', 'Iterative', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-plot(t, y(1,:));  % First output
-hold on;
-plot(t, y(2,:));  % Second output
-hold off
-xlabel('Time (s)');
-ylabel('System Output');
-title('Controlled CL System');
-legend('z_e', 'y_e');
-grid on;
+% % Default way
+% closed_loop_sys = feedback(OL_ctrl, eye(2));
+% t = 0:timeStep:200;  % Time vector for simulation
+% figure('Name', 'As a whole', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+% [y, tOut] = step(closed_loop_sys, t);
+% title('Controlled CL System');
+% plot(tOut, y(:, 2))
+% hold on
+% plot(tOut, y(:, 4))
+% hold off
+% xlabel('Time (s)');
+% ylabel('System Output');
+% title('Controlled CL System');
+% legend('z_e', 'y_e');
+% grid on;
+% 
+% % iterative way
+% t = 0:timeStep:200;  % Time vector for simulation
+% OL_sys = buf_sys.OLi;
+% x = zeros(4, length(t)+1);
+% u = zeros(2, length(t));
+% e = zeros(2, length(t));
+% y = zeros(2, length(t));
+% r = [0; 1];
+% Kp = 0.557;     % 0.557; 0
+% Ki = 0.0327;    % 0.0327; 0.0113           
+% Kp_matrix = [0 0; 
+%              0 Kp];
+% Ki_matrix = [0 0; 
+%              0 Ki];
+% %%%!!! The problem is the way PI is implemented iteratively
+% for i = 2:length(t)
+%     e(:, i) = r - y(:, i-1);
+%     delta_u = Ki_matrix * e(:, i) * timeStep;
+%     u(:, i) = Kp_matrix * (e(:, i)-e(:, i-1)) + u(:, i-1) + delta_u;
+%     x(:, i+1) = OL_sys.A * x(:, i) + OL_sys.B * u(:, i);  
+%     y(:, i) = OL_sys.C * x(:, i) + OL_sys.D * u(:, i);
+% end
+% figure('Name', 'Iterative', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+% plot(t, y(1,:));  % First output
+% hold on;
+% plot(t, y(2,:));  % Second output
+% hold off
+% xlabel('Time (s)');
+% ylabel('System Output');
+% title('Controlled CL System');
+% legend('z_e', 'y_e');
+% grid on;

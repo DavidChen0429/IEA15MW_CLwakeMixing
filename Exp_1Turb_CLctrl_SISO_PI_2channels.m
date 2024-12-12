@@ -24,15 +24,15 @@ timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 mag = 3;
 referenceType = 'ramp&stop'; % step, ramp, ramp&stop, step&step, zero
-Trigger = ceil(simTime/5);      % Time that ctrl is triggered
+Trigger = 1000;      % Time that ctrl is triggered
 HelixCycle = 1/(0.3*10/126) * (1/timeStep);
-Endtime = Trigger + 1*HelixCycle;
+Endtime = Trigger + 01*HelixCycle;
 saveOption = 'Y';
 
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\1Turbine\';
-fileName = ['1Turbine_CL_Helix_SISO_PI_2chls_FAIL_',referenceType,'_mag', num2str(mag),'.mat'];
-QprName = ['1Turbine_CL_Helix_SISO_PI_2chls_FAIL_',referenceType,'_mag', num2str(mag),'.qpr'];
+fileName = ['SISO_PI_2chls_suc_',referenceType,'_mag', num2str(mag),'.mat'];
+% QprName = ['SISO_PI_2chls_success_',referenceType,'_mag', num2str(mag),'.qpr'];
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
@@ -75,19 +75,6 @@ decoupled_delayed_sys = ss(decoupled_delayed_sys);
 U_inflow = 10;        % Inflow wind speed, same with the Q-blade setting
 D_NREL5MW = 126;     % Rotor diameter
 Hub_NREL5MW = 90;   % Hub height
-Wind_Height = Hub_NREL5MW;
-dimension = D_NREL5MW;     % span dim*dim meters
-grid_point = 50;     % sqaure grid
-Turb_time = 10;      % Simulation length of the windfield in seconds
-Turb_dt = timeStep;  % Temporal resolution of the windfield
-Turb_class = 'A';    % A, B, C
-Turb_type = 'NTM';   % NTM, ETM, etc   
-seed = 43;
-vertInf = 0;         % Vertical inflow angle in degrees
-horInf = 0;          % Horizontal inflow angle in degrees
-% calllib('QBladeDLL', 'addTurbulentWind', ...
-%     U_inflow,Hub_IEA15MW,Hub_IEA15MW,dimension,grid_point, ...
-%     Turb_time,Turb_dt,Turb_class,Turb_type,seed,vertInf,horInf,1)
 
 %% Defining Torque Control Setting
 % This need to be changed when inflow windspeed is varied
@@ -102,21 +89,11 @@ omega_e = Freq*2*pi;
 AzimuthOffset = 96; % 6 (2\pi) & 96; History -35
 
 t = linspace(1, simLen, simTime);
-% sigTilt_e = Helix_amplitude * ones(simTime, 1);  % basic
-% sigYaw_e = 0 * ones(simTime, 1);                 % basic
 
-% % Step input to test basic properties
+% Step input to test basic properties
 steps = [0*ones(1, simTime/5) Helix_amplitude*ones(1, simTime*2/5) 0*ones(1, simTime*2/5)];
-% steps = [0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) 2*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10) Helix_amplitude*ones(1, simTime/10) -2*ones(1, simTime/10) 0*ones(1, simTime/10)];
 sigTilt_e = steps;   % 0 * ones(simTime, 1)
 sigYaw_e = steps;    % 0 * ones(simTime, 1)
-
-% figure;
-% plot(t, sigTilt_e);
-% hold on
-% plot(t, sigYaw_e);
-% hold off
-% legend('\beta_{tilt,e}', '\beta_{yaw,e}')
 
 %% Define CL Ctrl setting
 e = zeros(simTime, 2);      % error
@@ -152,10 +129,9 @@ Kp_matrix2 = Kp * Channel_selector2;
 Ki_matrix2 = Ki * Channel_selector2;
 
 % Create reference
-% r = referenceGenerator(simTime,Trigger,Endtime,referenceType,mag,1);
+rOption = 'suc'; % fail
 r = zeros(simTime, 2);
-reference_magnitude1 = [8.6257 8.3827]; % [8.6257 8.3827]
-reference_magnitude2 = [8.6257 8.3827];
+reference_magnitude1 = [8.85 9.05]; % [8.5709 9.0784]
 reference_slope = reference_magnitude1/(1*HelixCycle);
 reference_slope2 = reference_magnitude1/(3*HelixCycle);
 for tt = Trigger:Endtime
@@ -163,28 +139,31 @@ for tt = Trigger:Endtime
 end
 r(Endtime:end, 1) = reference_magnitude1(1)*ones(simTime+1-Endtime, 1);
 
-for tt = switchControl1:(switchControl1+1*HelixCycle)
-    r(tt, 2) = reference_slope2(2) * (tt - switchControl1);   % y_e ramp signal
+if strcmp(rOption, 'suc')
+    for tt = switchControl1:(switchControl1+1*HelixCycle)
+        r(tt, 2) = reference_slope(2) * (tt - switchControl1);   % y_e ramp signal
+    end
+    buf1 = r(tt, 2);
+    r((switchControl1+1*HelixCycle):end, 2) = buf1*ones(simTime+1-(switchControl1+1*HelixCycle), 1);
+elseif strcmp(rOption, 'fail')
+    for tt = switchControl1:(switchControl1+1*HelixCycle)
+        r(tt, 2) = reference_slope2(2) * (tt - switchControl1);   % y_e ramp signal
+    end
+    buf1 = r(tt, 2);
+    r((switchControl1+1*HelixCycle):end, 2) = buf1*ones(simTime+1-(switchControl1+1*HelixCycle), 1);
+    
+    for tt2 = (switchControl1+3*HelixCycle):(switchControl1+4*HelixCycle)
+        r(tt2, 2) = buf1 + reference_slope2(2)*(tt2-(switchControl1+3*HelixCycle));   % y_e ramp signal
+    end
+    buf2 = r(tt2, 2);
+    r((switchControl1+4*HelixCycle):end, 2) = buf2*ones(simTime+1-(switchControl1+4*HelixCycle), 1);
+    
+    for tt3 = (switchControl1+6*HelixCycle):(switchControl1+7*HelixCycle)
+        r(tt3, 2) = buf2 + reference_slope2(2)*(tt3-(switchControl1+6*HelixCycle));   % y_e ramp signal
+    end
+    buf3 = r(tt3, 2);
+    r((switchControl1+7*HelixCycle):end, 2) = buf3*ones(simTime+1-(switchControl1+7*HelixCycle), 1);
 end
-buf1 = r(tt, 2);
-r((switchControl1+1*HelixCycle):end, 2) = buf1*ones(simTime+1-(switchControl1+1*HelixCycle), 1);
-
-for tt2 = (switchControl1+3*HelixCycle):(switchControl1+4*HelixCycle)
-    r(tt2, 2) = buf1 + reference_slope2(2)*(tt2-(switchControl1+3*HelixCycle));   % y_e ramp signal
-end
-buf2 = r(tt2, 2);
-r((switchControl1+4*HelixCycle):end, 2) = buf2*ones(simTime+1-(switchControl1+4*HelixCycle), 1);
-
-for tt3 = (switchControl1+6*HelixCycle):(switchControl1+7*HelixCycle)
-    r(tt3, 2) = buf2 + reference_slope2(2)*(tt3-(switchControl1+6*HelixCycle));   % y_e ramp signal
-end
-buf3 = r(tt3, 2);
-r((switchControl1+7*HelixCycle):end, 2) = buf3*ones(simTime+1-(switchControl1+7*HelixCycle), 1);
-
-% for tt = switchControl2:(switchControl2+1*HelixCycle)
-%     r(tt, 1) = reference_magnitude1(1)+reference_slope2(1) * (tt - switchControl2);   % y_e ramp signal
-% end
-% r((switchControl2+1*HelixCycle):end, 1) = reference_magnitude2(1)*ones(simTime+1-(switchControl2+1*HelixCycle), 1);
 plot(r)
 
 %% Defining LiDAR sampling 
@@ -222,8 +201,8 @@ HF_helixCenter_filtered = zeros(simTime, 2);
 PitchAngles = zeros(simTime, 3);
 FF_helixCenter = zeros(simTime, 2);
 HF_helixCenter = zeros(simTime, 2);
-templateStruct = struct('x', [], 'y', [], 'z', [], 'u_x', [], 'u_y', [], 'u_z', [], 'u_norm', [], 'u_los', []);
-LiDAR_data(simTime, 1) = templateStruct;
+% templateStruct = struct('x', [], 'y', [], 'z', [], 'u_x', [], 'u_y', [], 'u_z', [], 'u_norm', [], 'u_los', []);
+% LiDAR_data(simTime, 1) = templateStruct;
 
 % Sliding window
 ws_filter = 100;
@@ -317,7 +296,6 @@ for i = 1:1:simTime
         e(i, :) = r(i, :) - y(i-1, :);  
         % !!! The filter is so small that run into numerical issue, 
         % so do this for alternative
-%         e(i, :) = r(i, :) - yc(i-1, :);
         if i < switchControl1  % first channel
             delta_u = e(i, :)*timeStep*Ki_matrix;
             ubuf = (e(i,:)-e(i-1,:))*Kp_matrix + (u(i-1,:)+delta_u);
@@ -327,11 +305,6 @@ for i = 1:1:simTime
             ubuf = (e(i,:)-e(i-1,:))*Kp_matrix2 + (u(i-1,:)+delta_u);
             u(i, 1) = u(i-1, 1); % u(i-1, 1) 2.884
             u(i, 2) = ubuf(1, 2);
-%         elseif i >= switchControl2 % first channel
-%             delta_u = e(i, :)*timeStep*Ki_matrix;
-%             ubuf = (e(i,:)-e(i-1,:))*Kp_matrix + (u(i-1,:)+delta_u);
-%             u(i, 2) = u(i-1, 2); % u(i-1, 1) 2.884
-%             u(i, 1) = ubuf(1, 1);
         end
         % This can be derived from the inverse z-transform of discrete PI
         % I am a fucking genius and stupid man at the same time Lol
@@ -408,16 +381,15 @@ for i = 1:1:simTime
     PitchAngles(i,:) = [Pitch1 Pitch2 Pitch3];
     FF_helixCenter(i, :) = [wakeCenter(1) wakeCenter(2)]; % Z(tilt), Y(yaw)
     HF_helixCenter(i, :) = [center_e(1) center_e(2)];   % Ze(tilt), Ye(yaw) 
-    LiDAR_data(i) = windspeed;
+%     LiDAR_data(i) = windspeed;
 
     waitbar(i/simTime, f, sprintf('Simulation Running: %.1f%%', (i/simTime)*100));
 
 end
 close(f)
 if strcmp(saveOption, 'Y')
-    calllib('QBladeDLL','storeProject', [turbineName caseName QprName]) 
-    save([turbineName caseName fileName], 'LiDAR_data', ...
-                                      'FF_helixCenter', ...
+%     calllib('QBladeDLL','storeProject', [turbineName caseName QprName]) 
+    save([turbineName caseName fileName], 'FF_helixCenter', ...
                                       'FF_helixCenter_filtered', ...
                                       'HF_helixCenter', ...
                                       'HF_helixCenter_filtered', ...

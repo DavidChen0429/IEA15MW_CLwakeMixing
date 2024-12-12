@@ -70,19 +70,6 @@ decoupled_delayed_sys = ss(decoupled_delayed_sys);
 U_inflow = 10;        % Inflow wind speed, same with the Q-blade setting
 D_NREL5MW = 126;     % Rotor diameter
 Hub_NREL5MW = 90;   % Hub height
-Wind_Height = Hub_NREL5MW;
-dimension = D_NREL5MW;     % span dim*dim meters
-grid_point = 50;     % sqaure grid
-Turb_time = 10;      % Simulation length of the windfield in seconds
-Turb_dt = timeStep;  % Temporal resolution of the windfield
-Turb_class = 'A';    % A, B, C
-Turb_type = 'NTM';   % NTM, ETM, etc   
-seed = 43;
-vertInf = 0;         % Vertical inflow angle in degrees
-horInf = 0;          % Horizontal inflow angle in degrees
-% calllib('QBladeDLL', 'addTurbulentWind', ...
-%     U_inflow,Hub_IEA15MW,Hub_IEA15MW,dimension,grid_point, ...
-%     Turb_time,Turb_dt,Turb_class,Turb_type,seed,vertInf,horInf,1)
 
 %% Defining Torque Control Setting
 % This need to be changed when inflow windspeed is varied
@@ -91,7 +78,7 @@ N = 97;          % Gearbox ratio
 
 %% Defining Helix Control Setting
 Str = 0.3;                          % Strouhal number
-Helix_amplitude = 0;                % Helix amplitude                
+Helix_amplitude = 3;                % Helix amplitude                
 Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
 omega_e = Freq*2*pi;
 AzimuthOffset = 96; % 6 for pi/2 shift ;96 for pi shift (right relationship)
@@ -99,13 +86,6 @@ AzimuthOffset = 96; % 6 for pi/2 shift ;96 for pi shift (right relationship)
 t = linspace(1, simLen, simTime);
 sigTilt_e = Helix_amplitude*ones(simTime, 1);  % basic
 sigYaw_e = Helix_amplitude*ones(simTime, 1);   % basic
-
-% figure;
-% plot(t, sigTilt_e);
-% hold on
-% plot(t, sigYaw_e);
-% hold off
-% legend('\beta_{tilt,e}', '\beta_{yaw,e}')
 
 % Reference is not used, but for comparison with CLctrl
 Trigger = 0;
@@ -146,8 +126,8 @@ HF_helixCenter_filtered = zeros(simTime, 2);
 PitchAngles = zeros(simTime, 3);
 FF_helixCenter = zeros(simTime, 2);
 HF_helixCenter = zeros(simTime, 2);
-templateStruct = struct('x', [], 'y', [], 'z', [], 'u_x', [], 'u_y', [], 'u_z', [], 'u_norm', [], 'u_los', []);
-LiDAR_data(simTime, 1) = templateStruct;
+% templateStruct = struct('x', [], 'y', [], 'z', [], 'u_x', [], 'u_y', [], 'u_z', [], 'u_norm', [], 'u_los', []);
+% LiDAR_data(simTime, 1) = templateStruct;
 
 % Sliding window
 ws_filter = 100;
@@ -213,10 +193,8 @@ for i = 1:1:simTime
     end
     % Low pass filter
     % Centering
-%     centerZ = wakeCenter(1) - meanZ;
-%     centerY = wakeCenter(2) - meanY;
-    centerZ = wakeCenter(1) - 92.0026;  % data derived from the basecase
-    centerY = wakeCenter(2) + 4.0999;   % data derived from the basecase
+    centerZ = wakeCenter(1) - meanZ;
+    centerY = wakeCenter(2) - meanY;
     center_e = invR_helix * [centerZ; centerY];
     [HF_helixCenter_filtered(i, 1), filterState3] = filter(b_fir, 1, center_e(1), filterState3);
     [HF_helixCenter_filtered(i, 2), filterState4] = filter(b_fir, 1, center_e(2), filterState4);
@@ -230,8 +208,8 @@ for i = 1:1:simTime
 
     % II. Wake mixing
     % 1. Get tilt and yaw signals
-    beta_tilt_e = 0;
-    beta_yaw_e = 0;
+    beta_tilt_e = sigTilt_e(i);
+    beta_yaw_e = sigYaw_e(i);
     % 2. Inverse MBC 
     % 3. Blade pitch signal
     betaTiltYaw = invR_helix * [beta_tilt_e; 
@@ -273,16 +251,15 @@ for i = 1:1:simTime
     PitchAngles(i,:) = [Pitch1 Pitch2 Pitch3];
     FF_helixCenter(i, :) = [wakeCenter(1) wakeCenter(2)]; % Z(tilt), Y(yaw)
     HF_helixCenter(i, :) = [center_e(1) center_e(2)];   % Ze(tilt), Ye(yaw) 
-    LiDAR_data(i) = windspeed;
+%     LiDAR_data(i) = windspeed;
 
     waitbar(i/simTime, f, sprintf('Simulation Running: %.1f%%', (i/simTime)*100));
 
 end
 close(f)
 if strcmp(saveOption, 'Y')
-    calllib('QBladeDLL','storeProject', [turbineName caseName QprName]) 
-    save([turbineName caseName fileName], 'LiDAR_data', ...
-                                          'FF_helixCenter', ...
+%     calllib('QBladeDLL','storeProject', [turbineName caseName QprName]) 
+    save([turbineName caseName fileName], 'FF_helixCenter', ...
                                           'FF_helixCenter_filtered', ...
                                           'HF_helixCenter', ...
                                           'HF_helixCenter_filtered', ...
@@ -358,7 +335,7 @@ title('Center HF')
 % legend('z_e', 'y_e', 'z_{e,f}', 'y_{e,f}')
 legend('z_{e,f}', 'y_{e,f}')
 
-ringVisualization2(LiDAR_data, D_NREL5MW)
+% ringVisualization2(LiDAR_data, D_NREL5MW)
 
 %% Unload Library 
 % unloadlibrary 'QBladeDLL'

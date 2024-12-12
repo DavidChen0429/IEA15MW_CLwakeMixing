@@ -28,8 +28,8 @@ Trigger = 1000;      % Time that ctrl is triggered
 HelixCycle = 1/(0.3*10/126) * (1/timeStep);
 Endtime = Trigger + 1*HelixCycle;
 saveOption = 'Y';
-windtype = 'ShearRC2'; % Check .sim file (right. bts file) !!!!!!! 
-gain = 1;
+windtype = 'ShearReCenter2'; % Check .sim file (right. bts file) !!!!!!! 
+gain = 1.25;
 
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesLonger\';

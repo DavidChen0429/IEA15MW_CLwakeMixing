@@ -9,8 +9,8 @@ turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesLonger\';
 
 % Different case
-windCase = 'Uniform';
-% Uniform, Shear, Turb, Both, ShearRC, SkewedRC, BothRC
+windCase = 'SkewedRC';
+% Uniform, Shear, Turb, Both, ShearRC, ShearRC2, SkewedRC, BothRC
 
 veryBaseOLfile = '2Turbines_OL_Helix_mag3_4D.mat';
 if strcmp(windCase, 'Uniform')
@@ -25,6 +25,10 @@ elseif strcmp(windCase, 'ShearRC')
     basefile = '2Turbines_Baseline_ShearReCenter_4D.mat';
     OLfileName = '2Turbines_OL_Helix_ShearReCenter_mag3_4D.mat';
     CLfileName = '2Turbines_CL_Helix_ShearReCenter_mag3_4D.mat';
+elseif strcmp(windCase, 'ShearRC2')
+    basefile = '2Turbines_Baseline_ShearReCenter_4D.mat';
+    OLfileName = '2Turbines_OL_Helix_ShearReCenter_mag3_4D.mat';
+    CLfileName = '2Turbines_CL_Helix_ShearReCenter2_mag3_4D.mat';
 elseif strcmp(windCase, 'Turb')
     basefile = '2Turbines_Baseline_TI6_4D.mat';
     OLfileName = '2Turbines_OL_Helix_TI6_mag3_4D.mat';
@@ -37,6 +41,10 @@ elseif strcmp(windCase, 'SkewedRC')
     basefile = '2Turbines_Baseline_Skewed1ReCenter_4D.mat';
     OLfileName = '2Turbines_OL_Helix_Skewed1ReCenter_mag3_4D.mat';
     CLfileName = '2Turbines_CL_Helix_Skewed1ReCenter_mag3_4D.mat';  
+elseif strcmp(windCase, 'BothRC')
+    basefile = '2Turbines_Baseline_BothReCenter_4D.mat';
+    OLfileName = '2Turbines_OL_Helix_ShearReCenter_mag3_4D.mat';
+    CLfileName = '2Turbines_CL_Helix_BothReCenter_mag3_4D.mat'; 
 end
 
 veryBase = load([turbineName caseName veryBaseOLfile]);
@@ -45,7 +53,7 @@ OL = load([turbineName caseName OLfileName]);
 CL = load([turbineName caseName CLfileName]);
 
 %% Overall Settings
-overallOption = 'N';
+errorOption = 'N';
 flowAnalysis = 'N';
 rareDataAnalysis = 'N';
 overallDetailOption = 'Y';
@@ -77,6 +85,38 @@ Font = 20;
 color0 = [0.4660 0.6740 0.1880];
 color1 = [0, 0.4470, 0.7410];
 color2 = [0.8500, 0.3250, 0.0980];
+
+% ============== Error for Tracking 
+if strcmp(errorOption, 'Y')
+    figure('Name', 'Experiment Error', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+    subplot(2, 1, 1)
+    plot(t, (CL.r(filter:end, 1)-CL.y(filter:end, 1)), 'Color',color1,'LineWidth',lw)
+    hold on
+    plot(t, (CL.ym(filter:end, 1)-CL.ytilda(filter:end, 1)),'--', 'Color',color2,'LineWidth',lw)
+    yline(0, 'k--','LineWidth',lw)
+    xline(20, '--k', 'Activate Ctrl', 'LabelOrientation', 'horizontal', 'LineWidth', 1);
+    hold off
+    xlabel('Time [s]')
+    ylabel('Magnitude [m]')
+    xlim([0 500])
+    ylim([-20 15])
+    legend('e_p', 'e_f', 'Location','southeast')
+    title('z^e')
+    subplot(2, 1, 2)
+    plot(t, (CL.r(filter:end, 2)-CL.y(filter:end, 2)), 'Color',color1,'LineWidth',lw)
+    hold on
+    plot(t, (CL.ym(filter:end, 2)-CL.ytilda(filter:end, 2)),'--', 'Color',color2,'LineWidth',lw)
+    yline(0, 'k--','LineWidth',lw)
+    xline(20, '--k', 'Activate Ctrl', 'LabelOrientation', 'horizontal', 'LineWidth', 1);
+    hold off
+    xlabel('Time [s]')
+    ylabel('Magnitude [m]')
+    xlim([0 500])
+    ylim([-20 15])
+    legend('e_p', 'e_f', 'Location','southeast')
+    title('y^e')
+    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+end
 
 % ============== Wind Flow Information
 if strcmp(flowAnalysis, 'Y')
@@ -259,7 +299,7 @@ if strcmp(overallDetailOption, 'Y')
         title('\beta^e_{yaw}')
         xlim([0 t0(end)])
         xlabel('Time [s]')
-        ylim([-1 5])
+        ylim([-1 8])
         ylabel('Magnitude [deg]')
         legend('OL','CL','Location','southeast')
         subplot(2, 1, 1)
@@ -270,7 +310,7 @@ if strcmp(overallDetailOption, 'Y')
         title('\beta^e_{tilt}')
         xlim([0 t0(end)])
         xlabel('Time [s]')
-        ylim([-1 5])
+        ylim([-1 8])
         ylabel('Magnitude [deg]')
         legend('OL','CL','Location','southeast')
         setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
@@ -344,7 +384,6 @@ if strcmp(overallDetailOption, 'Y')
         ylabel('Position [m]')
         legend('OL','CL','Location','southeast')
         subplot(2, 1, 1)
-        r2 = ones(simLength-filter0+1, 1)*9.0661;
         plot(t0, OL.FF_helixCenter_filtered(filter0:end, 2),'Color',color0,'LineWidth', lw)
         hold on
         plot(t0, CL.FF_helixCenter_filtered(filter0:end, 2),'Color',color2,'LineWidth', lw)
@@ -365,22 +404,23 @@ if strcmp(trajOption, 'Y')
     center_ol = mean(OL.FF_helixCenter_filtered(filter:end, :));
     center_cl = mean(CL.FF_helixCenter_filtered(filter:end, :));
     figure('Name', 'HubJet Trajectory', 'NumberTitle', 'off', 'Position', [100, 100, 600, 600]);
-    plot(Baseline.FF_helixCenter_filtered(filter:end, 2), Baseline.FF_helixCenter_filtered(filter:end, 1), 'Color',color0, 'LineWidth', lw)
-    hold on
+%     plot(Baseline.FF_helixCenter_filtered(filter:end, 2), Baseline.FF_helixCenter_filtered(filter:end, 1), 'Color',color0, 'LineWidth', lw)
+%     hold on
     plot(OL.FF_helixCenter_filtered(filter:end, 2), OL.FF_helixCenter_filtered(filter:end, 1), 'Color',color1, 'LineWidth', lw)
+    hold on
     plot(CL.FF_helixCenter_filtered(filter:end, 2), CL.FF_helixCenter_filtered(filter:end, 1), 'Color',color2, 'LineWidth', lw)
-    plot(center_bl(2), center_bl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color0);
+    plot(0, 90, 'k*', 'MarkerSize', 10);
+    plot(center_blb(2), center_blb(1), 'k+', 'MarkerSize', 10);
+%     plot(center_bl(2), center_bl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color0);
     plot(center_ol(2), center_ol(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color1);
     plot(center_cl(2), center_cl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color2);
-    plot(center_blb(2), center_blb(1), 'k+');
-    plot(0, 90, 'k*', 'MarkerSize', 10);
     hold off
     title('Hub Jet Trajectory')
     xlabel('y [m]')
     ylabel('z [m]')
     xlim([-30 20])
     ylim([67 117])
-    legend('Baseline', 'OL', 'CL', 'Location','southeast')
+    legend('OL','CL','Hub','Uni OL', 'Location','southeast')
     setfigpaper('Width',[15,1],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 end
 

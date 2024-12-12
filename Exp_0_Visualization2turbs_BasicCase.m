@@ -8,13 +8,13 @@ addpath('.\Functions');
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesLonger\';
 
-ControlOption = 'None'; % None, Helix
+ControlOption = 'Helix'; % None, Helix
 % Different case
 if strcmp(ControlOption, 'Helix')
     basefile = '2Turbines_OL_Helix_mag3_4D.mat';
-    OLfileName = '2Turbines_OL_Helix_Shear0.2_mag3_4D.mat';
+    OLfileName = '2Turbines_OL_Helix_ShearReCenter_mag3_4D.mat';
     CLfileName = '2Turbines_OL_Helix_TI6_mag3_4D.mat';
-    FKfileName = '2Turbines_OL_Helix_TI6&Shear0.2_mag3_4D';
+    FKfileName = '2Turbines_OL_Helix_TI6&Shear0.2_mag3_4D.mat';
 elseif strcmp(ControlOption, 'None')
     basefile = '2Turbines_Baseline_4D.mat';
     OLfileName = '2Turbines_Baseline_Shear0.2_4D.mat';
@@ -28,23 +28,24 @@ CL = load([turbineName caseName CLfileName]);
 FL = load([turbineName caseName FKfileName]);
 
 %% Overall Settings
-overallOption = 'Y';
-flowAnalysis = 'Y';
+overallOption = 'N';
+flowAnalysis = 'N';
 rareDataAnalysis = 'N';
-overallDetailOption = 'N';
-trajOption = 'Y';
+overallDetailOption = 'Y';
+coorFrame = 'HF';
+trajOption = 'N';
 videoOption = 'N';
 powerAnalysis = 'N';
 DELAnalysis = 'N';
-PBDAnalysis = 'Y';
-powerDELAnalysis = 'Y';
+PBDAnalysis = 'N';
+powerDELAnalysis = 'N';
 
 % Basic Settings
 D_NREL5MW = 126;
 U_inflow = 10;
 timeStep = 0.1;
 filter = 3000;
-filter0 = 1;    % Overall
+filter0 = 5000;    % Overall
 filter2 = 1;    % Wind info
 filter3 = 1;    % Rare data
 DeadtimeDelay = 112; % change to 112 when showing whole process
@@ -289,37 +290,68 @@ end
 
 % ============== Overeall Detailed Visualization
 if strcmp(overallDetailOption, 'Y')
-    % hub Jet Helix Frame
-    figure('Name', 'Output Detail', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-    subplot(2, 1, 2)
-    plot(t, Baseline.HF_helixCenter_filtered(filter:end, 1),'Color',color0,'LineWidth', lw)
-    hold on
-    plot(t, OL.HF_helixCenter_filtered(filter:end, 1), 'Color',color1,'LineWidth', lw)
-    plot(t, CL.HF_helixCenter_filtered(filter:end, 1), 'Color',color2,'LineWidth', lw)
-    plot(t, FL.HF_helixCenter_filtered(filter:end, 1), 'Color',color3,'LineWidth', lw)
-    yline(0, '--', 'LineWidth', lw)
-    hold off
-    title('y^e')
-    xlim([0 t(end)])
-    xlabel('Time [s]')
-    ylim([-1 15])
-    ylabel('Magnitude [m]')
-    legend('Uniform','Shear','Turbulence','S&T','Location','southeast')
-    subplot(2, 1, 1)
-    plot(t, Baseline.HF_helixCenter_filtered(filter:end, 2),'Color',color0,'LineWidth', lw)
-    hold on
-    plot(t, OL.HF_helixCenter_filtered(filter:end, 2), 'Color',color1,'LineWidth', lw)
-    plot(t, CL.HF_helixCenter_filtered(filter:end, 2), 'Color',color2,'LineWidth', lw)
-    plot(t, FL.HF_helixCenter_filtered(filter:end, 2), 'Color',color3,'LineWidth', lw)
-    yline(0, '--', 'LineWidth', lw)
-    hold off
-    title('z^e')
-    xlim([0 t(end)])
-    xlabel('Time [s]')
-    ylim([-1 15])
-    ylabel('Magnitude [m]')
-    legend('Uniform','Shear','Turbulence','S&T','Location','southeast')
-    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+    t0 = (1:(simLength-filter0+1)) * timeStep;
+    if strcmp(coorFrame,'HF')
+        % Output
+        r1 = ones(simLength-filter0+1, 1)*8.5606;
+        figure('Name', 'Output Detail HF', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+        subplot(2, 1, 2)
+        plot(t0, Baseline.HF_helixCenter_filtered(filter0:end, 1),'Color',color0,'LineWidth', lw)
+        hold on
+        plot(t0, OL.HF_helixCenter_filtered(filter0:end, 1),'Color',color1,'LineWidth', lw)
+        plot(t0, CL.HF_helixCenter_filtered(filter0:end, 1),'Color',color2,'LineWidth', lw)
+        plot(t0, FL.HF_helixCenter_filtered(filter0:end, 1),'Color',color3,'LineWidth', lw)
+        plot(t0, r1, 'k:', 'LineWidth', lw)
+        yline(0, '--', 'LineWidth', lw)
+        hold off
+        title('y^e')
+        xlim([0 t0(end)])
+        xlabel('Time [s]')
+        ylim([-1 15])
+        ylabel('Position [m]')
+        legend('Uniform','Shear','Turbulence','S&T','Location','southeast')
+        subplot(2, 1, 1)
+        r2 = ones(simLength-filter0+1, 1)*9.0661;
+        plot(t0, Baseline.HF_helixCenter_filtered(filter0:end, 2),'Color',color0,'LineWidth', lw)
+        hold on
+        plot(t0, OL.HF_helixCenter_filtered(filter0:end, 2),'Color',color1,'LineWidth', lw)
+        plot(t0, CL.HF_helixCenter_filtered(filter0:end, 2),'Color',color2,'LineWidth', lw)
+        plot(t0, FL.HF_helixCenter_filtered(filter0:end, 2),'Color',color3,'LineWidth', lw)
+        plot(t0, r2, 'k:', 'LineWidth', lw)
+        yline(0, '--', 'LineWidth', lw)
+        hold off
+        title('z^e')
+        xlim([0 t0(end)])
+        xlabel('Time [s]')
+        ylim([-1 15])
+        ylabel('Position [m]')
+        legend('Uniform','Shear','Turbulence','S&T','Location','southeast')
+        setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+    elseif strcmp(coorFrame, 'FF')
+        % Output
+        figure('Name', 'Output Detail FF', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+        subplot(2, 1, 2)
+        plot(t0, OL.FF_helixCenter_filtered(filter0:end, 1),'Color',color0,'LineWidth', lw)
+        hold on
+        plot(t0, CL.FF_helixCenter_filtered(filter0:end, 1),'Color',color1,'LineWidth', lw)
+        hold off
+        title('z')
+        xlim([0 t0(end)])
+        xlabel('Time [s]')
+        ylabel('Position [m]')
+        legend('OL','CL','Location','southeast')
+        subplot(2, 1, 1)
+        plot(t0, OL.FF_helixCenter_filtered(filter0:end, 2),'Color',color0,'LineWidth', lw)
+        hold on
+        plot(t0, CL.FF_helixCenter_filtered(filter0:end, 2),'Color',color2,'LineWidth', lw)
+        hold off
+        title('y')
+        xlim([0 t0(end)])
+        xlabel('Time [s]')
+        ylabel('Position [m]')
+        legend('OL','CL','Location','southeast')
+        setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+    end
 end
 
 % ============== Hub Jet Trajectory
@@ -334,46 +366,43 @@ if strcmp(trajOption, 'Y')
     plot(Baseline.FF_helixCenter_filtered(filter:end, 2), Baseline.FF_helixCenter_filtered(filter:end, 1), 'Color',color0, 'LineWidth', lw)
     hold on
     plot(OL.FF_helixCenter_filtered(filter:end, 2), OL.FF_helixCenter_filtered(filter:end, 1), 'Color',color1, 'LineWidth', lw)
+    plot(0, 90, 'k*', 'MarkerSize', 10);
     plot(center_bl(2), center_bl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color0);
     plot(center_ol(2), center_ol(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color1);
-    plot(0, 90, 'k*', 'MarkerSize', 10);
     hold off
-    title('Hub Jet Trajectory')
     xlabel('y [m]')
     ylabel('z [m]')
     xlim([-30 20])
     ylim([67 117])
-    legend('Uniform', 'Shear', 'Location','southeast')
+    legend('Uniform', 'Shear','Hub', 'Location','southeast')
 
     subplot(1, 3, 2)
     plot(Baseline.FF_helixCenter_filtered(filter:end, 2), Baseline.FF_helixCenter_filtered(filter:end, 1), 'Color',color0, 'LineWidth', lw)
     hold on
     plot(CL.FF_helixCenter_filtered(filter:end, 2), CL.FF_helixCenter_filtered(filter:end, 1), 'Color',color2, 'LineWidth', lw)
+    plot(0, 90, 'k*', 'MarkerSize', 10);
     plot(center_bl(2), center_bl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color0);
     plot(center_cl(2), center_cl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color2);
-    plot(0, 90, 'k*', 'MarkerSize', 10);
     hold off
-    title('Hub Jet Trajectory')
     xlabel('y [m]')
     ylabel('z [m]')
     xlim([-30 20])
     ylim([67 117])
-    legend('Uniform', 'Turbulence', 'Location','southeast')
+    legend('Uniform', 'Turbulence','Hub', 'Location','southeast')
 
     subplot(1, 3, 3)
     plot(Baseline.FF_helixCenter_filtered(filter:end, 2), Baseline.FF_helixCenter_filtered(filter:end, 1), 'Color',color0, 'LineWidth', lw)
     hold on
     plot(FL.FF_helixCenter_filtered(filter:end, 2), FL.FF_helixCenter_filtered(filter:end, 1), 'Color',color3, 'LineWidth', lw)
+    plot(0, 90, 'k*', 'MarkerSize', 10);
     plot(center_bl(2), center_bl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color0);
     plot(center_fl(2), center_fl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color2);
-    plot(0, 90, 'k*', 'MarkerSize', 10);
     hold off
-    title('Hub Jet Trajectory')
     xlabel('y [m]')
     ylabel('z [m]')
     xlim([-30 20])
     ylim([67 117])
-    legend('Uniform', 'S&T', 'Location','southeast')
+    legend('Uniform', 'S&T','Hub', 'Location','southeast')
     setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 end
 
