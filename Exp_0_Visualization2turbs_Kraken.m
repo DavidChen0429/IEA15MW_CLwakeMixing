@@ -2,15 +2,16 @@
 % clear
 close all 
 addpath('.\Functions');
-%clc
+clc
 
 %% Data file (Chage this accordingly)
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesLonger\';
 
 % Different case
-windCase = 'SkewedRC';
-% Uniform, Shear, Turb, Both, ShearRC, ShearRC2, SkewedRC, BothRC
+windCase = 'BothRC';
+% Uniform, Shear, Turb, Both, ShearRC, ShearRC2, SkewedRC, BothRC,
+% SkewedRC2, BothRC2
 
 veryBaseOLfile = '2Turbines_OL_Helix_mag3_4D.mat';
 if strcmp(windCase, 'Uniform')
@@ -27,8 +28,12 @@ elseif strcmp(windCase, 'ShearRC')
     CLfileName = '2Turbines_CL_Helix_ShearReCenter_mag3_4D.mat';
 elseif strcmp(windCase, 'ShearRC2')
     basefile = '2Turbines_Baseline_ShearReCenter_4D.mat';
-    OLfileName = '2Turbines_OL_Helix_ShearReCenter_mag3_4D.mat';
+    OLfileName = '2Turbines_OL_Helix_ShearReCenter2_mag3.3_4D.mat';
     CLfileName = '2Turbines_CL_Helix_ShearReCenter2_mag3_4D.mat';
+elseif strcmp(windCase, 'ShearRC3')
+    basefile = '2Turbines_Baseline_ShearReCenter_4D.mat';
+    OLfileName = '2Turbines_OL_Helix_ShearReCenter_mag3_4D.mat';
+    CLfileName = '2Turbines_CL_Helix_ShearReCenter3_mag3_4D.mat';
 elseif strcmp(windCase, 'Turb')
     basefile = '2Turbines_Baseline_TI6_4D.mat';
     OLfileName = '2Turbines_OL_Helix_TI6_mag3_4D.mat';
@@ -41,10 +46,18 @@ elseif strcmp(windCase, 'SkewedRC')
     basefile = '2Turbines_Baseline_Skewed1ReCenter_4D.mat';
     OLfileName = '2Turbines_OL_Helix_Skewed1ReCenter_mag3_4D.mat';
     CLfileName = '2Turbines_CL_Helix_Skewed1ReCenter_mag3_4D.mat';  
+elseif strcmp(windCase, 'SkewedRC2')
+    basefile = '2Turbines_Baseline_Skewed1ReCenter_4D.mat';
+    OLfileName = '2Turbines_OL_Helix_Skewed1ReCenter_mag3_4D.mat';
+    CLfileName = '2Turbines_CL_Helix_Skewed1ReCenter2_mag3_4D.mat';  
 elseif strcmp(windCase, 'BothRC')
     basefile = '2Turbines_Baseline_BothReCenter_4D.mat';
-    OLfileName = '2Turbines_OL_Helix_ShearReCenter_mag3_4D.mat';
+    OLfileName = '2Turbines_OL_Helix_BothReCenter_mag3_4D.mat';
     CLfileName = '2Turbines_CL_Helix_BothReCenter_mag3_4D.mat'; 
+elseif strcmp(windCase, 'BothRC2')
+    basefile = '2Turbines_Baseline_BothReCenter_4D.mat';
+    OLfileName = '2Turbines_OL_Helix_BothReCenter_mag3_4D.mat';
+    CLfileName = '2Turbines_CL_Helix_BothReCenter2_mag3_4D.mat'; 
 end
 
 veryBase = load([turbineName caseName veryBaseOLfile]);
@@ -54,7 +67,7 @@ CL = load([turbineName caseName CLfileName]);
 
 %% Overall Settings
 errorOption = 'N';
-flowAnalysis = 'N';
+flowAnalysis = 'Y';
 rareDataAnalysis = 'N';
 overallDetailOption = 'Y';
 coorFrame = 'HF';
@@ -62,15 +75,17 @@ trajOption = 'Y';
 videoOption = 'N';
 powerAnalysis = 'N';
 DELAnalysis = 'N';
-PBDAnalysis = 'Y';
+PBDAnalysis = 'N';
 powerDELAnalysis = 'Y';
+numericalAnalysis = 'Y';
+
 
 % Basic Settings
 D_NREL5MW = 126;
 U_inflow = 10;
 timeStep = 0.1;
-filter = 3000; % 3000 for steady-state
-filter0 = 1; % Overall result
+filter = 5000; % 3000 for steady-state
+filter0 = filter; % Overall result
 filter2 = 1; % Wind info
 filter3 = 6000; % Rare data
 DeadtimeDelay = 112; % change to 112 when showing whole process
@@ -132,8 +147,6 @@ if strcmp(flowAnalysis, 'Y')
     xlabel('Time [s]')
     ylabel('Speed [m/s]')
     legend('OL','CL','Location','southeast')
-%     disp(mean(OL.UmeanStore(filter2:end)))
-%     disp(mean(CL.UmeanStore(filter2:end)))
 
     subplot(2, 1, 2)
     plot(t2, OL.TIStore(filter2:end)*100,'Color',color1,'LineWidth', lw)
@@ -146,6 +159,14 @@ if strcmp(flowAnalysis, 'Y')
     ylabel('Value [%]')
     legend('OL','CL','Location','southeast')
     setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+    
+    fprintf('\n==================== Flow Comparison \n');
+    fprintf('========== Wind Speed \n');
+    fprintf('   OL: %.2e m/s\n', mean(OL.UmeanStore(filter2:end)));
+    fprintf('   CL: %.2e m/s\n', mean(CL.UmeanStore(filter2:end)));
+    fprintf('========== Turbulence Intensity \n');
+    fprintf('   OL: %.2e %%\n', mean(OL.TIStore(filter2:end)*100));
+    fprintf('   CL: %.2e %%\n', mean(CL.TIStore(filter2:end)*100));   
 end
 
 % ============== Rare Data Visualization
@@ -373,20 +394,20 @@ if strcmp(overallDetailOption, 'Y')
 
         % Output
         figure('Name', 'Output Detail FF', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-        subplot(2, 1, 2)
+        subplot(2, 1, 1)
         plot(t0, OL.FF_helixCenter_filtered(filter0:end, 1),'Color',color0,'LineWidth', lw)
         hold on
-        plot(t0, CL.FF_helixCenter_filtered(filter0:end, 1),'Color',color1,'LineWidth', lw)
+        plot(t0, CL.FF_helixCenter_filtered(filter0:end, 1),'Color',color2,'LineWidth', lw)
         hold off
         title('z')
         xlim([0 t0(end)])
         xlabel('Time [s]')
         ylabel('Position [m]')
         legend('OL','CL','Location','southeast')
-        subplot(2, 1, 1)
+        subplot(2, 1, 2)
         plot(t0, OL.FF_helixCenter_filtered(filter0:end, 2),'Color',color0,'LineWidth', lw)
         hold on
-        plot(t0, CL.FF_helixCenter_filtered(filter0:end, 2),'Color',color2,'LineWidth', lw)
+        plot(t0, CL.FF_helixCenter_filtered(filter0:end, 2),'Color',color1,'LineWidth', lw)
         hold off
         title('y')
         xlim([0 t0(end)])
@@ -399,6 +420,8 @@ end
 
 % ============== Hub Jet Trajectory
 if strcmp(trajOption, 'Y')
+%     CL.FF_helixCenter_filtered(:, 2) = CL.FF_helixCenter_filtered(:, 2) + 0.5;
+%     CL.FF_helixCenter_filtered(:, 1) = CL.FF_helixCenter_filtered(:, 1) + 0.5;
     center_blb = mean(veryBase.FF_helixCenter_filtered(filter:end, :));
     center_bl = mean(Baseline.FF_helixCenter_filtered(filter:end, :));
     center_ol = mean(OL.FF_helixCenter_filtered(filter:end, :));
@@ -415,11 +438,10 @@ if strcmp(trajOption, 'Y')
     plot(center_ol(2), center_ol(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color1);
     plot(center_cl(2), center_cl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color2);
     hold off
-    title('Hub Jet Trajectory')
     xlabel('y [m]')
     ylabel('z [m]')
     xlim([-30 20])
-    ylim([67 117])
+    ylim([60 110])
     legend('OL','CL','Hub','Uni OL', 'Location','southeast')
     setfigpaper('Width',[15,1],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 end
@@ -435,7 +457,7 @@ end
 % =========== Baseline
 % Upstream WT1
 BL_result.WT1.power = calculatePower(filter,Baseline.Power_store,D_NREL5MW,U_inflow); % [MW]
-BL_result.WT1.power2 = calculatePower2(filter,Baseline.Power_store);
+% BL_result.WT1.power2 = calculatePower2(filter,Baseline.Power_store);
 BL_result.WT1.DEL = calculateDEL(filter, ...
     Baseline.Mflap1_store,Baseline.Medge1_store, ...
     Baseline.Mflap2_store,Baseline.Medge2_store, ...
@@ -447,7 +469,7 @@ BL_result.WT1.PBD = calculatePBD(filter,Baseline.PitchAngles, ...
     Baseline.Mflap3_store,Baseline.Medge3_store); % [kNm deg]
 % Downstream WT2
 BL_result.WT2.power = calculatePower(filter,Baseline.Powerturb2_store,D_NREL5MW,U_inflow); % [MW]
-BL_result.WT2.power2 = calculatePower2(filter,Baseline.Powerturb2_store);
+% BL_result.WT2.power2 = calculatePower2(filter,Baseline.Powerturb2_store);
 BL_result.WT2.DEL = calculateDEL(filter, ...
     Baseline.Mflap1turb2_store,Baseline.Medge1turb2_store, ...
     Baseline.Mflap2turb2_store,Baseline.Medge2turb2_store, ...
@@ -462,14 +484,14 @@ BL_result.WT1.DEL_edgewise = mean(BL_result.WT1.DEL(2)+BL_result.WT1.DEL(4)+BL_r
 BL_result.WT2.DEL_flapwise = mean(BL_result.WT2.DEL(1)+BL_result.WT2.DEL(3)+BL_result.WT2.DEL(5));
 BL_result.WT2.DEL_edgewise = mean(BL_result.WT2.DEL(2)+BL_result.WT2.DEL(4)+BL_result.WT2.DEL(6));
 BL_result.All.power = BL_result.WT1.power + BL_result.WT2.power;
-BL_result.All.power2 = BL_result.WT1.power2 + BL_result.WT2.power2;
+% BL_result.All.power2 = BL_result.WT1.power2 + BL_result.WT2.power2;
 BL_result.All.DEL_flapwise = BL_result.WT1.DEL_flapwise + BL_result.WT2.DEL_flapwise;
 BL_result.All.DEL_edgewise = BL_result.WT1.DEL_edgewise + BL_result.WT2.DEL_edgewise;
 BL_result.All.PBD = BL_result.WT1.PBD + BL_result.WT2.PBD;
 
 % =========== Open-Loop
 OL_result.WT1.power = calculatePower(filter,OL.Power_store,D_NREL5MW,U_inflow); % [MW]
-OL_result.WT1.power2 = calculatePower2(filter,OL.Power_store);
+% OL_result.WT1.power2 = calculatePower2(filter,OL.Power_store);
 OL_result.WT1.DEL = calculateDEL(filter, ...
     OL.Mflap1_store,OL.Medge1_store, ...
     OL.Mflap2_store,OL.Medge2_store, ...
@@ -481,7 +503,7 @@ OL_result.WT1.PBD = calculatePBD(filter,OL.PitchAngles, ...
     OL.Mflap3_store,OL.Medge3_store); % [kNm deg]
 % Downstream WT2
 OL_result.WT2.power = calculatePower(filter,OL.Powerturb2_store,D_NREL5MW,U_inflow); % [MW]
-OL_result.WT2.power2 = calculatePower2(filter,OL.Powerturb2_store);
+% OL_result.WT2.power2 = calculatePower2(filter,OL.Powerturb2_store);
 OL_result.WT2.DEL = calculateDEL(filter, ...
     OL.Mflap1turb2_store,OL.Medge1turb2_store, ...
     OL.Mflap2turb2_store,OL.Medge2turb2_store, ...
@@ -496,14 +518,14 @@ OL_result.WT1.DEL_edgewise = mean(OL_result.WT1.DEL(2)+OL_result.WT1.DEL(4)+OL_r
 OL_result.WT2.DEL_flapwise = mean(OL_result.WT2.DEL(1)+OL_result.WT2.DEL(3)+OL_result.WT2.DEL(5));
 OL_result.WT2.DEL_edgewise = mean(OL_result.WT2.DEL(2)+OL_result.WT2.DEL(4)+OL_result.WT2.DEL(6));
 OL_result.All.power = OL_result.WT1.power + OL_result.WT2.power;
-OL_result.All.power2 = OL_result.WT1.power2 + OL_result.WT2.power2;
+% OL_result.All.power2 = OL_result.WT1.power2 + OL_result.WT2.power2;
 OL_result.All.DEL_flapwise = OL_result.WT1.DEL_flapwise + OL_result.WT2.DEL_flapwise;
 OL_result.All.DEL_edgewise = OL_result.WT1.DEL_edgewise + OL_result.WT2.DEL_edgewise;
 OL_result.All.PBD = OL_result.WT1.PBD + OL_result.WT2.PBD;
 
 % =========== Closed-Loop
 CL_result.WT1.power = calculatePower(filter,CL.Power_store,D_NREL5MW,U_inflow); % [MW]
-CL_result.WT1.power2 = calculatePower2(filter,CL.Power_store);
+% CL_result.WT1.power2 = calculatePower2(filter,CL.Power_store);
 CL_result.WT1.DEL = calculateDEL(filter, ...
     CL.Mflap1_store,CL.Medge1_store, ...
     CL.Mflap2_store,CL.Medge2_store, ...
@@ -515,7 +537,7 @@ CL_result.WT1.PBD = calculatePBD(filter,CL.PitchAngles, ...
     CL.Mflap3_store,CL.Medge3_store); % [kNm deg]
 % Downstream WT2
 CL_result.WT2.power = calculatePower(filter,CL.Powerturb2_store,D_NREL5MW,U_inflow); % [MW]
-CL_result.WT2.power2 = calculatePower2(filter,CL.Powerturb2_store);
+% CL_result.WT2.power2 = calculatePower2(filter,CL.Powerturb2_store);
 CL_result.WT2.DEL = calculateDEL(filter, ...
     CL.Mflap1turb2_store,CL.Medge1turb2_store, ...
     CL.Mflap2turb2_store,CL.Medge2turb2_store, ...
@@ -530,7 +552,7 @@ CL_result.WT1.DEL_edgewise = mean(CL_result.WT1.DEL(2)+CL_result.WT1.DEL(4)+CL_r
 CL_result.WT2.DEL_flapwise = mean(CL_result.WT2.DEL(1)+CL_result.WT2.DEL(3)+CL_result.WT2.DEL(5));
 CL_result.WT2.DEL_edgewise = mean(CL_result.WT2.DEL(2)+CL_result.WT2.DEL(4)+CL_result.WT2.DEL(6));
 CL_result.All.power = CL_result.WT1.power + CL_result.WT2.power;
-CL_result.All.power2 = CL_result.WT1.power2 + CL_result.WT2.power2;
+% CL_result.All.power2 = CL_result.WT1.power2 + CL_result.WT2.power2;
 CL_result.All.DEL_flapwise = CL_result.WT1.DEL_flapwise + CL_result.WT2.DEL_flapwise;
 CL_result.All.DEL_edgewise = CL_result.WT1.DEL_edgewise + CL_result.WT2.DEL_edgewise;
 CL_result.All.PBD = CL_result.WT1.PBD + CL_result.WT2.PBD;
@@ -610,4 +632,41 @@ end
 if strcmp(PBDAnalysis, 'Y')
     deltaPBD = mean(CL_result.WT1.PBD) - mean(OL_result.WT1.PBD);
     disp(deltaPBD)
+end
+
+% === Numerical Comparsion between OL and CL
+if strcmp(numericalAnalysis, 'Y')
+    % Power
+    PowWT1vs = (CL_result.WT1.power - OL_result.WT1.power)/OL_result.WT1.power;
+    PowWT2vs = (CL_result.WT2.power - OL_result.WT2.power)/OL_result.WT2.power;
+    PowAllvs = (CL_result.All.power - OL_result.All.power)/OL_result.All.power;
+    % DEL
+    DELeWT1vs = (CL_result.WT1.DEL_edgewise - OL_result.WT1.DEL_edgewise)/OL_result.WT1.DEL_edgewise;
+    DELeWT2vs = (CL_result.WT2.DEL_edgewise - OL_result.WT2.DEL_edgewise)/OL_result.WT2.DEL_edgewise;
+    DELeAllvs = (CL_result.All.DEL_edgewise - OL_result.All.DEL_edgewise)/OL_result.All.DEL_edgewise;
+    DELfWT1vs = (CL_result.WT1.DEL_flapwise - OL_result.WT1.DEL_flapwise)/OL_result.WT1.DEL_flapwise;
+    DELfWT2vs = (CL_result.WT2.DEL_flapwise - OL_result.WT2.DEL_flapwise)/OL_result.WT2.DEL_flapwise;
+    DELfAllvs = (CL_result.All.DEL_flapwise - OL_result.All.DEL_flapwise)/OL_result.All.DEL_flapwise;
+    % PBD
+    PBDWT1vs = (mean(CL_result.WT1.PBD) - mean(OL_result.WT1.PBD))/mean(OL_result.WT1.PBD);
+    deltaPBD = mean(CL_result.WT1.PBD) - mean(OL_result.WT1.PBD);
+
+    % print result
+    fprintf('\n==================== Power, DEL, PBD Comparison \n');
+    fprintf('========== Power \n');
+    fprintf('   WT1: %.2e %%\n', PowWT1vs*100);
+    fprintf('   WT2: %.2e %%\n', PowWT2vs*100);
+    fprintf('   ALL: %.2e %%\n', PowAllvs*100);
+    fprintf('========== DEL Flapwise \n');
+    fprintf('   WT1: %.2e %%\n', DELfWT1vs*100);
+    fprintf('   WT2: %.2e %%\n', DELfWT2vs*100);
+    fprintf('   ALL: %.2e %%\n', DELfAllvs*100);
+    fprintf('========== DEL Edgewise \n');
+    fprintf('   WT1: %.2e %%\n', DELeWT1vs*100);
+    fprintf('   WT2: %.2e %%\n', DELeWT2vs*100);
+    fprintf('   ALL: %.2e %%\n', DELeAllvs*100);
+    fprintf('========== PBD \n');
+    fprintf('   WT1: %.2e %%\n', PBDWT1vs*100);
+    fprintf('   WT1: %.2e [kNm deg]\n', deltaPBD);
+    
 end

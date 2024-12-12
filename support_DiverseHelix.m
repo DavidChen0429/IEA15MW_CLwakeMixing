@@ -28,8 +28,10 @@ showFlowerOption = 'Y';
 Font = 20;
 lw = 2;
 filter = 1000;
+color0 = [0.4660 0.6740 0.1880];
 color1 = [0, 0.4470, 0.7410];
 color2 = [0.8500, 0.3250, 0.0980];
+color3 = [0.3010 0.7450 0.9330];
 
 %% 1. Show the Hub Jet
 dataLiDAR_A = Baseline.LiDAR_data;
@@ -77,16 +79,16 @@ clim([4 10])
 %% 2. Show Oval 
 % Show Trajectory
 figure('Name', 'HubJet Trajectory', 'NumberTitle', 'off', 'Position', [100, 100, 600, 600]);
-plot(Baseline.FF_helixCenter_filtered(filter:end, 2), Baseline.FF_helixCenter_filtered(filter:end, 1), 'Color',color1, 'LineWidth', lw)
+plot(Baseline.FF_helixCenter_filtered(filter:end, 2), Baseline.FF_helixCenter_filtered(filter:end, 1), 'Color',color0, 'LineWidth', lw)
 hold on
-plot(OvalCase.FF_helixCenter_filtered(filter:end, 2), OvalCase.FF_helixCenter_filtered(filter:end, 1), 'Color',color2, 'LineWidth', lw)
+plot(OvalCase.FF_helixCenter_filtered(filter:end, 2), OvalCase.FF_helixCenter_filtered(filter:end, 1), 'Color',color3, 'LineWidth', lw)
 hold off
 title('Hub Jet Trajectory')
 xlabel('y [m]')
 ylabel('z [m]')
 xlim([-30 20])
 ylim([67 117])
-legend('Baisc Helix', 'Oval Helix', 'Location','southeast')
+legend('Circle', 'Oval', 'Location','southeast')
 setfigpaper('Width',[15,1],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 
 % Show Input Signal
@@ -116,16 +118,16 @@ setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
         
 %% 3. Show Flower
 figure('Name', 'Input Circle vs. Flower', 'NumberTitle', 'off', 'Position', [100, 100, 600, 600]);
-plot(Baseline.FF_helixCenter_filtered(filter:end, 2), Baseline.FF_helixCenter_filtered(filter:end, 1), 'Color',color1, 'LineWidth', lw)
+plot(Baseline.FF_helixCenter_filtered(filter:end, 2), Baseline.FF_helixCenter_filtered(filter:end, 1), 'Color',color0, 'LineWidth', lw)
 hold on
-plot(FlowerCase.FF_helixCenter_filtered(filter:end, 2), FlowerCase.FF_helixCenter_filtered(filter:end, 1), 'Color',color2, 'LineWidth', lw)
+plot(FlowerCase.FF_helixCenter_filtered(filter:end, 2), FlowerCase.FF_helixCenter_filtered(filter:end, 1), 'Color',color3, 'LineWidth', lw)
 hold off
 title('Hub Jet Trajectory')
 xlabel('y [m]')
 ylabel('z [m]')
 xlim([-30 20])
 ylim([67 117])
-legend('Baisc Helix', 'Flower Helix', 'Location','southeast')
+legend('Circle', 'Flower', 'Location','southeast')
 setfigpaper('Width',[15,1],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 
 % Show Input Signal

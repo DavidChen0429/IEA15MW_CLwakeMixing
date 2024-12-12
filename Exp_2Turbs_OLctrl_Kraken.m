@@ -22,13 +22,13 @@ end
 simTime = 9000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
-mag = 3; % 2, 3, 99(customize), -1(doesn't work)
+mag = 3.3; % 2, 3, 99(customize), -1(doesn't work)
 referenceType = 'ramp&stop'; % step, ramp, ramp&stop, step&step, zero, customize&step, customize&ramp
 Trigger = 1000;      % Time that ctrl is triggered
 HelixCycle = 1/(0.3*10/126) * (1/timeStep);
 Endtime = Trigger + 1*HelixCycle;
 saveOption = 'Y';
-windtype = 'BothReCenter'; % Check .sim file (right. bts file) !!!!!!!  
+windtype = 'ShearReCenter2'; % Check .sim file (right. bts file) !!!!!!!  
 
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesLonger\';
@@ -109,7 +109,7 @@ hold off
 legend('\beta_{tilt,e}', '\beta_{yaw,e}')
 
 % Reference is not used, but for comparison with CLctrl
-r = referenceGenerator(simTime,Trigger,Endtime,referenceType,mag,0);
+r = referenceGenerator(simTime,Trigger,Endtime,referenceType,3,0);
 
 %% Defining LiDAR sampling 
 % When you change this, don't forget to change the name of data.mat

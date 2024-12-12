@@ -71,12 +71,12 @@ END_TURB_2
 
 ----------------------------------------Wind Input-----------------------------------------------------------------
 1                                        WNDTYPE            - use a number: 0 = steady; 1 = windfield; 2 = hubheight
-Shear0.2.bts              		             WNDNAME            - filename of the turbsim input file or hubheight file (with extension), leave blank if unused
+Skewed3.bts              		             WNDNAME            - filename of the turbsim input file or hubheight file (with extension), leave blank if unused
 0                                        STITCHINGTYPE      - the windfield stitching type; 0 = periodic; 1 = mirror
 1                                        WINDAUTOSHIFT      - the windfield shifting automatically based on rotor diameter; 0 = false; 1 = true
 0.00                                     SHIFTTIME          - the windfield is shifted by this time if WINDAUTOSHIFT = 0
 10.00                                    MEANINF            - the mean inflow velocity, overridden if a windfield or hubheight file is use
-0.00                                     HORANGLE           - the horizontal inflow angle
+1.00                                     HORANGLE           - the horizontal inflow angle
 0.00                                     VERTANGLE          - the vertical inflow angle
 0                                        PROFILETYPE        - the type of wind profile used (0 = Power Law; 1 = Logarithmic)
 0.000                                    SHEAREXP           - the shear exponent if using a power law profile, if a windfield is used these values are used to calculate the mean wake convection velocities
