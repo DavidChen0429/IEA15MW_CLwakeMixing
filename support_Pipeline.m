@@ -12,10 +12,10 @@ timeStep = 0.1;
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Pipeline\';
 fileName1 = 'St3A3_30_step.mat';
-fileName2 = 'St3A3_step.mat';
+fileName2 = 'St3A3_30.mat';
 
-St3A3 = load([turbineName caseName fileName1]);
-% St3A3 = load([turbineName caseName fileName2]);
+% St3A3 = load([turbineName caseName fileName1]);
+St3A3 = load([turbineName caseName fileName2]);
 
 %% Visualization
 t = (1: (length(St3A3.FF_beta)-filterIndex+1)) * timeStep;
@@ -92,10 +92,10 @@ plot(t, St3A3.FF_helixCenter_filtered(filterIndex:end, 2) + 4.0999,'LineWidth', 
 yline(0, '--', 'LineWidth', 1)
 hold off;
 xlabel('Time [s]')
-ylabel('Magnitude [m]')
+ylabel('Position [m]')
 xlim([0 450])
 ylim([-20 20])
-title('Hub Jet Fixed Frame')
+title('Fixed Frame')
 legend('z', 'y', 'z_f', 'y_f', 'Location', 'southeast')
 
 subplot(2, 1, 2)
@@ -105,10 +105,10 @@ plot(t, St3A3.HF_helixCenter_filtered(filterIndex:end, 2),'LineWidth', lw);
 yline(0, '--', 'LineWidth', 1)
 hold off;
 xlabel('Time [s]')
-ylabel('Magnitude')
+ylabel('Position [m]')
 xlim([0 450])
 ylim([-5 15])
-title('Hub Jet Helix Frame')
+title('Helix Frame')
 legend('z^{e}', 'y^{e}', 'Location', 'southeast')
 
 setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',20,'linewidth',1)

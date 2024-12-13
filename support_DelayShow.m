@@ -33,7 +33,7 @@ plot(t, St3A3.FF_beta(filterIndex:end, 1),'k--','LineWidth', lw);
 yline(0, '--', 'LineWidth', 1)
 hold off;
 xlabel('Time [s]')
-ylabel('Magnitude [m]')
+ylabel('Position [m]')
 xlim([0 450])
 ylim([-20 20])
 title('Fixed Frame')
@@ -48,7 +48,7 @@ plot(t, St3A3.HF_beta(filterIndex:end, 2),'k--','LineWidth', lw);
 yline(0, '--', 'LineWidth', 1)
 hold off;
 xlabel('Time [s]')
-ylabel('Magnitude')
+ylabel('Position [m]')
 xlim([0 450])
 ylim([-5 15])
 title('Helix Frame')

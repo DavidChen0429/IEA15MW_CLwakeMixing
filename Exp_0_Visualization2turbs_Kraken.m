@@ -9,9 +9,11 @@ turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesLonger\';
 
 % Different case
-windCase = 'BothRC';
-% Uniform, Shear, Turb, Both, ShearRC, ShearRC2, SkewedRC, BothRC,
-% SkewedRC2, BothRC2
+windCase = 'SkewedRC3';
+% Uniform, Turb 
+% Shear, ShearRC, ShearRC2, ShearRC3, 
+% SkewedRC, SkewedRC2, SkewedRC3
+% Both, BothRC, BothRC2,
 
 veryBaseOLfile = '2Turbines_OL_Helix_mag3_4D.mat';
 if strcmp(windCase, 'Uniform')
@@ -50,6 +52,10 @@ elseif strcmp(windCase, 'SkewedRC2')
     basefile = '2Turbines_Baseline_Skewed1ReCenter_4D.mat';
     OLfileName = '2Turbines_OL_Helix_Skewed1ReCenter_mag3_4D.mat';
     CLfileName = '2Turbines_CL_Helix_Skewed1ReCenter2_mag3_4D.mat';  
+elseif strcmp(windCase, 'SkewedRC3')
+    basefile = '2Turbines_Baseline_Skewed1ReCenter_4D.mat';
+    OLfileName = '2Turbines_OL_Helix_Skewed1ReCenter_mag3_4D.mat';
+    CLfileName = '2Turbines_CL_Helix_Skewed1ReCenter3_mag3_4D.mat';  
 elseif strcmp(windCase, 'BothRC')
     basefile = '2Turbines_Baseline_BothReCenter_4D.mat';
     OLfileName = '2Turbines_OL_Helix_BothReCenter_mag3_4D.mat';
@@ -84,7 +90,7 @@ numericalAnalysis = 'Y';
 D_NREL5MW = 126;
 U_inflow = 10;
 timeStep = 0.1;
-filter = 5000; % 3000 for steady-state
+filter = 3000; % 3000 for steady-state
 filter0 = filter; % Overall result
 filter2 = 1; % Wind info
 filter3 = 6000; % Rare data
@@ -420,7 +426,7 @@ end
 
 % ============== Hub Jet Trajectory
 if strcmp(trajOption, 'Y')
-%     CL.FF_helixCenter_filtered(:, 2) = CL.FF_helixCenter_filtered(:, 2) + 0.5;
+    CL.FF_helixCenter_filtered(:, 2) = CL.FF_helixCenter_filtered(:, 2) + 0.5;
 %     CL.FF_helixCenter_filtered(:, 1) = CL.FF_helixCenter_filtered(:, 1) + 0.5;
     center_blb = mean(veryBase.FF_helixCenter_filtered(filter:end, :));
     center_bl = mean(Baseline.FF_helixCenter_filtered(filter:end, :));

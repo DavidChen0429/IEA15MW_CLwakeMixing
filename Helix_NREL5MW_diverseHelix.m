@@ -23,12 +23,12 @@ simTime = 1680*2;     % in timestep, actual time is simTime*timestep(Q-blade def
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 saveOption = 'Y';
-HelixShape = 'flower'; % oval or flower
+HelixShape = 'oval'; % oval or flower
 
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Sth\';
-fileName = 'flower.mat';
-QprName = 'flower.qpr';
+fileName = 'oval.mat';
+QprName = 'oval.qpr';
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
@@ -300,8 +300,7 @@ if strcmp(saveOption, 'Y')
 %                                           'Mflap3_store', ...
 %                                           'Medge3_store', ...
 %                                           'PitchAngles');
-    save([turbineName caseName fileName], 'LiDAR_data', ...
-                                          'FF_helixCenter', ...
+    save([turbineName caseName fileName], 'FF_helixCenter', ...
                                           'FF_helixCenter_filtered', ...
                                           'FF_beta', ...
                                           'HF_beta');
