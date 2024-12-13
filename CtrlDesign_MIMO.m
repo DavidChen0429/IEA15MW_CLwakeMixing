@@ -28,7 +28,7 @@ showBasicOption = 'N';      % Basic property
 showController = 'Y';
 showWeight = 'N';
 showFreqOption = 'N';       % BD of S, T, U, L
-showFreq2Option = 'N';      % BD of WpS, WuU
+showFreq2Option = 'Y';      % BD of WpS, WuU
 showSingularValue = 'N';    % Singular value of S, T
 showTimeOption = 'Y';       % Step response
 showIteraitve = 'N';
@@ -162,10 +162,11 @@ end
 % Check bounded
 if strcmp(showFreq2Option, 'Y')
     buf = tf([1/Mp, omega_cl], [1, omega_cl*0.625]);
+    buf2 = blkdiag(buf, buf);
     figure('Name', 'Weight Compliance', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
     bodemag(S_mimo,'m');
     hold on
-    bodemag(1/Wp,'m--');
+    bodemag(1/buf2,'m--');
     bodemag(U_mimo,'c');
     bodemag(1/Wu,'c--');
     hold off

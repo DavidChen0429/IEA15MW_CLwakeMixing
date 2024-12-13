@@ -9,67 +9,81 @@ turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesLonger\';
 
 % Different case
-windCase = 'SkewedRC3';
-% Uniform, Turb 
-% Shear, ShearRC, ShearRC2, ShearRC3, 
-% SkewedRC, SkewedRC2, SkewedRC3
+windCase = 'SkewedRC';
+% Uniform
+% Turb 
+% Shear, ShearRC, ShearRC2, ShearRC3
 % Both, BothRC, BothRC2,
+% SkewedRC, SkewedRC2, SkewedRC3
 
 veryBaseOLfile = '2Turbines_OL_Helix_mag3_4D.mat';
 if strcmp(windCase, 'Uniform')
     basefile = '2Turbines_Baseline_4D.mat';
     OLfileName = '2Turbines_OL_Helix_mag3_4D.mat';
     CLfileName = '2Turbines_CL_Helix_ramp&stop_mag3_4D.mat';
+    filter = 3000;
 elseif strcmp(windCase, 'Shear')
     basefile = '2Turbines_Baseline_Shear0.2_4D.mat';
     OLfileName = '2Turbines_OL_Helix_Shear0.2_mag3_4D.mat';
     CLfileName = '2Turbines_CL_Helix_Shear0.2_mag3_4D.mat';
+    filter = 3000;
 elseif strcmp(windCase, 'ShearRC')
     basefile = '2Turbines_Baseline_ShearReCenter_4D.mat';
     OLfileName = '2Turbines_OL_Helix_ShearReCenter_mag3_4D.mat';
     CLfileName = '2Turbines_CL_Helix_ShearReCenter_mag3_4D.mat';
+    filter = 3000;
 elseif strcmp(windCase, 'ShearRC2')
     basefile = '2Turbines_Baseline_ShearReCenter_4D.mat';
     OLfileName = '2Turbines_OL_Helix_ShearReCenter2_mag3.3_4D.mat';
     CLfileName = '2Turbines_CL_Helix_ShearReCenter2_mag3_4D.mat';
+    filter = 3500;
 elseif strcmp(windCase, 'ShearRC3')
     basefile = '2Turbines_Baseline_ShearReCenter_4D.mat';
     OLfileName = '2Turbines_OL_Helix_ShearReCenter_mag3_4D.mat';
     CLfileName = '2Turbines_CL_Helix_ShearReCenter3_mag3_4D.mat';
+    filter = 3500;
 elseif strcmp(windCase, 'Turb')
     basefile = '2Turbines_Baseline_TI6_4D.mat';
     OLfileName = '2Turbines_OL_Helix_TI6_mag3_4D.mat';
     CLfileName = '2Turbines_CL_Helix_TI6_mag3_4D.mat';    
+    filter = 3000;
 elseif strcmp(windCase, 'Both')
     basefile = '2Turbines_Baseline_TI6&Shear0.2_4D.mat';
     OLfileName = '2Turbines_OL_Helix_TI6&Shear0.2_mag3_4D.mat';
     CLfileName = '2Turbines_CL_Helix_TI6&Shear0.2_mag3_4D.mat';
+    filter = 3000;
 elseif strcmp(windCase, 'SkewedRC')
     basefile = '2Turbines_Baseline_Skewed1ReCenter_4D.mat';
     OLfileName = '2Turbines_OL_Helix_Skewed1ReCenter_mag3_4D.mat';
-    CLfileName = '2Turbines_CL_Helix_Skewed1ReCenter_mag3_4D.mat';  
+    CLfileName = '2Turbines_CL_Helix_Skewed1ReCenter_mag3_4D.mat';
+    filter = 3000;
 elseif strcmp(windCase, 'SkewedRC2')
     basefile = '2Turbines_Baseline_Skewed1ReCenter_4D.mat';
     OLfileName = '2Turbines_OL_Helix_Skewed1ReCenter_mag3_4D.mat';
-    CLfileName = '2Turbines_CL_Helix_Skewed1ReCenter2_mag3_4D.mat';  
+    CLfileName = '2Turbines_CL_Helix_Skewed1ReCenter2_mag3_4D.mat'; 
+    filter = 3500;
 elseif strcmp(windCase, 'SkewedRC3')
     basefile = '2Turbines_Baseline_Skewed1ReCenter_4D.mat';
     OLfileName = '2Turbines_OL_Helix_Skewed1ReCenter_mag3_4D.mat';
     CLfileName = '2Turbines_CL_Helix_Skewed1ReCenter3_mag3_4D.mat';  
+    filter = 3500;
 elseif strcmp(windCase, 'BothRC')
     basefile = '2Turbines_Baseline_BothReCenter_4D.mat';
     OLfileName = '2Turbines_OL_Helix_BothReCenter_mag3_4D.mat';
     CLfileName = '2Turbines_CL_Helix_BothReCenter_mag3_4D.mat'; 
+    filter = 3000;
 elseif strcmp(windCase, 'BothRC2')
     basefile = '2Turbines_Baseline_BothReCenter_4D.mat';
     OLfileName = '2Turbines_OL_Helix_BothReCenter_mag3_4D.mat';
     CLfileName = '2Turbines_CL_Helix_BothReCenter2_mag3_4D.mat'; 
+    filter = 5000;
 end
 
 veryBase = load([turbineName caseName veryBaseOLfile]);
 Baseline = load([turbineName caseName basefile]);
 OL = load([turbineName caseName OLfileName]);
 CL = load([turbineName caseName CLfileName]);
+disp(mean(CL.HF_beta(filter:end, :)))
 
 %% Overall Settings
 errorOption = 'N';
@@ -90,7 +104,7 @@ numericalAnalysis = 'Y';
 D_NREL5MW = 126;
 U_inflow = 10;
 timeStep = 0.1;
-filter = 3000; % 3000 for steady-state
+% filter = 3500; % 3000 for steady-state, 3500 ShearRC3, 5000 BothRC2
 filter0 = filter; % Overall result
 filter2 = 1; % Wind info
 filter3 = 6000; % Rare data
@@ -141,30 +155,30 @@ end
 
 % ============== Wind Flow Information
 if strcmp(flowAnalysis, 'Y')
-    t2 = (1:(simLength-filter2+1)) * timeStep;
-    figure('Name', 'Wind', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-    subplot(2, 1, 1)
-    plot(t2, OL.UmeanStore(filter2:end), 'Color',color1,'LineWidth', lw)
-    hold on
-    plot(t2, CL.UmeanStore(filter2:end),'Color',color2,'LineWidth', lw)
-    hold off
-    title('Average U_{inflow}')
-    xlim([0 t2(end)])
-    xlabel('Time [s]')
-    ylabel('Speed [m/s]')
-    legend('OL','CL','Location','southeast')
-
-    subplot(2, 1, 2)
-    plot(t2, OL.TIStore(filter2:end)*100,'Color',color1,'LineWidth', lw)
-    hold on
-    plot(t2, CL.TIStore(filter2:end)*100,'Color',color2,'LineWidth', lw)
-    hold off
-    title('Turbulence Intensity')
-    xlim([0 t2(end)])
-    xlabel('Time [s]')
-    ylabel('Value [%]')
-    legend('OL','CL','Location','southeast')
-    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+%     t2 = (1:(simLength-filter2+1)) * timeStep;
+%     figure('Name', 'Wind', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+%     subplot(2, 1, 1)
+%     plot(t2, OL.UmeanStore(filter2:end), 'Color',color1,'LineWidth', lw)
+%     hold on
+%     plot(t2, CL.UmeanStore(filter2:end),'Color',color2,'LineWidth', lw)
+%     hold off
+%     title('Average U_{inflow}')
+%     xlim([0 t2(end)])
+%     xlabel('Time [s]')
+%     ylabel('Speed [m/s]')
+%     legend('OL','CL','Location','southeast')
+% 
+%     subplot(2, 1, 2)
+%     plot(t2, OL.TIStore(filter2:end)*100,'Color',color1,'LineWidth', lw)
+%     hold on
+%     plot(t2, CL.TIStore(filter2:end)*100,'Color',color2,'LineWidth', lw)
+%     hold off
+%     title('Turbulence Intensity')
+%     xlim([0 t2(end)])
+%     xlabel('Time [s]')
+%     ylabel('Value [%]')
+%     legend('OL','CL','Location','southeast')
+%     setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
     
     fprintf('\n==================== Flow Comparison \n');
     fprintf('========== Wind Speed \n');
@@ -426,8 +440,12 @@ end
 
 % ============== Hub Jet Trajectory
 if strcmp(trajOption, 'Y')
-    CL.FF_helixCenter_filtered(:, 2) = CL.FF_helixCenter_filtered(:, 2) + 0.5;
-%     CL.FF_helixCenter_filtered(:, 1) = CL.FF_helixCenter_filtered(:, 1) + 0.5;
+    if strcmp(windCase,'ShearRC3')
+        CL.FF_helixCenter_filtered(:, 2) = CL.FF_helixCenter_filtered(:, 2) + 0.5;
+    elseif strcmp(windCase, 'BothRC2')
+        CL.FF_helixCenter_filtered(:, 2) = CL.FF_helixCenter_filtered(:, 2) + 0.5;
+    end
+        %     CL.FF_helixCenter_filtered(:, 1) = CL.FF_helixCenter_filtered(:, 1) + 0.5;
     center_blb = mean(veryBase.FF_helixCenter_filtered(filter:end, :));
     center_bl = mean(Baseline.FF_helixCenter_filtered(filter:end, :));
     center_ol = mean(OL.FF_helixCenter_filtered(filter:end, :));
