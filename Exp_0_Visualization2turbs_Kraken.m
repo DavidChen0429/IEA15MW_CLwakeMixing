@@ -14,7 +14,7 @@ windCase = 'SkewedRC';
 % Turb 
 % Shear, ShearRC, ShearRC2, ShearRC3
 % Both, BothRC, BothRC2,
-% SkewedRC, SkewedRC2, SkewedRC3
+% SkewedRC2, SkewedRC
 
 veryBaseOLfile = '2Turbines_OL_Helix_mag3_4D.mat';
 if strcmp(windCase, 'Uniform')
@@ -61,12 +61,7 @@ elseif strcmp(windCase, 'SkewedRC2')
     basefile = '2Turbines_Baseline_Skewed1ReCenter_4D.mat';
     OLfileName = '2Turbines_OL_Helix_Skewed1ReCenter_mag3_4D.mat';
     CLfileName = '2Turbines_CL_Helix_Skewed1ReCenter2_mag3_4D.mat'; 
-    filter = 3500;
-elseif strcmp(windCase, 'SkewedRC3')
-    basefile = '2Turbines_Baseline_Skewed1ReCenter_4D.mat';
-    OLfileName = '2Turbines_OL_Helix_Skewed1ReCenter_mag3_4D.mat';
-    CLfileName = '2Turbines_CL_Helix_Skewed1ReCenter3_mag3_4D.mat';  
-    filter = 3500;
+    filter = 3000;
 elseif strcmp(windCase, 'BothRC')
     basefile = '2Turbines_Baseline_BothReCenter_4D.mat';
     OLfileName = '2Turbines_OL_Helix_BothReCenter_mag3_4D.mat';
@@ -96,8 +91,9 @@ videoOption = 'N';
 powerAnalysis = 'N';
 DELAnalysis = 'N';
 PBDAnalysis = 'N';
-powerDELAnalysis = 'Y';
+powerDELAnalysis = 'N';
 numericalAnalysis = 'Y';
+storyTellingBasic = 'Y';
 
 
 % Basic Settings
@@ -477,7 +473,41 @@ if strcmp(videoOption, 'Y')
 end
 
 % ============== Power and Fatigue Analysis
-% Note!!! Open-loop is used as benchmark rather than baseline
+% =========== Very Baseline --- Uniform OL
+% Upstream WT1
+VBL_result.WT1.power = calculatePower(filter,veryBase.Power_store,D_NREL5MW,U_inflow); % [MW]
+% BL_result.WT1.power2 = calculatePower2(filter,Baseline.Power_store);
+VBL_result.WT1.DEL = calculateDEL(filter, ...
+    veryBase.Mflap1_store,veryBase.Medge1_store, ...
+    veryBase.Mflap2_store,veryBase.Medge2_store, ...
+    veryBase.Mflap3_store,veryBase.Medge3_store, ...
+    timeStep); % [Nm]
+VBL_result.WT1.PBD = calculatePBD(filter,veryBase.PitchAngles, ...
+    veryBase.Mflap1_store,veryBase.Medge1_store, ...
+    veryBase.Mflap2_store,veryBase.Medge2_store, ...
+    veryBase.Mflap3_store,veryBase.Medge3_store); % [kNm deg]
+% Downstream WT2
+VBL_result.WT2.power = calculatePower(filter,veryBase.Powerturb2_store,D_NREL5MW,U_inflow); % [MW]
+% BL_result.WT2.power2 = calculatePower2(filter,Baseline.Powerturb2_store);
+VBL_result.WT2.DEL = calculateDEL(filter, ...
+    veryBase.Mflap1turb2_store,veryBase.Medge1turb2_store, ...
+    veryBase.Mflap2turb2_store,veryBase.Medge2turb2_store, ...
+    veryBase.Mflap3turb2_store,veryBase.Medge3turb2_store, ...
+    timeStep); % [Nm]
+VBL_result.WT2.PBD = calculatePBD(filter,veryBase.PitchAnglesturb2, ...
+    veryBase.Mflap1turb2_store,veryBase.Medge1turb2_store, ...
+    veryBase.Mflap2turb2_store,veryBase.Medge2turb2_store, ...
+    veryBase.Mflap3turb2_store,veryBase.Medge3turb2_store); % [kNm deg]
+VBL_result.WT1.DEL_flapwise = mean(VBL_result.WT1.DEL(1)+VBL_result.WT1.DEL(3)+VBL_result.WT1.DEL(5));
+VBL_result.WT1.DEL_edgewise = mean(VBL_result.WT1.DEL(2)+VBL_result.WT1.DEL(4)+VBL_result.WT1.DEL(6));
+VBL_result.WT2.DEL_flapwise = mean(VBL_result.WT2.DEL(1)+VBL_result.WT2.DEL(3)+VBL_result.WT2.DEL(5));
+VBL_result.WT2.DEL_edgewise = mean(VBL_result.WT2.DEL(2)+VBL_result.WT2.DEL(4)+VBL_result.WT2.DEL(6));
+VBL_result.All.power = VBL_result.WT1.power + VBL_result.WT2.power;
+% BL_result.All.power2 = BL_result.WT1.power2 + BL_result.WT2.power2;
+VBL_result.All.DEL_flapwise = VBL_result.WT1.DEL_flapwise + VBL_result.WT2.DEL_flapwise;
+VBL_result.All.DEL_edgewise = VBL_result.WT1.DEL_edgewise + VBL_result.WT2.DEL_edgewise;
+VBL_result.All.PBD = VBL_result.WT1.PBD + VBL_result.WT2.PBD;
+
 % =========== Baseline
 % Upstream WT1
 BL_result.WT1.power = calculatePower(filter,Baseline.Power_store,D_NREL5MW,U_inflow); % [MW]
@@ -693,4 +723,145 @@ if strcmp(numericalAnalysis, 'Y')
     fprintf('   WT1: %.2e %%\n', PBDWT1vs*100);
     fprintf('   WT1: %.2e [kNm deg]\n', deltaPBD);
     
+end
+
+%% 
+if strcmp(storyTellingBasic, 'Y')
+    % Very Basic (Uniform Open-Loop Helix)
+    VBLpower = [VBL_result.WT1.power VBL_result.WT2.power VBL_result.All.power];
+    VBLDELflap = [VBL_result.WT1.DEL_flapwise VBL_result.WT2.DEL_flapwise VBL_result.All.DEL_flapwise];
+    VBLDELedge = [VBL_result.WT1.DEL_edgewise VBL_result.WT2.DEL_edgewise VBL_result.All.DEL_edgewise];
+    % Pre-Control (Open-Loop Helix)
+    OLpower = [OL_result.WT1.power OL_result.WT2.power OL_result.All.power];
+    OLDELflap = [OL_result.WT1.DEL_flapwise OL_result.WT2.DEL_flapwise OL_result.All.DEL_flapwise];
+    OLDELedge = [OL_result.WT1.DEL_edgewise OL_result.WT2.DEL_edgewise OL_result.All.DEL_edgewise];
+    % Post-Control (Closed-Loop Helix)
+    CLpower = [CL_result.WT1.power CL_result.WT2.power CL_result.All.power];
+    CLDELflap = [CL_result.WT1.DEL_flapwise CL_result.WT2.DEL_flapwise CL_result.All.DEL_flapwise];
+    CLDELedge = [CL_result.WT1.DEL_edgewise CL_result.WT2.DEL_edgewise CL_result.All.DEL_edgewise];
+    
+    x_labels = {'WT1', 'WT2', 'WT1+WT2'};   
+
+%     % == Open-Loop System
+%     figure('Name', 'OL vs ref', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+%     % Power
+%     subplot(1, 3, 1)
+%     b2 = bar(VBLpower, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
+%     hold on;
+%     b1 = bar(OLpower, 'EdgeColor', 'k', 'LineWidth', 1.5);
+%     set(gca, 'XTickLabel', x_labels);
+%     legend([b1, b2], {'Uniform', 'Conditions'}, 'Location', 'northwest');
+%     ylabel('Power [MW]');
+%     hold off;
+%     
+%     % DEL Flapwise
+%     subplot(1, 3, 2)
+%     b2 = bar(VBLDELflap, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
+%     hold on;
+%     b1 = bar(OLDELflap, 'EdgeColor', 'k', 'LineWidth', 1.5);
+%     set(gca, 'XTickLabel', x_labels);
+%     legend([b1, b2], {'Uniform', 'Conditions'}, 'Location', 'northwest');
+%     ylabel('DEL Flapwise [Nm]');
+%     hold off;
+%     
+%     % DEL Edgewise
+%     subplot(1, 3, 3)
+%     b2 = bar(VBLDELedge, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
+%     hold on;
+%     b1 = bar(OLDELedge, 'EdgeColor', 'k', 'LineWidth', 1.5);
+%     set(gca, 'XTickLabel', x_labels);
+%     legend([b1, b2], {'Uniform', 'Conditions'}, 'Location', 'northwest');
+%     ylabel('DEL Edgewise [Nm]');
+%     hold off;
+%     setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw);
+% 
+%     % == Closed-Loop System
+%     figure('Name', 'CL vs ref', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+%     % Power
+%     subplot(1, 3, 1)
+%     b2 = bar(VBLpower, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
+%     hold on;
+%     b1 = bar(CLpower, 'EdgeColor', 'k', 'LineWidth', 1.5);
+%     set(gca, 'XTickLabel', x_labels);
+%     legend([b1, b2], {'Uniform', 'Conditions'}, 'Location', 'northwest');
+%     ylabel('Power [MW]');
+%     hold off;
+%     
+%     % DEL Flapwise
+%     subplot(1, 3, 2)
+%     b2 = bar(VBLDELflap, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
+%     hold on;
+%     b1 = bar(CLDELflap, 'EdgeColor', 'k', 'LineWidth', 1.5);
+%     set(gca, 'XTickLabel', x_labels);
+%     legend([b1, b2], {'Uniform', 'Conditions'}, 'Location', 'northwest');
+%     ylabel('DEL Flapwise [Nm]');
+%     hold off;
+%     
+%     % DEL Edgewise
+%     subplot(1, 3, 3)
+%     b2 = bar(VBLDELedge, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
+%     hold on;
+%     b1 = bar(CLDELedge, 'EdgeColor', 'k', 'LineWidth', 1.5);
+%     set(gca, 'XTickLabel', x_labels);
+%     legend([b1, b2], {'Uniform', 'Conditions'}, 'Location', 'northwest');
+%     ylabel('DEL Edgewise [Nm]');
+%     hold off;
+%     setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw);
+
+    % == Open-Loop vs. Closed-Loop
+    figure('Name', 'OL&CL vs ref', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+    % Power
+    subplot(1, 3, 1)
+    b1 = bar([OLpower; CLpower]', 'grouped');
+    hold on
+    b2 = bar([VBLpower; VBLpower]', 'grouped');
+    hold off
+    b2(1).FaceColor = 'none'; 
+    b2(1).EdgeColor = 'k';
+    b2(1).LineStyle = '--';
+    b2(1).LineWidth = 1.5;
+    b2(2).FaceColor = 'none'; 
+    b2(2).EdgeColor = 'k';
+    b2(2).LineStyle = '--';
+    b2(2).LineWidth = 1.5;
+    set(gca, 'XTickLabel', x_labels);
+    legend([b1(1), b1(2), b2], {'OL', 'CL', 'Ref'}, 'Location', 'northwest');
+    ylabel('Power [MW]');
+
+    % DEL Flapwise
+    subplot(1, 3, 2)
+    b1 = bar([OLDELflap; CLDELflap]', 'grouped');
+    hold on
+    b2 = bar([VBLDELflap; VBLDELflap]', 'grouped');
+    hold off
+    b2(1).FaceColor = 'none'; 
+    b2(1).EdgeColor = 'k';
+    b2(1).LineStyle = '--';
+    b2(1).LineWidth = 1.5;
+    b2(2).FaceColor = 'none'; 
+    b2(2).EdgeColor = 'k';
+    b2(2).LineStyle = '--';
+    b2(2).LineWidth = 1.5;
+    set(gca, 'XTickLabel', x_labels);
+    legend([b1(1), b1(2), b2], {'OL', 'CL', 'Ref'}, 'Location', 'northwest');
+    ylabel('DEL Flapwise [Nm]');
+
+    % DEL Edgewise
+    subplot(1, 3, 3)
+    b1 = bar([OLDELedge; CLDELedge]', 'grouped');
+    hold on
+    b2 = bar([VBLDELedge; VBLDELedge]', 'grouped');
+    hold off
+    b2(1).FaceColor = 'none'; 
+    b2(1).EdgeColor = 'k';
+    b2(1).LineStyle = '--';
+    b2(1).LineWidth = 1.5;
+    b2(2).FaceColor = 'none'; 
+    b2(2).EdgeColor = 'k';
+    b2(2).LineStyle = '--';
+    b2(2).LineWidth = 1.5;
+    set(gca, 'XTickLabel', x_labels);
+    legend([b1(1), b1(2), b2], {'OL', 'CL', 'Ref'}, 'Location', 'northwest');
+    ylabel('DEL Edgewise [Nm]');
+    setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw);
 end

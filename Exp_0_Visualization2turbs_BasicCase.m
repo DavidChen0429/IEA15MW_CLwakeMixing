@@ -33,7 +33,7 @@ flowAnalysis = 'N';
 rareDataAnalysis = 'N';
 overallDetailOption = 'Y';
 coorFrame = 'HF';
-trajOption = 'N';
+trajOption = 'Y';
 videoOption = 'N';
 powerAnalysis = 'N';
 DELAnalysis = 'N';
@@ -277,7 +277,7 @@ if strcmp(trajOption, 'Y')
     xlabel('y [m]')
     ylabel('z [m]')
     xlim([-30 20])
-    ylim([67 117])
+    ylim([60 110])
     legend('Uniform', 'Shear','Hub', 'Location','southeast')
 
     subplot(1, 3, 2)
@@ -291,7 +291,7 @@ if strcmp(trajOption, 'Y')
     xlabel('y [m]')
     ylabel('z [m]')
     xlim([-30 20])
-    ylim([67 117])
+    ylim([60 110])
     legend('Uniform', 'Turbulence','Hub', 'Location','southeast')
 
     subplot(1, 3, 3)
@@ -305,7 +305,7 @@ if strcmp(trajOption, 'Y')
     xlabel('y [m]')
     ylabel('z [m]')
     xlim([-30 20])
-    ylim([67 117])
+    ylim([60 110])
     legend('Uniform', 'S&T','Hub', 'Location','southeast')
     setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 end
