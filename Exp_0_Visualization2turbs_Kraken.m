@@ -9,11 +9,11 @@ turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesLonger\';
 
 % Different case
-windCase = 'SkewedRC';
+windCase = 'BothRC2';
 % Uniform
 % Turb 
-% Shear, ShearRC, ShearRC2, ShearRC3
-% Both, BothRC, BothRC2,
+% ShearRC3, Shear, ShearRC, ShearRC2
+% BothRC2, Both, BothRC,
 % SkewedRC2, SkewedRC
 
 veryBaseOLfile = '2Turbines_OL_Helix_mag3_4D.mat';
@@ -71,7 +71,7 @@ elseif strcmp(windCase, 'BothRC2')
     basefile = '2Turbines_Baseline_BothReCenter_4D.mat';
     OLfileName = '2Turbines_OL_Helix_BothReCenter_mag3_4D.mat';
     CLfileName = '2Turbines_CL_Helix_BothReCenter2_mag3_4D.mat'; 
-    filter = 5000;
+    filter = 3000;
 end
 
 veryBase = load([turbineName caseName veryBaseOLfile]);
@@ -107,6 +107,7 @@ filter3 = 6000; % Rare data
 DeadtimeDelay = 112; % change to 112 when showing whole process
 Str = 0.3;                          % Strouhal number              
 Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
+x_labels = {'WT1', 'WT2', 'All'};   
 
 %% Visualization
 simLength = length(Baseline.Power_store);
@@ -739,8 +740,6 @@ if strcmp(storyTellingBasic, 'Y')
     CLpower = [CL_result.WT1.power CL_result.WT2.power CL_result.All.power];
     CLDELflap = [CL_result.WT1.DEL_flapwise CL_result.WT2.DEL_flapwise CL_result.All.DEL_flapwise];
     CLDELedge = [CL_result.WT1.DEL_edgewise CL_result.WT2.DEL_edgewise CL_result.All.DEL_edgewise];
-    
-    x_labels = {'WT1', 'WT2', 'WT1+WT2'};   
 
 %     % == Open-Loop System
 %     figure('Name', 'OL vs ref', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
