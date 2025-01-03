@@ -39,7 +39,7 @@ powerAnalysis = 'N';
 DELAnalysis = 'N';
 PBDAnalysis = 'N';
 powerDELAnalysis = 'Y';
-storyTellingBasic = 'Y';
+storyTellingBasic = 'N';
 
 % Basic Settings
 D_NREL5MW = 126;
@@ -507,6 +507,10 @@ if strcmp(PBDAnalysis, 'Y')
     disp(mean(OL_result.WT1.PBD) - mean(BL_result.WT1.PBD))
     disp(mean(CL_result.WT1.PBD) - mean(BL_result.WT1.PBD))
     disp(mean(FL_result.WT1.PBD) - mean(BL_result.WT1.PBD))
+
+    disp((mean(OL_result.WT1.PBD) - mean(BL_result.WT1.PBD))/mean(BL_result.WT1.PBD))
+    disp((mean(CL_result.WT1.PBD) - mean(BL_result.WT1.PBD))/mean(BL_result.WT1.PBD))
+    disp((mean(FL_result.WT1.PBD) - mean(BL_result.WT1.PBD))/mean(BL_result.WT1.PBD))
 end
 
 % ============== Story telling
