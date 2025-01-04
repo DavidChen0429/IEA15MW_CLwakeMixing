@@ -41,7 +41,7 @@ elseif strcmp(windCase, 'ShearRC3')
     basefile = '2Turbines_Baseline_ShearReCenter_4D.mat';
     OLfileName = '2Turbines_OL_Helix_ShearReCenter_mag3_4D.mat';
     CLfileName = '2Turbines_CL_Helix_ShearReCenter3_mag3_4D.mat';
-    filter = 5000;
+    filter = 3000;
 elseif strcmp(windCase, 'Turb')
     basefile = '2Turbines_Baseline_TI6_4D.mat';
     OLfileName = '2Turbines_OL_Helix_TI6_mag3_4D.mat';
@@ -824,7 +824,7 @@ if strcmp(storyTellingBasic, 'Y')
     b2(2).LineStyle = '--';
     b2(2).LineWidth = 1.5;
     set(gca, 'XTickLabel', x_labels);
-    legend([b1(1), b1(2), b2], {'OL', 'CL', 'Ref'}, 'Location', 'northwest');
+    legend([b1(1), b1(2), b2], {'OL', 'CL', 'Uni'}, 'Location', 'northwest');
     ylabel('Power [MW]');
 
     % DEL Flapwise
@@ -842,7 +842,7 @@ if strcmp(storyTellingBasic, 'Y')
     b2(2).LineStyle = '--';
     b2(2).LineWidth = 1.5;
     set(gca, 'XTickLabel', x_labels);
-    legend([b1(1), b1(2), b2], {'OL', 'CL', 'Ref'}, 'Location', 'northwest');
+    legend([b1(1), b1(2), b2], {'OL', 'CL', 'Uni'}, 'Location', 'northwest');
     ylabel('DEL Flapwise [Nm]');
 
     % DEL Edgewise
@@ -860,7 +860,7 @@ if strcmp(storyTellingBasic, 'Y')
     b2(2).LineStyle = '--';
     b2(2).LineWidth = 1.5;
     set(gca, 'XTickLabel', x_labels);
-    legend([b1(1), b1(2), b2], {'OL', 'CL', 'Ref'}, 'Location', 'northwest');
+    legend([b1(1), b1(2), b2], {'OL', 'CL', 'Uni'}, 'Location', 'northwest');
     ylabel('DEL Edgewise [Nm]');
     setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw);
 end

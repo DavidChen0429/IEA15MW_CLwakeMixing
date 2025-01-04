@@ -27,7 +27,7 @@ HelixShape = 'basic'; % oval or flower
 
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Sth\';
-fileName = 'basic.mat';
+fileName = 'basic2.mat';
 % QprName = 'oval.qpr';
 
 %% Load project and Initialize simulation
@@ -274,7 +274,8 @@ if strcmp(saveOption, 'Y')
 %                                           'PitchAngles');
     save([turbineName caseName fileName], 'FF_helixCenter', ...
                                           'FF_helixCenter_filtered', ...
-                                          'FF_beta');
+                                          'FF_beta', ...
+                                          'PitchAngles');
 end
 calllib('QBladeDLL','closeInstance')
 

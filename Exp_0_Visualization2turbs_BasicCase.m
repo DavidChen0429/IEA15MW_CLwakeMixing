@@ -39,7 +39,7 @@ powerAnalysis = 'N';
 DELAnalysis = 'N';
 PBDAnalysis = 'N';
 powerDELAnalysis = 'Y';
-storyTellingBasic = 'N';
+storyTellingBasic = 'Y';
 
 % Basic Settings
 D_NREL5MW = 126;
@@ -533,6 +533,17 @@ if strcmp(storyTellingBasic, 'Y')
     FLDELedge = [FL_result.WT1.DEL_edgewise FL_result.WT2.DEL_edgewise FL_result.All.DEL_edgewise];
     
     x_labels = {'WT1', 'WT2', 'All'};   
+
+    % == Shear Power
+    figure('Name', 'onlyPower Shear vs ref', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+    bar([VBLpower;OLpower]', 'EdgeColor', 'k', 'LineWidth', 1.5);
+    hold on
+    bar([VBLpower;VBLpower]', 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
+    hold off
+    set(gca, 'XTickLabel', x_labels);
+    legend({'Uniform', 'Shear'}, 'Location', 'northwest');
+    ylabel('Power [MW]');
+    setfigpaper('Width',[30,0.4],'Interpreter','tex','FontSize',Font,'linewidth',lw);
 
     % == Shear
     figure('Name', 'Shear vs ref', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);

@@ -11,11 +11,13 @@ timeStep = 0.1;
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Sth\';
 basicFile = 'basic.mat';
+basicFile2 = 'basic2.mat';
 % turbFile = 'turb.mat';
 ovalFile = 'oval.mat';
 flowerFile = 'flower.mat';
 
 Baseline = load([turbineName caseName basicFile]);
+Baseline2 = load([turbineName caseName basicFile2]);
 % TurbCase = load([turbineName caseName turbFile]);
 OvalCase = load([turbineName caseName ovalFile]);
 FlowerCase = load([turbineName caseName flowerFile]);
@@ -151,4 +153,33 @@ xlim([0 t(end)])
 xlabel('Time [s]')
 ylabel('[deg]')
 title('\beta_{yaw}')
+setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+
+%% 4. Show Helix
+filter = 600;
+t = (0:(filter-1)) * timeStep;
+% Input Rotating Frame
+figure('Name', 'Input Detail', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+plot(t, Baseline2.PitchAngles(1:filter, 1), 'Color', color1, 'LineWidth', lw)
+hold on
+plot(t, Baseline2.PitchAngles(1:filter, 2), 'Color', color2, 'LineWidth', lw)
+plot(t, Baseline2.PitchAngles(1:filter, 3), 'Color', color3, 'LineWidth', lw)
+hold off
+legend('\beta_1', '\beta_2', '\beta_3');
+xlim([0 t(end)])
+xlabel('Time [s]')
+ylabel('[deg]')
+title('Blade Pitch Signal')
+setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+
+% Input Fixed Frame
+figure('Name', 'Input Detail', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+plot(t, Baseline2.FF_beta(1:filter, 1), 'Color', color1, 'LineWidth', lw)
+hold on
+plot(t, Baseline2.FF_beta(1:filter, 2), 'Color', color2, 'LineWidth', lw)
+legend('\beta_{tilt}', '\beta_{yaw}');
+xlim([0 t(end)])
+xlabel('Time [s]')
+ylabel('[deg]')
+title('Fixed Frame')
 setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
