@@ -11,9 +11,9 @@ y_1Dref = 0 + D/2 * cos(theta);
 z_1Dref = 90 + D/2 * sin(theta);
 
 % ====== Uncomment if save video
-% videoFile = fileName; % ".\Data\NTM-B.avi"
-% v = VideoWriter(videoFile);
-% open(v);
+videoFile = fileName; % ".\Data\NTM-B.avi"
+v = VideoWriter(videoFile);
+open(v);
 
 figure('Position', [10, 10, 800, 310]);
 for counter = 1:interval:data_length(1)  
@@ -27,8 +27,9 @@ for counter = 1:interval:data_length(1)
     hold off;
     xlabel('Y [m]')
     ylabel('Z [m]')
-    title('LiDAR Wind Speed (sec)', round(counter/interval + 1))
-    colorbar;
+    title('Baseline (sec)', round(counter/interval + 1))
+    colorbarHandle = colorbar;
+    ylabel(colorbarHandle, 'u [m/s]');
     clim([4 10])
 
     subplot(1, 2, 2)
@@ -41,13 +42,14 @@ for counter = 1:interval:data_length(1)
     hold off;
     xlabel('Y [m]')
     ylabel('Z [m]')
-    title('LiDAR Wind Speed (sec)', round(counter/interval + 1))
-    colorbar;
+    title('CCW Helix (sec)', round(counter/interval + 1))
+    colorbarHandle = colorbar;
+    ylabel(colorbarHandle, 'u [m/s]');
     clim([4 10])
     pause(0.1);
 
 % ====== Uncomment if save video
-%     frame = getframe(gcf);
-%     writeVideo(v, frame);
+    frame = getframe(gcf);
+    writeVideo(v, frame);
 end 
 end

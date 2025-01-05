@@ -183,3 +183,17 @@ xlabel('Time [s]')
 ylabel('[deg]')
 title('Fixed Frame')
 setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+
+%% 5. Show Hub Jet trajectory
+filter = 500;
+t = (filter:3000) * timeStep;
+figure('Name', 'Hub Jet Trajectory', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+plot(t, Baseline.FF_helixCenter(filter:3000, 1), 'Color', color1, 'LineWidth', lw);
+hold on
+plot(t, Baseline.FF_helixCenter(filter:3000, 2), 'Color', color2, 'LineWidth', lw);
+hold off
+legend('z_{hj}', 'y_{hj}');
+xlabel('Time [s]')
+ylabel('[m]')
+title('Hub Jet Coordinate in Fixed Frame')
+setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)

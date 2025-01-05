@@ -24,10 +24,11 @@ timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 saveOption = 'Y';
 HelixShape = 'basic'; % oval or flower
+HelixAmpltidue = 0;
 
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Sth\';
-fileName = 'basic2.mat';
+fileName = 'zeroAnimation.mat';
 % QprName = 'oval.qpr';
 
 %% Load project and Initialize simulation
@@ -98,8 +99,8 @@ elseif strcmp(HelixShape, 'flower')
     sigTilt = [3*sin(2*pi*Freq*t1) 1*sin(2*pi*Freq*t2) 3*sin(2*pi*Freq*t3) 1*sin(2*pi*Freq*t4)];          
     sigYaw = [1*sin(2*pi*Freq*t1-pi/2) 3*sin(2*pi*Freq*t2-pi/2) 1*sin(2*pi*Freq*t3-pi/2) 3*sin(2*pi*Freq*t4-pi/2)];  % CCW
 elseif strcmp(HelixShape, 'basic')
-    sigTilt = 3 * sin(2*pi*Freq*t);          
-    sigYaw = 3 * sin(2*pi*Freq*t - pi/2);  % CCW
+    sigTilt = HelixAmpltidue * sin(2*pi*Freq*t);          
+    sigYaw = HelixAmpltidue * sin(2*pi*Freq*t - pi/2);  % CCW
 end
 
 Trigger = 0;
@@ -275,7 +276,8 @@ if strcmp(saveOption, 'Y')
     save([turbineName caseName fileName], 'FF_helixCenter', ...
                                           'FF_helixCenter_filtered', ...
                                           'FF_beta', ...
-                                          'PitchAngles');
+                                          'PitchAngles', ...
+                                          'LiDAR_data');
 end
 calllib('QBladeDLL','closeInstance')
 

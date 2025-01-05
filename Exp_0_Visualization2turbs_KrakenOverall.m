@@ -20,12 +20,18 @@ elseif strcmp(ControlOption, 'Kraken')
     OLfileName = '2Turbines_CL_Helix_ShearReCenter3_mag3_4D.mat';
     CLfileName = '2Turbines_CL_Helix_TI6_mag3_4D.mat';
     FKfileName = '2Turbines_CL_Helix_BothReCenter2_mag3_4D.mat';
+    OLfileName2 = '2Turbines_OL_Helix_ShearReCenter_mag3_4D.mat';
+    CLfileName2 = '2Turbines_OL_Helix_TI6_mag3_4D.mat';
+    FKfileName2 = '2Turbines_OL_Helix_TI6&Shear0.2_mag3_4D.mat';
 end 
 
 Baseline = load([turbineName caseName basefile]);
 OL = load([turbineName caseName OLfileName]);
 CL = load([turbineName caseName CLfileName]);
 FL = load([turbineName caseName FKfileName]);
+OL2 = load([turbineName caseName OLfileName2]);
+CL2 = load([turbineName caseName CLfileName2]);
+FL2 = load([turbineName caseName FKfileName2]);
 
 %% Overall Settings
 overallOption = 'N';
@@ -34,12 +40,13 @@ rareDataAnalysis = 'N';
 overallDetailOption = 'Y';
 coorFrame = 'HF';
 trajOption = 'Y';
+trajOption2 = 'N';
 videoOption = 'N';
 powerAnalysis = 'N';
 DELAnalysis = 'N';
 PBDAnalysis = 'N';
-powerDELAnalysis = 'Y';
-storyTellingBasic = 'Y';
+powerDELAnalysis = 'N';
+storyTellingBasic = 'N';
 
 % Basic Settings
 D_NREL5MW = 126;
@@ -274,6 +281,63 @@ if strcmp(trajOption, 'Y')
     plot(0, 90, 'k*', 'MarkerSize', 10);
     plot(center_bl(2), center_bl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color0);
     plot(center_ol(2), center_ol(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color1);
+    hold off
+    xlabel('y [m]')
+    ylabel('z [m]')
+    xlim([-30 20])
+    ylim([60 110])
+    legend('Uniform', 'Shear','Hub', 'Location','southeast')
+
+    subplot(1, 3, 2)
+    plot(Baseline.FF_helixCenter_filtered(filter:end, 2), Baseline.FF_helixCenter_filtered(filter:end, 1), 'Color',color0, 'LineWidth', lw)
+    hold on
+    plot(CL.FF_helixCenter_filtered(filter:end, 2), CL.FF_helixCenter_filtered(filter:end, 1), 'Color',color2, 'LineWidth', lw)
+    plot(0, 90, 'k*', 'MarkerSize', 10);
+    plot(center_bl(2), center_bl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color0);
+    plot(center_cl(2), center_cl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color2);
+    hold off
+    xlabel('y [m]')
+    ylabel('z [m]')
+    xlim([-30 20])
+    ylim([60 110])
+    legend('Uniform', 'Turbulence','Hub', 'Location','southeast')
+
+    subplot(1, 3, 3)
+    plot(Baseline.FF_helixCenter_filtered(filter:end, 2), Baseline.FF_helixCenter_filtered(filter:end, 1), 'Color',color0, 'LineWidth', lw)
+    hold on
+    plot(FL.FF_helixCenter_filtered(5000:end, 2), FL.FF_helixCenter_filtered(5000:end, 1), 'Color',color3, 'LineWidth', lw)
+    plot(0, 90, 'k*', 'MarkerSize', 10);
+    plot(center_bl(2), center_bl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color0);
+    plot(center_fl(2), center_fl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color2);
+    hold off
+    xlabel('y [m]')
+    ylabel('z [m]')
+    xlim([-30 20])
+    ylim([60 110])
+    legend('Uniform', 'S&T','Hub', 'Location','southeast')
+    setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+end
+
+% ============== Hub Jet Trajectory2
+if strcmp(trajOption2, 'Y')
+    center_bl = mean(Baseline.FF_helixCenter_filtered(filter:end, :));
+    center_ol = mean(OL.FF_helixCenter_filtered(filter:end, :))+[0 0.5];
+    center_cl = mean(CL.FF_helixCenter_filtered(filter:end, :));
+    center_fl = mean(FL.FF_helixCenter_filtered(filter:end, :));
+    center_ol2 = mean(OL2.FF_helixCenter_filtered(filter:end, :));
+    center_cl2 = mean(CL2.FF_helixCenter_filtered(filter:end, :));
+    center_fl2 = mean(FL2.FF_helixCenter_filtered(filter:end, :));
+    
+    figure('Name', 'HubJet Trajectory', 'NumberTitle', 'off', 'Position', [100, 100, 1050, 300]);
+    subplot(1, 3, 1)
+    plot(Baseline.FF_helixCenter_filtered(filter:end, 2), Baseline.FF_helixCenter_filtered(filter:end, 1), 'Color',color0, 'LineWidth', lw)
+    hold on
+    plot(OL.FF_helixCenter_filtered(5000:end, 2), OL.FF_helixCenter_filtered(5000:end, 1), 'Color',color1, 'LineWidth', lw)
+    plot(0, 90, 'k*', 'MarkerSize', 10);
+    plot(center_bl(2), center_bl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color0);
+    plot(center_ol(2), center_ol(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color1);
+    plot(OL2.FF_helixCenter_filtered(5000:end, 2), OL2.FF_helixCenter_filtered(5000:end, 1), 'Color',color1, 'LineWidth', lw, 'LineStyle', '--')
+    plot(center_ol2(2), center_ol2(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color1);
     hold off
     xlabel('y [m]')
     ylabel('z [m]')

@@ -9,7 +9,7 @@ turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesLonger\';
 
 % Different case
-windCase = 'BothRC2';
+windCase = 'Uniform';
 % Uniform
 % Turb 
 % ShearRC3, Shear, ShearRC, ShearRC2
@@ -82,9 +82,9 @@ disp(mean(CL.HF_beta(filter:end, :)))
 
 %% Overall Settings
 errorOption = 'N';
-flowAnalysis = 'Y';
+flowAnalysis = 'N';
 rareDataAnalysis = 'N';
-overallDetailOption = 'Y';
+overallDetailOption = 'N';
 coorFrame = 'HF';
 trajOption = 'Y';
 videoOption = 'N';
@@ -92,8 +92,9 @@ powerAnalysis = 'N';
 DELAnalysis = 'N';
 PBDAnalysis = 'N';
 powerDELAnalysis = 'N';
-numericalAnalysis = 'Y';
-storyTellingBasic = 'Y';
+numericalAnalysis = 'N';
+storyTellingBasic = 'N';
+showCompnent = 'Y';
 
 
 % Basic Settings
@@ -103,7 +104,7 @@ timeStep = 0.1;
 % filter = 3500; % 3000 for steady-state, 3500 ShearRC3, 5000 BothRC2
 filter0 = filter; % Overall result
 filter2 = 1; % Wind info
-filter3 = 6000; % Rare data
+filter3 = 1000; % Rare data
 DeadtimeDelay = 112; % change to 112 when showing whole process
 Str = 0.3;                          % Strouhal number              
 Freq = Str*U_inflow/D_NREL5MW;      % From Str, in Hz
@@ -321,6 +322,34 @@ if strcmp(rareDataAnalysis, 'Y')
     ylabel('Amplitude [dB]');
     legend('Mip1','Mip2','Mip3','f_e','1P','Location','southeast')
     title('Mip PSD')
+end
+
+% ============== Show Different Component
+if strcmp(showCompnent, 'Y')
+    figure('Name', 'show Compnent', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+    subplot(2, 1, 1)
+    t3 = (1000:9000) * timeStep;
+    plot(t3, CL.ym(filter3:end, 1),'Color',color1,'LineWidth', lw)
+    hold on
+    plot(t3, CL.y(filter3:end, 1),'Color',color0,'LineWidth', lw)
+    plot(t3, CL.ytilda(filter3:end, 1),'Color',color0,'LineWidth', lw, 'LineStyle', '--')
+    hold off
+    xlabel('Time [sec]')
+    ylabel('Position [m]')
+    title('Hub Jet $z^e$')
+    legend('$y_m$', '$y$', '$\tilde{y}$', 'Interpreter', 'latex')
+
+    subplot(2, 1, 2)
+    plot(t3, CL.ym(filter3:end, 2),'Color',color2,'LineWidth', lw)
+    hold on
+    plot(t3, CL.y(filter3:end, 2),'Color',color0,'LineWidth', lw)
+    plot(t3, CL.ytilda(filter3:end, 2),'Color',color0,'LineWidth', lw, 'LineStyle', '--')
+    hold off
+    xlabel('Time [sec]')
+    ylabel('Position [m]')
+    title('Hub Jet $y^e$')
+    legend('$y_m$', '$y$', '$\tilde{y}$', 'Interpreter', 'latex')
+    setfigpaper('Width',[30,0.5],'Interpreter','latex','FontSize',Font,'linewidth',lw)
 end
 
 % ============== Overeall Detailed Visualization
@@ -726,7 +755,6 @@ if strcmp(numericalAnalysis, 'Y')
     
 end
 
-%% 
 if strcmp(storyTellingBasic, 'Y')
     % Very Basic (Uniform Open-Loop Helix)
     VBLpower = [VBL_result.WT1.power VBL_result.WT2.power VBL_result.All.power];
