@@ -92,8 +92,8 @@ powerAnalysis = 'N';
 DELAnalysis = 'N';
 PBDAnalysis = 'N';
 powerDELAnalysis = 'N';
-numericalAnalysis = 'N';
-storyTellingBasic = 'N';
+numericalAnalysis = 'Y';
+storyTellingBasic = 'Y';
 showCompnent = 'N';
 
 
@@ -482,9 +482,9 @@ if strcmp(trajOption, 'Y')
     if strcmp(windCase,'ShearRC3')
         CL.FF_helixCenter_filtered(:, 2) = CL.FF_helixCenter_filtered(:, 2) + 0.5;
     elseif strcmp(windCase, 'BothRC2')
-        CL.FF_helixCenter_filtered(:, 2) = CL.FF_helixCenter_filtered(:, 2) + 0.5;
+        CL.FF_helixCenter_filtered(:, 2) = CL.FF_helixCenter_filtered(:, 2) + 0.7;
     end
-        %     CL.FF_helixCenter_filtered(:, 1) = CL.FF_helixCenter_filtered(:, 1) + 0.5;
+%     filter = 4000
     center_blb = mean(veryBase.FF_helixCenter_filtered(filter:end, :));
     center_bl = mean(Baseline.FF_helixCenter_filtered(filter:end, :));
     center_ol = mean(OL.FF_helixCenter_filtered(filter:end, :));

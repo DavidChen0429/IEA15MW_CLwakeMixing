@@ -38,8 +38,8 @@ videoOption = 'N';
 powerAnalysis = 'N';
 DELAnalysis = 'N';
 PBDAnalysis = 'N';
-powerDELAnalysis = 'Y';
-storyTellingBasic = 'Y';
+powerDELAnalysis = 'N';
+storyTellingBasic = 'N';
 
 % Basic Settings
 D_NREL5MW = 126;
@@ -301,7 +301,7 @@ if strcmp(trajOption, 'Y')
     plot(FL.FF_helixCenter_filtered(filter:end, 2), FL.FF_helixCenter_filtered(filter:end, 1), 'Color',color3, 'LineWidth', lw)
     plot(0, 90, 'k*', 'MarkerSize', 10);
     plot(center_bl(2), center_bl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color0);
-    plot(center_fl(2), center_fl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color2);
+    plot(center_fl(2), center_fl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color3);
     hold off
     xlabel('y [m]')
     ylabel('z [m]')
