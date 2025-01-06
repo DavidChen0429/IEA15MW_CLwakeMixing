@@ -9,7 +9,7 @@ turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesLonger\';
 
 % Different case
-windCase = 'Uniform';
+windCase = 'ShearRC3';
 % Uniform
 % Turb 
 % ShearRC3, Shear, ShearRC, ShearRC2
@@ -82,7 +82,7 @@ disp(mean(CL.HF_beta(filter:end, :)))
 
 %% Overall Settings
 errorOption = 'N';
-flowAnalysis = 'N';
+flowAnalysis = 'Y';
 rareDataAnalysis = 'N';
 overallDetailOption = 'N';
 coorFrame = 'HF';
@@ -94,7 +94,7 @@ PBDAnalysis = 'N';
 powerDELAnalysis = 'N';
 numericalAnalysis = 'N';
 storyTellingBasic = 'N';
-showCompnent = 'Y';
+showCompnent = 'N';
 
 
 % Basic Settings
@@ -153,31 +153,44 @@ end
 
 % ============== Wind Flow Information
 if strcmp(flowAnalysis, 'Y')
-%     t2 = (1:(simLength-filter2+1)) * timeStep;
-%     figure('Name', 'Wind', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-%     subplot(2, 1, 1)
-%     plot(t2, OL.UmeanStore(filter2:end), 'Color',color1,'LineWidth', lw)
-%     hold on
-%     plot(t2, CL.UmeanStore(filter2:end),'Color',color2,'LineWidth', lw)
-%     hold off
-%     title('Average U_{inflow}')
-%     xlim([0 t2(end)])
-%     xlabel('Time [s]')
-%     ylabel('Speed [m/s]')
-%     legend('OL','CL','Location','southeast')
-% 
-%     subplot(2, 1, 2)
-%     plot(t2, OL.TIStore(filter2:end)*100,'Color',color1,'LineWidth', lw)
-%     hold on
-%     plot(t2, CL.TIStore(filter2:end)*100,'Color',color2,'LineWidth', lw)
-%     hold off
-%     title('Turbulence Intensity')
-%     xlim([0 t2(end)])
-%     xlabel('Time [s]')
-%     ylabel('Value [%]')
-%     legend('OL','CL','Location','southeast')
-%     setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
-    
+    t2 = (1:(simLength-filter2+1)) * timeStep;
+    figure('Name', 'Wind', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+    subplot(2, 1, 1)
+    plot(t2, OL.UmeanStore(filter2:end), 'Color',color1,'LineWidth', lw)
+    hold on
+    plot(t2, CL.UmeanStore(filter2:end),'Color',color2,'LineWidth', lw)
+    hold off
+    title('Average U_{inflow}')
+    xlim([0 t2(end)])
+    xlabel('Time [s]')
+    ylabel('Speed [m/s]')
+    legend('OL','CL','Location','southeast')
+
+    subplot(2, 1, 2)
+    plot(t2, OL.TIStore(filter2:end)*100,'Color',color1,'LineWidth', lw)
+    hold on
+    plot(t2, CL.TIStore(filter2:end)*100,'Color',color2,'LineWidth', lw)
+    hold off
+    title('Turbulence Intensity')
+    xlim([0 t2(end)])
+    xlabel('Time [s]')
+    ylabel('Value [%]')
+    legend('OL','CL','Location','southeast')
+    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+
+    filter2 = 5000;
+    t2 = (1:(simLength-filter2+1)) * timeStep;
+    plot(t2, OL.UmeanStore(filter2:end), 'Color',color1,'LineWidth', lw)
+    hold on
+    plot(t2, CL.UmeanStore(filter2:end),'Color',color2,'LineWidth', lw)
+    hold off
+    title('Average U_{inflow}')
+    xlim([0 t2(end)])
+    xlabel('Time [s]')
+    ylabel('Speed [m/s]')
+    legend('OL','CL','Location','southeast')
+    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+
     fprintf('\n==================== Flow Comparison \n');
     fprintf('========== Wind Speed \n');
     fprintf('   OL: %.2e m/s\n', mean(OL.UmeanStore(filter2:end)));

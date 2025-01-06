@@ -34,6 +34,7 @@ color0 = [0.4660 0.6740 0.1880];
 color1 = [0, 0.4470, 0.7410];
 color2 = [0.8500, 0.3250, 0.0980];
 color3 = [0.3010 0.7450 0.9330];
+red = [1 0 0];
 
 %% 1. Show the Hub Jet
 % dataLiDAR_A = Baseline.LiDAR_data;
@@ -121,7 +122,7 @@ setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 figure('Name', 'Input Circle vs. Flower', 'NumberTitle', 'off', 'Position', [100, 100, 600, 600]);
 plot(Baseline.FF_helixCenter_filtered(filter:end, 2), Baseline.FF_helixCenter_filtered(filter:end, 1), 'Color',color0, 'LineWidth', lw)
 hold on
-plot(FlowerCase.FF_helixCenter_filtered(filter:end, 2), FlowerCase.FF_helixCenter_filtered(filter:end, 1), 'Color',color3, 'LineWidth', lw)
+plot(FlowerCase.FF_helixCenter_filtered(filter:end, 2), FlowerCase.FF_helixCenter_filtered(filter:end, 1), 'Color',red, 'LineWidth', lw)
 hold off
 xlabel('y [m]')
 ylabel('z [m]')

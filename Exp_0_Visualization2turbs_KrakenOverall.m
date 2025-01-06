@@ -29,9 +29,9 @@ Baseline = load([turbineName caseName basefile]);
 OL = load([turbineName caseName OLfileName]);
 CL = load([turbineName caseName CLfileName]);
 FL = load([turbineName caseName FKfileName]);
-OL2 = load([turbineName caseName OLfileName2]);
-CL2 = load([turbineName caseName CLfileName2]);
-FL2 = load([turbineName caseName FKfileName2]);
+% OL2 = load([turbineName caseName OLfileName2]);
+% CL2 = load([turbineName caseName CLfileName2]);
+% FL2 = load([turbineName caseName FKfileName2]);
 
 %% Overall Settings
 overallOption = 'N';
@@ -41,6 +41,7 @@ overallDetailOption = 'Y';
 coorFrame = 'HF';
 trajOption = 'Y';
 trajOption2 = 'N';
+trajOption3 = 'Y';
 videoOption = 'N';
 powerAnalysis = 'N';
 DELAnalysis = 'N';
@@ -373,6 +374,59 @@ if strcmp(trajOption2, 'Y')
     ylim([60 110])
     legend('Uniform', 'S&T','Hub', 'Location','southeast')
     setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+end
+
+% ============== Hub Jet Trajectory3
+if strcmp(trajOption3, 'Y')
+    center_bl = mean(Baseline.FF_helixCenter_filtered(filter:end, :));
+    center_ol = mean(OL.FF_helixCenter_filtered(filter:end, :))+[0 0.5];
+    center_cl = mean(CL.FF_helixCenter_filtered(filter:end, :));
+    center_fl = mean(FL.FF_helixCenter_filtered(filter:end, :));
+    
+    figure('Name', 'HubJet Trajectory', 'NumberTitle', 'off', 'Position', [100, 100, 600, 600]);
+    plot(Baseline.FF_helixCenter_filtered(filter:end, 2), Baseline.FF_helixCenter_filtered(filter:end, 1), 'Color',color0, 'LineWidth', lw)
+    hold on
+    plot(OL.FF_helixCenter_filtered(5000:end, 2), OL.FF_helixCenter_filtered(5000:end, 1), 'Color',color1, 'LineWidth', lw)
+    plot(0, 90, 'k*', 'MarkerSize', 10);
+    plot(center_bl(2), center_bl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color0);
+    plot(center_ol(2), center_ol(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color1);
+    hold off
+    xlabel('y [m]')
+    ylabel('z [m]')
+    xlim([-30 20])
+    ylim([60 110])
+    legend('Uniform', 'Shear','Hub', 'Location','southeast')
+    setfigpaper('Width',[15,1],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+
+    figure('Name', 'HubJet Trajectory', 'NumberTitle', 'off', 'Position', [100, 100, 600, 600]);
+    plot(Baseline.FF_helixCenter_filtered(filter:end, 2), Baseline.FF_helixCenter_filtered(filter:end, 1), 'Color',color0, 'LineWidth', lw)
+    hold on
+    plot(CL.FF_helixCenter_filtered(filter:end, 2), CL.FF_helixCenter_filtered(filter:end, 1), 'Color',color2, 'LineWidth', lw)
+    plot(0, 90, 'k*', 'MarkerSize', 10);
+    plot(center_bl(2), center_bl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color0);
+    plot(center_cl(2), center_cl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color2);
+    hold off
+    xlabel('y [m]')
+    ylabel('z [m]')
+    xlim([-30 20])
+    ylim([60 110])
+    legend('Uniform', 'Turbulence','Hub', 'Location','southeast')
+    setfigpaper('Width',[15,1],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+
+    figure('Name', 'HubJet Trajectory', 'NumberTitle', 'off', 'Position', [100, 100, 600, 600]);
+    plot(Baseline.FF_helixCenter_filtered(filter:end, 2), Baseline.FF_helixCenter_filtered(filter:end, 1), 'Color',color0, 'LineWidth', lw)
+    hold on
+    plot(FL.FF_helixCenter_filtered(5000:end, 2), FL.FF_helixCenter_filtered(5000:end, 1), 'Color',color3, 'LineWidth', lw)
+    plot(0, 90, 'k*', 'MarkerSize', 10);
+    plot(center_bl(2), center_bl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color0);
+    plot(center_fl(2), center_fl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color3);
+    hold off
+    xlabel('y [m]')
+    ylabel('z [m]')
+    xlim([-30 20])
+    ylim([60 110])
+    legend('Uniform', 'S&T','Hub', 'Location','southeast')
+    setfigpaper('Width',[15,1],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 end
 
 % ============== Video comparison
@@ -721,7 +775,8 @@ if strcmp(storyTellingBasic, 'Y')
     end
     set(gca, 'XTickLabel', x_labels);
     legend([b1, b2], {'S', 'T', 'S&T', 'Uni'}, 'Location', 'northwest');
-    ylabel('Power [MW]');
+    ylabel('[MW]');
+    title('Power')
     hold off;
     
     % DEL Flapwise
@@ -734,7 +789,8 @@ if strcmp(storyTellingBasic, 'Y')
     end
     set(gca, 'XTickLabel', x_labels);
     legend([b1, b2], {'S', 'T', 'S&T', 'Uni'}, 'Location', 'northwest');
-    ylabel('DEL Flapwise [Nm]');
+    ylabel('[Nm]');
+    title('DEL Flapwise')
     hold off;
     
     % DEL Edgewise
@@ -747,7 +803,8 @@ if strcmp(storyTellingBasic, 'Y')
     end
     set(gca, 'XTickLabel', x_labels);
     legend([b1, b2], {'S', 'T', 'S&T', 'Uni'}, 'Location', 'northwest');
-    ylabel('DEL Edgewise [Nm]');
+    ylabel('[Nm]');
+    title('DEL Edgewise');
     hold off;
     setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw);
 
