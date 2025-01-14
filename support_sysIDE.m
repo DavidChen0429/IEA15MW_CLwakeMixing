@@ -3,10 +3,10 @@ close all
 addpath('.\Functions');
 
 %% Get Training data and Testing data
-trainData = 'train_240min_1bw_noise1%_AzimuthOffset96.mat';      
-testData = 'stepResponse_both_AzimuthOffset96.mat';                
+trainData = '240min_1bw_noise1_96AO.mat';      
+testData = '240min_1bw_noise1_96AO.mat';                
 turbineName = '.\Data\NREL5MW\';
-caseName = 'Str0.3_U10_1Dd_10Hz_CCW\sysIDE\';
+caseName = 'sysIDE\';
 IDEdata_train = load([turbineName caseName trainData]);
 IDEdata_test = load([turbineName caseName testData]);
 timeStep = 0.1;
@@ -53,6 +53,9 @@ ys2 = y_test';  % 2*N
 
 ys(1, :) = -1 * ys(1, :);
 ys2(1, :) = -1 * ys2(1, :);
+
+%% Visualize IO data
+
 
 %% PBSID-varx System IDE
 n_varx = 4;

@@ -169,7 +169,8 @@ hold off
 legend('\beta_1', '\beta_2', '\beta_3');
 xlim([0 t(end)])
 xlabel('Time [s]')
-ylabel('[deg]')
+ylabel('Pitch [deg]')
+ylim([-3.5 3.5]);
 title('Blade Pitch Signal')
 setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 
@@ -181,7 +182,8 @@ plot(t, Baseline2.FF_beta(1:filter, 2), 'Color', color2, 'LineWidth', lw)
 legend('\beta_{tilt}', '\beta_{yaw}');
 xlim([0 t(end)])
 xlabel('Time [s]')
-ylabel('[deg]')
+ylabel('Pitch [deg]')
+ylim([-3.5 3.5]);
 title('Fixed Frame')
 setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 
@@ -189,12 +191,48 @@ setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 filter = 500;
 t = (filter:3000) * timeStep;
 figure('Name', 'Hub Jet Trajectory', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-plot(t, Baseline.FF_helixCenter(filter:3000, 1), 'Color', color1, 'LineWidth', lw);
-hold on
-plot(t, Baseline.FF_helixCenter(filter:3000, 2), 'Color', color2, 'LineWidth', lw);
-hold off
-legend('z_{hj}', 'y_{hj}');
+subplot(2, 1, 1)
+plot(t, Baseline.FF_helixCenter_filtered(filter:3000, 1), 'Color', color1, 'LineWidth', lw);
 xlabel('Time [s]')
-ylabel('[m]')
+ylabel('z [m]')
 title('Hub Jet Coordinate in Fixed Frame')
+subplot(2, 1, 2)
+plot(t, Baseline.FF_helixCenter_filtered(filter:3000, 2), 'Color', color2, 'LineWidth', lw);
+xlabel('Time [s]')
+ylabel('y [m]')
 setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+
+%% Recreate the Helix Block Diagram
+filter = 600;
+% Font = 80;
+% lw = 5;
+t = (0:(filter-1)) * timeStep;
+% Input Rotating Frame
+figure('Name', 'Input Detail', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+plot(t, Baseline2.PitchAngles(1:filter, 1), 'Color', color1, 'LineWidth', lw)
+hold on
+plot(t, Baseline2.PitchAngles(1:filter, 2), 'Color', color2, 'LineWidth', lw)
+plot(t, Baseline2.PitchAngles(1:filter, 3), 'Color', color3, 'LineWidth', lw)
+hold off
+legend('$\beta_1$', '$\beta_2$', '$\beta_3$');
+ylim([-3.5 3.5]);
+text(0, -2.8, '$f_{\beta}=f_e+f_r$');
+setfigpaper('Width',[30,0.5],'Interpreter','latex','FontSize',Font,'linewidth',lw)
+
+% Input Fixed Frame
+figure('Name', 'Input Detail', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+plot(t, Baseline2.FF_beta(1:filter, 1), 'Color', color1, 'LineWidth', lw)
+hold on
+plot(t, Baseline2.FF_beta(1:filter, 2), 'Color', color2, 'LineWidth', lw)
+legend('$\beta_{tilt}$', '$\beta_{yaw}$');
+ylim([-3.5 3.5]);
+text(0, -2.8, '$f_e$');
+setfigpaper('Width',[30,0.5],'Interpreter','latex','FontSize',Font,'linewidth',lw)
+
+% Rotor Sigal
+figure('Name', 'Input Detail', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+plot(t, sin(t), 'Color', color0, 'LineWidth', lw)
+ylim([-1.25 1.25]);
+legend('$sin(\psi)$');
+text(0, -1, '$f_r$');
+setfigpaper('Width',[30,0.5],'Interpreter','latex','FontSize',Font,'linewidth',lw)

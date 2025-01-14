@@ -67,7 +67,7 @@ Ap = 1.55;               % Bound on low freq
 omega_cl = 0.02;        % Closed-loop bandwidth
 Wp0 = tf([1/Mp, omega_cl], [1, omega_cl*Ap]);   % Emphasizes performance and disturbance rejection
 % 1. Wu(z)
-omega_c = 0.5;
+omega_c = 0.15; % 0.5 
 B = 10;
 Wu0 = 0.4*B^2*tf([1, sqrt(2)*omega_c, omega_c^2], [1, sqrt(2)*B*omega_c, (B*omega_c)^2]);     % Emphasizes input magnitude 
 % 3. Wt(z)
