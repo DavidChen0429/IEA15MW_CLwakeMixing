@@ -96,7 +96,6 @@ numericalAnalysis = 'Y';
 storyTellingBasic = 'Y';
 showCompnent = 'N';
 
-
 % Basic Settings
 D_NREL5MW = 126;
 U_inflow = 10;

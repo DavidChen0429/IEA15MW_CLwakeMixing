@@ -71,7 +71,7 @@ END_TURB_2
 
 ----------------------------------------Wind Input-----------------------------------------------------------------
 1                                        WNDTYPE            - use a number: 0 = steady; 1 = windfield; 2 = hubheight
-Skewed3.bts              		             WNDNAME            - filename of the turbsim input file or hubheight file (with extension), leave blank if unused
+TI15.bts              		             WNDNAME            - filename of the turbsim input file or hubheight file (with extension), leave blank if unused
 0                                        STITCHINGTYPE      - the windfield stitching type; 0 = periodic; 1 = mirror
 1                                        WINDAUTOSHIFT      - the windfield shifting automatically based on rotor diameter; 0 = false; 1 = true
 0.00                                     SHIFTTIME          - the windfield is shifted by this time if WINDAUTOSHIFT = 0

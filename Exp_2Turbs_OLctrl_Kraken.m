@@ -19,19 +19,19 @@ if isempty(m)
 end
 
 %% Data file (Chage this accordingly)
-simTime = 9000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 6000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
-mag = 3.3; % 2, 3, 99(customize), -1(doesn't work)
+mag = 3; % 2, 3, 99(customize), -1(doesn't work)
 referenceType = 'ramp&stop'; % step, ramp, ramp&stop, step&step, zero, customize&step, customize&ramp
 Trigger = 1000;      % Time that ctrl is triggered
 HelixCycle = 1/(0.3*10/126) * (1/timeStep);
 Endtime = Trigger + 1*HelixCycle;
 saveOption = 'Y';
-windtype = 'ShearReCenter2'; % Check .sim file (right. bts file) !!!!!!!  
+windtype = 'TI15'; % Check .sim file (right. bts file) !!!!!!!  
 
 turbineName = '.\Data\NREL5MW\';
-caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesLonger\';
+caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\OscillationTurb\';
 fileName = ['2Turbines_OL_Helix_', windtype,'_mag', num2str(mag),'_4D.mat'];
 QprName = ['2Turbines_OL_Helix_',windtype,'_mag', num2str(mag),'_4D.qpr'];
 
