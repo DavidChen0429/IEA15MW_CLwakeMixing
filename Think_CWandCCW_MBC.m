@@ -22,14 +22,14 @@ end
 simTime = 3000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
-saveOption = 'N';
+saveOption = 'Y';
 HelixShape = 'basic'; % oval or flower
 HelixAmpltidue = 0;
 
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Sth\';
-fileName = 'zeroAnimation.mat';
-% QprName = 'oval.qpr';
+% fileName = 'zeroAnimation.mat';
+QprName = 'basicHelix.qpr';
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
@@ -78,7 +78,7 @@ t = linspace(1, simLen, simTime);
 if strcmp(HelixShape, 'basic')
     sigTilt = HelixAmpltidue * sin(2*pi*Freq*t);          
     sigYaw = HelixAmpltidue * sin(2*pi*Freq*t - pi/2);  % CCW
-    sigYaw_CW = HelixAmpltidue * sin(2*pi*Freq*t + pi/2);  % CW
+%     sigYaw_CW = HelixAmpltidue * sin(2*pi*Freq*t + pi/2);  % CW
 end
 
 %% Defining LiDAR sampling 
@@ -229,7 +229,7 @@ end
 close(f)
 toc 
 if strcmp(saveOption, 'Y')
-%     calllib('QBladeDLL','storeProject', [turbineName caseName QprName]) 
+    calllib('QBladeDLL','storeProject', [turbineName caseName QprName]) 
 %     save([turbineName caseName fileName], 'LiDAR_data', ...
 %                                           'FF_helixCenter', ...
 %                                           'FF_helixCenter_filtered', ...
@@ -249,20 +249,20 @@ if strcmp(saveOption, 'Y')
 %                                           'Mflap3_store', ...
 %                                           'Medge3_store', ...
 %                                           'PitchAngles');
-    save([turbineName caseName fileName], 'FF_helixCenter', ...
-                                          'FF_helixCenter_filtered', ...
-                                          'FF_beta', ...
-                                          'PitchAngles', ...
-                                          'LiDAR_data');
+%     save([turbineName caseName fileName], 'FF_helixCenter', ...
+%                                           'FF_helixCenter_filtered', ...
+%                                           'FF_beta', ...
+%                                           'PitchAngles', ...
+%                                           'LiDAR_data');
 end
 calllib('QBladeDLL','closeInstance')
 
 %% Visualization
 trigger_time = Trigger * timeStep;
 
-figure
-plot(t, FF_beta(:, 1))
-hold on
-plot(t, FF_beta(:, 2))
-
-ringVisualization2(LiDAR_data, D_NREL5MW)
+% figure
+% plot(t, FF_beta(:, 1))
+% hold on
+% plot(t, FF_beta(:, 2))
+% 
+% ringVisualization2(LiDAR_data, D_NREL5MW)
