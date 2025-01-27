@@ -28,18 +28,18 @@ CL = load([turbineName caseName CLfileName]);
 FL = load([turbineName caseName FKfileName]);
 
 %% Overall Settings
-overallOption = 'N';
 flowAnalysis = 'N';
 rareDataAnalysis = 'N';
-overallDetailOption = 'Y';
+overallDetailOption = 'N';
 coorFrame = 'HF';
-trajOption = 'Y';
+trajOption = 'N';
 videoOption = 'N';
 powerAnalysis = 'N';
 DELAnalysis = 'N';
 PBDAnalysis = 'N';
 powerDELAnalysis = 'N';
 storyTellingBasic = 'N';
+HFTvisual = 'Y';
 
 % Basic Settings
 D_NREL5MW = 126;
@@ -744,4 +744,72 @@ if strcmp(storyTellingBasic, 'Y')
 %     legend([b1(1), b1(2), b2], {'OL', 'CL', 'Ref'}, 'Location', 'northwest');
 %     ylabel('DEL Edgewise [Nm]');
 %     setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw);
+end
+
+if strcmp(HFTvisual, 'Y')
+    % Output
+    t0 = (1:(simLength-filter0+1)) * timeStep;
+    figure('Name', 'Input Coordiante Transform FF', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+    subplot(2, 1, 1);
+    plot(t0, Baseline.FF_helixCenter_filtered(filter0:end, 1),'Color',color1,'LineWidth', lw);
+    xlim([0 t0(end)])
+    xlabel('Time [s]')
+    ylabel('z [m]')
+    subplot(2, 1, 2)
+    plot(t0, Baseline.FF_helixCenter_filtered(filter0:end, 2),'Color',color2,'LineWidth', lw);
+    xlim([0 t0(end)])
+    xlabel('Time [s]')
+    ylabel('y [m]')
+    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+
+    t0 = (1:(simLength-filter0+1)) * timeStep;
+    figure('Name', 'Input Coordiante Transform HF', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+    subplot(2, 1, 1);
+    plot(t0, Baseline.HF_helixCenter_filtered(filter0:end, 1),'Color',color1,'LineWidth', lw);
+    xlim([0 t0(end)])
+    xlabel('Time [s]')
+    ylabel('z [m]')
+    ylim([0 10])
+    subplot(2, 1, 2)
+    plot(t0, Baseline.HF_helixCenter_filtered(filter0:end, 2),'Color',color2,'LineWidth', lw);
+    xlim([0 t0(end)])
+    xlabel('Time [s]')
+    ylabel('y [m]')
+    ylim([0 10])
+    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+
+     % Input
+    t0 = (1:(simLength-filter0+1)) * timeStep;
+    figure('Name', 'Input Coordiante Transform FF', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+    subplot(2, 1, 1);
+    plot(t0, Baseline.FF_beta(filter0:end, 1),'Color',color1,'LineWidth', lw);
+    xlim([0 t0(end)])
+    xlabel('Time [s]')
+    ylabel('Pitch [deg]')
+    title('\beta_{tilt}')
+    subplot(2, 1, 2)
+    plot(t0, Baseline.FF_beta(filter0:end, 2),'Color',color2,'LineWidth', lw);
+    xlim([0 t0(end)])
+    xlabel('Time [s]')
+    ylabel('Pitch [deg]')
+    title('\beta_{yaw}')
+    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+
+    t0 = (1:(simLength-filter0+1)) * timeStep;
+    figure('Name', 'Input Coordiante Transform HF', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+    subplot(2, 1, 1);
+    plot(t0, Baseline.HF_beta(filter0:end, 1),'Color',color1,'LineWidth', lw);
+    xlim([0 t0(end)])
+    xlabel('Time [s]')
+    ylabel('Pitch [deg]')
+    ylim([0 5])
+    title('\beta^e_{tilt}')
+    subplot(2, 1, 2)
+    plot(t0, Baseline.HF_beta(filter0:end, 2),'Color',color2,'LineWidth', lw);
+    xlim([0 t0(end)])
+    xlabel('Time [s]')
+    ylabel('Pitch [deg]')
+    ylim([0 5])
+    title('\beta^e_{yaw}')
+    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 end

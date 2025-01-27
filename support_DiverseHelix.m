@@ -156,10 +156,38 @@ ylabel('[deg]')
 title('\beta_{yaw}')
 setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 
-%% 4. Show Helix
+%% 4. Show Normal Helix Input Signal
 filter = 600;
 t = (0:(filter-1)) * timeStep;
-% Input Rotating Frame
+% Input Rotating Frame (blade by blade)
+figure('Name', 'Input Detail', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+plot(t, Baseline2.PitchAngles(1:filter, 1), 'Color', color1, 'LineWidth', lw)
+hold on
+% plot(t, Baseline2.PitchAngles(1:filter, 2), 'Color', color2, 'LineWidth', lw)
+% plot(t, Baseline2.PitchAngles(1:filter, 3), 'Color', color3, 'LineWidth', lw)
+hold off
+legend('\beta_1');
+xlim([0 t(end)])
+xlabel('Time [s]')
+ylabel('Pitch [deg]')
+ylim([-3.5 3.5]);
+% title('Blade Pitch Signal')
+setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+
+figure('Name', 'Input Detail', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+plot(t, Baseline2.PitchAngles(1:filter, 1), 'Color', color1, 'LineWidth', lw)
+hold on
+plot(t, Baseline2.PitchAngles(1:filter, 2), 'Color', color2, 'LineWidth', lw)
+% plot(t, Baseline2.PitchAngles(1:filter, 3), 'Color', color3, 'LineWidth', lw)
+hold off
+legend('\beta_1', '\beta_2');
+xlim([0 t(end)])
+xlabel('Time [s]')
+ylabel('Pitch [deg]')
+ylim([-3.5 3.5]);
+% title('Blade Pitch Signal')
+setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+
 figure('Name', 'Input Detail', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
 plot(t, Baseline2.PitchAngles(1:filter, 1), 'Color', color1, 'LineWidth', lw)
 hold on
@@ -171,7 +199,7 @@ xlim([0 t(end)])
 xlabel('Time [s]')
 ylabel('Pitch [deg]')
 ylim([-3.5 3.5]);
-title('Blade Pitch Signal')
+% title('Blade Pitch Signal')
 setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 
 % Input Fixed Frame
@@ -184,7 +212,7 @@ xlim([0 t(end)])
 xlabel('Time [s]')
 ylabel('Pitch [deg]')
 ylim([-3.5 3.5]);
-title('Fixed Frame')
+% title('Fixed Frame')
 setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 
 %% 5. Show Hub Jet trajectory

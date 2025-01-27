@@ -8,7 +8,7 @@ addpath('.\Functions');
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesLonger\';
 
-ControlOption = 'Helix'; % Kraken, Helix
+ControlOption = 'Kraken'; % Kraken, Helix
 % Different case
 if strcmp(ControlOption, 'Helix')
     basefile = '2Turbines_OL_Helix_mag3_4D.mat';
@@ -39,21 +39,21 @@ flowAnalysis = 'N';
 rareDataAnalysis = 'N';
 overallDetailOption = 'N';
 coorFrame = 'HF';
-trajOption = 'Y';
-trajOption3 = 'Y';
+trajOption = 'N';
+trajOption3 = 'N';
 videoOption = 'N';
 powerAnalysis = 'N';
 DELAnalysis = 'N';
 PBDAnalysis = 'N';
 powerDELAnalysis = 'N';
-storyTellingBasic = 'N';
-biasShear = [0 0.8];
+storyTellingBasic = 'Y';
+biasShear = [0 0.0];    % [0 0.8]
 
 % Basic Settings
 D_NREL5MW = 126;
 U_inflow = 10;
 timeStep = 0.1;
-filter = 3000;
+filter = 3500;
 filter0 = 5000;    % Overall
 filter2 = 1;    % Wind info
 filter3 = 1;    % Rare data
@@ -274,6 +274,55 @@ if strcmp(trajOption, 'Y')
     center_cl = mean(CL.FF_helixCenter_filtered(filter:end, :));
     center_fl = mean(FL.FF_helixCenter_filtered(filter:end, :));
     
+    % Just uniform
+    figure('Name', 'HubJet Trajectory', 'NumberTitle', 'off', 'Position', [100, 100, 1050, 300]);
+    subplot(1, 3, 1)
+    plot(Baseline.FF_helixCenter_filtered(filter:end, 2), Baseline.FF_helixCenter_filtered(filter:end, 1), 'Color',color0, 'LineWidth', lw)
+    hold on
+%     plot(OL.FF_helixCenter_filtered(5000:end, 2), OL.FF_helixCenter_filtered(5000:end, 1), 'Color',color1, 'LineWidth', lw)
+    plot(0, 90, 'k*', 'MarkerSize', 10);
+    plot(center_bl(2), center_bl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color0);
+%     plot(center_ol(2), center_ol(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color1);
+    hold off
+    xlabel('y [m]')
+    ylabel('z [m]')
+    xlim([-30 20])
+    ylim([60 110])
+%     legend('Uniform', 'Shear','Hub', 'Location','southeast')
+    legend('Uniform', 'Hub', 'Location','southeast')
+
+    subplot(1, 3, 2)
+    plot(Baseline.FF_helixCenter_filtered(filter:end, 2), Baseline.FF_helixCenter_filtered(filter:end, 1), 'Color',color0, 'LineWidth', lw)
+    hold on
+%     plot(CL.FF_helixCenter_filtered(filter:end, 2), CL.FF_helixCenter_filtered(filter:end, 1), 'Color',color2, 'LineWidth', lw)
+    plot(0, 90, 'k*', 'MarkerSize', 10);
+    plot(center_bl(2), center_bl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color0);
+%     plot(center_cl(2), center_cl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color2);
+    hold off
+    xlabel('y [m]')
+    ylabel('z [m]')
+    xlim([-30 20])
+    ylim([60 110])
+%     legend('Uniform', 'Turbulence','Hub', 'Location','southeast')
+    legend('Uniform', 'Hub', 'Location','southeast')
+
+    subplot(1, 3, 3)
+    plot(Baseline.FF_helixCenter_filtered(filter:end, 2), Baseline.FF_helixCenter_filtered(filter:end, 1), 'Color',color0, 'LineWidth', lw)
+    hold on
+%     plot(FL.FF_helixCenter_filtered(5000:end, 2), FL.FF_helixCenter_filtered(5000:end, 1), 'Color',color3, 'LineWidth', lw)
+    plot(0, 90, 'k*', 'MarkerSize', 10);
+    plot(center_bl(2), center_bl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color0);
+%     plot(center_fl(2), center_fl(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', color3);
+    hold off
+    xlabel('y [m]')
+    ylabel('z [m]')
+    xlim([-30 20])
+    ylim([60 110])
+%     legend('Uniform', 'S&T','Hub', 'Location','southeast')
+    legend('Uniform', 'Hub', 'Location','southeast')
+    setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+
+    % Uniform and OL Kraken
     figure('Name', 'HubJet Trajectory', 'NumberTitle', 'off', 'Position', [100, 100, 1050, 300]);
     subplot(1, 3, 1)
     plot(Baseline.FF_helixCenter_filtered(filter:end, 2), Baseline.FF_helixCenter_filtered(filter:end, 1), 'Color',color0, 'LineWidth', lw)
@@ -595,115 +644,115 @@ if strcmp(storyTellingBasic, 'Y')
     
     x_labels = {'WT1', 'WT2', 'All'};   
 
-    % == Shear Power
-    figure('Name', 'onlyPower Shear vs ref', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-    bar([VBLpower;OLpower]', 'EdgeColor', 'k', 'LineWidth', 1.5);
-    hold on
-    bar([VBLpower;VBLpower]', 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
-    hold off
-    set(gca, 'XTickLabel', x_labels);
-    legend({'Uniform', 'Shear'}, 'Location', 'northwest');
-    ylabel('Power [MW]');
-    setfigpaper('Width',[30,0.4],'Interpreter','tex','FontSize',Font,'linewidth',lw);
-
-    % == Shear
-    figure('Name', 'Shear vs ref', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-    % Power
-    subplot(1, 3, 1)
-    b1 = bar(OLpower, 'EdgeColor', 'k', 'FaceColor', color1, 'LineWidth', 1.5);
-    hold on;
-    b2 = bar(VBLpower, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
-    set(gca, 'XTickLabel', x_labels);
-    legend([b1, b2], {'Shear', 'Uni'}, 'Location', 'northwest');
-    ylabel('Power [MW]');
-    hold off;
-    
-    % DEL Flapwise
-    subplot(1, 3, 2)
-    b1 = bar(OLDELflap, 'EdgeColor', 'k', 'FaceColor', color1, 'LineWidth', 1.5);
-    hold on;
-    b2 = bar(VBLDELflap, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
-    set(gca, 'XTickLabel', x_labels);
-    legend([b1, b2], {'Shear', 'Uni'}, 'Location', 'northwest');
-    ylabel('DEL Flapwise [Nm]');
-    hold off;
-    
-    % DEL Edgewise
-    subplot(1, 3, 3)
-    b1 = bar(OLDELedge, 'EdgeColor', 'k', 'FaceColor', color1, 'LineWidth', 1.5);
-    hold on;
-    b2 = bar(VBLDELedge, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
-    set(gca, 'XTickLabel', x_labels);
-    legend([b1, b2], {'Shear', 'Uni'}, 'Location', 'northwest');
-    ylabel('DEL Edgewise [Nm]');
-    hold off;
-    setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw);
-
-    % == Turbulence
-    figure('Name', 'Turb vs ref', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-    % Power
-    subplot(1, 3, 1)
-    b1 = bar(CLpower, 'EdgeColor', 'k', 'FaceColor', color2, 'LineWidth', 1.5);
-    hold on;
-    b2 = bar(VBLpower, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
-    set(gca, 'XTickLabel', x_labels);
-    legend([b1, b2], {'Turb', 'Uni'}, 'Location', 'northwest');
-    ylabel('Power [MW]');
-    hold off;
-    
-    % DEL Flapwise
-    subplot(1, 3, 2)
-    b1 = bar(CLDELflap, 'EdgeColor', 'k', 'FaceColor', color2, 'LineWidth', 1.5);
-    hold on;
-    b2 = bar(VBLDELflap, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
-    set(gca, 'XTickLabel', x_labels);
-    legend([b1, b2], {'Turb', 'Uni'}, 'Location', 'northwest');
-    ylabel('DEL Flapwise [Nm]');
-    hold off;
-    
-    % DEL Edgewise
-    subplot(1, 3, 3)
-    b1 = bar(CLDELedge, 'EdgeColor', 'k', 'FaceColor', color2, 'LineWidth', 1.5);
-    hold on;
-    b2 = bar(VBLDELedge, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
-    set(gca, 'XTickLabel', x_labels);
-    legend([b1, b2], {'Turb', 'Uni'}, 'Location', 'northwest');
-    ylabel('DEL Edgewise [Nm]');
-    hold off;
-    setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw);
-
-    % == Shear & Turbulence
-    figure('Name', 'S&T vs ref', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
-    % Power
-    subplot(1, 3, 1)
-    b1 = bar(FLpower, 'EdgeColor', 'k', 'FaceColor', color3, 'LineWidth', 1.5);
-    hold on;
-    b2 = bar(VBLpower, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
-    set(gca, 'XTickLabel', x_labels);
-    legend([b1, b2], {'S&T', 'Uni'}, 'Location', 'northwest');
-    ylabel('Power [MW]');
-    hold off;
-    
-    % DEL Flapwise
-    subplot(1, 3, 2)
-    b1 = bar(FLDELflap, 'EdgeColor', 'k', 'FaceColor', color3, 'LineWidth', 1.5);
-    hold on;
-    b2 = bar(VBLDELflap, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
-    set(gca, 'XTickLabel', x_labels);
-    legend([b1, b2], {'S&T', 'Uni'}, 'Location', 'northwest');
-    ylabel('DEL Flapwise [Nm]');
-    hold off;
-    
-    % DEL Edgewise
-    subplot(1, 3, 3)
-    b1 = bar(FLDELedge, 'EdgeColor', 'k', 'FaceColor', color3, 'LineWidth', 1.5);
-    hold on;
-    b2 = bar(VBLDELedge, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
-    set(gca, 'XTickLabel', x_labels);
-    legend([b1, b2], {'S&T', 'Uni'}, 'Location', 'northwest');
-    ylabel('DEL Edgewise [Nm]');
-    hold off;
-    setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw);
+%     % == Shear Power
+%     figure('Name', 'onlyPower Shear vs ref', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+%     bar([VBLpower;OLpower]', 'EdgeColor', 'k', 'LineWidth', 1.5);
+%     hold on
+%     bar([VBLpower;VBLpower]', 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
+%     hold off
+%     set(gca, 'XTickLabel', x_labels);
+%     legend({'Uniform', 'Shear'}, 'Location', 'northwest');
+%     ylabel('Power [MW]');
+%     setfigpaper('Width',[30,0.4],'Interpreter','tex','FontSize',Font,'linewidth',lw);
+% 
+%     % == Shear
+%     figure('Name', 'Shear vs ref', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+%     % Power
+%     subplot(1, 3, 1)
+%     b1 = bar(OLpower, 'EdgeColor', 'k', 'FaceColor', color1, 'LineWidth', 1.5);
+%     hold on;
+%     b2 = bar(VBLpower, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
+%     set(gca, 'XTickLabel', x_labels);
+%     legend([b1, b2], {'Shear', 'Uni'}, 'Location', 'northwest');
+%     ylabel('Power [MW]');
+%     hold off;
+%     
+%     % DEL Flapwise
+%     subplot(1, 3, 2)
+%     b1 = bar(OLDELflap, 'EdgeColor', 'k', 'FaceColor', color1, 'LineWidth', 1.5);
+%     hold on;
+%     b2 = bar(VBLDELflap, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
+%     set(gca, 'XTickLabel', x_labels);
+%     legend([b1, b2], {'Shear', 'Uni'}, 'Location', 'northwest');
+%     ylabel('DEL Flapwise [Nm]');
+%     hold off;
+%     
+%     % DEL Edgewise
+%     subplot(1, 3, 3)
+%     b1 = bar(OLDELedge, 'EdgeColor', 'k', 'FaceColor', color1, 'LineWidth', 1.5);
+%     hold on;
+%     b2 = bar(VBLDELedge, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
+%     set(gca, 'XTickLabel', x_labels);
+%     legend([b1, b2], {'Shear', 'Uni'}, 'Location', 'northwest');
+%     ylabel('DEL Edgewise [Nm]');
+%     hold off;
+%     setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw);
+% 
+%     % == Turbulence
+%     figure('Name', 'Turb vs ref', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+%     % Power
+%     subplot(1, 3, 1)
+%     b1 = bar(CLpower, 'EdgeColor', 'k', 'FaceColor', color2, 'LineWidth', 1.5);
+%     hold on;
+%     b2 = bar(VBLpower, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
+%     set(gca, 'XTickLabel', x_labels);
+%     legend([b1, b2], {'Turb', 'Uni'}, 'Location', 'northwest');
+%     ylabel('Power [MW]');
+%     hold off;
+%     
+%     % DEL Flapwise
+%     subplot(1, 3, 2)
+%     b1 = bar(CLDELflap, 'EdgeColor', 'k', 'FaceColor', color2, 'LineWidth', 1.5);
+%     hold on;
+%     b2 = bar(VBLDELflap, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
+%     set(gca, 'XTickLabel', x_labels);
+%     legend([b1, b2], {'Turb', 'Uni'}, 'Location', 'northwest');
+%     ylabel('DEL Flapwise [Nm]');
+%     hold off;
+%     
+%     % DEL Edgewise
+%     subplot(1, 3, 3)
+%     b1 = bar(CLDELedge, 'EdgeColor', 'k', 'FaceColor', color2, 'LineWidth', 1.5);
+%     hold on;
+%     b2 = bar(VBLDELedge, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
+%     set(gca, 'XTickLabel', x_labels);
+%     legend([b1, b2], {'Turb', 'Uni'}, 'Location', 'northwest');
+%     ylabel('DEL Edgewise [Nm]');
+%     hold off;
+%     setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw);
+% 
+%     % == Shear & Turbulence
+%     figure('Name', 'S&T vs ref', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+%     % Power
+%     subplot(1, 3, 1)
+%     b1 = bar(FLpower, 'EdgeColor', 'k', 'FaceColor', color3, 'LineWidth', 1.5);
+%     hold on;
+%     b2 = bar(VBLpower, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
+%     set(gca, 'XTickLabel', x_labels);
+%     legend([b1, b2], {'S&T', 'Uni'}, 'Location', 'northwest');
+%     ylabel('Power [MW]');
+%     hold off;
+%     
+%     % DEL Flapwise
+%     subplot(1, 3, 2)
+%     b1 = bar(FLDELflap, 'EdgeColor', 'k', 'FaceColor', color3, 'LineWidth', 1.5);
+%     hold on;
+%     b2 = bar(VBLDELflap, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
+%     set(gca, 'XTickLabel', x_labels);
+%     legend([b1, b2], {'S&T', 'Uni'}, 'Location', 'northwest');
+%     ylabel('DEL Flapwise [Nm]');
+%     hold off;
+%     
+%     % DEL Edgewise
+%     subplot(1, 3, 3)
+%     b1 = bar(FLDELedge, 'EdgeColor', 'k', 'FaceColor', color3, 'LineWidth', 1.5);
+%     hold on;
+%     b2 = bar(VBLDELedge, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
+%     set(gca, 'XTickLabel', x_labels);
+%     legend([b1, b2], {'S&T', 'Uni'}, 'Location', 'northwest');
+%     ylabel('DEL Edgewise [Nm]');
+%     hold off;
+%     setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw);
 
     % == Three Together
     colors = [color1; color2; color3];
@@ -718,8 +767,8 @@ if strcmp(storyTellingBasic, 'Y')
     end
     set(gca, 'XTickLabel', x_labels);
     legend([b1, b2], {'S', 'T', 'S&T', 'Uni'}, 'Location', 'northwest');
-    ylabel('[MW]');
-    title('Power')
+    ylabel('Power [MW]');
+%     title('Power')
     hold off;
     
     % DEL Flapwise
@@ -732,8 +781,8 @@ if strcmp(storyTellingBasic, 'Y')
     end
     set(gca, 'XTickLabel', x_labels);
     legend([b1, b2], {'S', 'T', 'S&T', 'Uni'}, 'Location', 'northwest');
-    ylabel('[Nm]');
-    title('DEL Flapwise')
+    ylabel('DEL Flapwise [Nm]');
+%     title('DEL Flapwise')
     hold off;
     
     % DEL Edgewise
@@ -746,8 +795,45 @@ if strcmp(storyTellingBasic, 'Y')
     end
     set(gca, 'XTickLabel', x_labels);
     legend([b1, b2], {'S', 'T', 'S&T', 'Uni'}, 'Location', 'northwest');
-    ylabel('[Nm]');
-    title('DEL Edgewise');
+    ylabel('DEL Edgewise [Nm]');
+%     title('DEL Edgewise');
+    hold off;
+    setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw);
+
+    % == Two Together
+    colors = [color1; color2; color3];
+    figure('Name', '3 vs ref', 'NumberTitle', 'off', 'Position', [100, 100, 600, 600]);
+    % Power
+    subplot(1, 2, 1)
+    b1 = bar([OLpower;CLpower;FLpower]', 'EdgeColor', 'k', 'LineWidth', 1.5);
+    hold on;
+    b2 = bar(VBLpower, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
+    for i = 1:length(b1)
+        b1(i).FaceColor = colors(i, :);
+    end
+    set(gca, 'XTickLabel', x_labels);
+    legend([b1, b2], {'S', 'T', 'S&T', 'Uni'}, 'Location', 'northwest');
+    ylabel('Power [MW]');
+    ylim([0 6]);
+    title('Power')
+    hold off;
+    
+    % DEL combined
+    OL_DEL = sqrt(OLDELedge.^2 + OLDELflap.^2);
+    CL_DEL = sqrt(CLDELedge.^2 + CLDELflap.^2);
+    FL_DEL = sqrt(FLDELedge.^2 + FLDELflap.^2);
+    subplot(1, 2, 2)
+    b1 = bar([OL_DEL;CL_DEL;FL_DEL]', 'EdgeColor', 'k', 'LineWidth', 1.5);
+    hold on;
+    b2 = bar(VBLDELflap, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
+    for i = 1:length(b1)
+        b1(i).FaceColor = colors(i, :);
+    end
+    set(gca, 'XTickLabel', x_labels);
+    legend([b1, b2], {'S', 'T', 'S&T', 'Uni'}, 'Location', 'northwest');
+    ylabel('DEL [Nm]');
+    ylim([0 6e7]);
+    title('DEL Whole')
     hold off;
     setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw);
 

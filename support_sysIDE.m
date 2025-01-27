@@ -62,7 +62,8 @@ n_varx = 4;
 f_varx = 200;    
 p_varx = 200;
 
-[S,X] = dordvarx(us,ys,f_varx,p_varx,'tikh','gcv');
+[S,X] = dordvarx(us,ys,f_varx,p_varx,'tikh','gcv');       % CL method
+% [S,X] = dordfir(us,ys,f_varx,p_varx,'tikh','gcv');      % OL method
 x = dmodx(X,n_varx);
 
 % State-Space Model Acquisition

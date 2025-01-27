@@ -9,7 +9,7 @@ turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesLonger\';
 
 % Different case
-windCase = 'BothRC2';
+windCase = 'ShearRC3';
 % Uniform
 % Turb 
 % ShearRC3, Shear, ShearRC, ShearRC2
@@ -41,7 +41,7 @@ elseif strcmp(windCase, 'ShearRC3')
     basefile = '2Turbines_Baseline_ShearReCenter_4D.mat';
     OLfileName = '2Turbines_OL_Helix_ShearReCenter_mag3_4D.mat';
     CLfileName = '2Turbines_CL_Helix_ShearReCenter3_mag3_4D.mat';
-    filter = 3000;
+    filter = 3500;
 elseif strcmp(windCase, 'Turb')
     basefile = '2Turbines_Baseline_TI6_4D.mat';
     OLfileName = '2Turbines_OL_Helix_TI6_mag3_4D.mat';
@@ -78,7 +78,7 @@ veryBase = load([turbineName caseName veryBaseOLfile]);
 Baseline = load([turbineName caseName basefile]);
 OL = load([turbineName caseName OLfileName]);
 CL = load([turbineName caseName CLfileName]);
-disp(mean(CL.HF_beta(filter:end, :)))
+% disp(mean(CL.HF_beta(filter:end, :)))
 
 %% Overall Settings
 errorOption = 'N';
@@ -92,9 +92,10 @@ powerAnalysis = 'N';
 DELAnalysis = 'N';
 PBDAnalysis = 'N';
 powerDELAnalysis = 'N';
-numericalAnalysis = 'Y';
-storyTellingBasic = 'Y';
+numericalAnalysis = 'N';
+storyTellingBasic = 'N';
 showCompnent = 'N';
+thesisWritingPowerLoad = 'Y';
 
 % Basic Settings
 D_NREL5MW = 126;
@@ -174,19 +175,6 @@ if strcmp(flowAnalysis, 'Y')
     xlim([0 t2(end)])
     xlabel('Time [s]')
     ylabel('Value [%]')
-    legend('OL','CL','Location','southeast')
-    setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
-
-    filter2 = 5000;
-    t2 = (1:(simLength-filter2+1)) * timeStep;
-    plot(t2, OL.UmeanStore(filter2:end), 'Color',color1,'LineWidth', lw)
-    hold on
-    plot(t2, CL.UmeanStore(filter2:end),'Color',color2,'LineWidth', lw)
-    hold off
-    title('Average U_{inflow}')
-    xlim([0 t2(end)])
-    xlabel('Time [s]')
-    ylabel('Speed [m/s]')
     legend('OL','CL','Location','southeast')
     setfigpaper('Width',[30,0.5],'Interpreter','tex','FontSize',Font,'linewidth',lw)
 
@@ -479,11 +467,12 @@ end
 % ============== Hub Jet Trajectory
 if strcmp(trajOption, 'Y')
     if strcmp(windCase,'ShearRC3')
-        CL.FF_helixCenter_filtered(:, 2) = CL.FF_helixCenter_filtered(:, 2) + 0.5;
+        CL.FF_helixCenter_filtered(:, 2) = CL.FF_helixCenter_filtered(:, 2) + 0.8;
     elseif strcmp(windCase, 'BothRC2')
         CL.FF_helixCenter_filtered(:, 2) = CL.FF_helixCenter_filtered(:, 2) + 0.7;
     end
-%     filter = 4000
+    filter_buf = filter;
+    filter = 5000;
     center_blb = mean(veryBase.FF_helixCenter_filtered(filter:end, :));
     center_bl = mean(Baseline.FF_helixCenter_filtered(filter:end, :));
     center_ol = mean(OL.FF_helixCenter_filtered(filter:end, :));
@@ -506,6 +495,7 @@ if strcmp(trajOption, 'Y')
     ylim([60 110])
     legend('OL','CL','Hub','Uni OL', 'Location','southeast')
     setfigpaper('Width',[15,1],'Interpreter','tex','FontSize',Font,'linewidth',lw)
+    filter = filter_buf;
 end
 
 % ============== Video comparison
@@ -727,7 +717,7 @@ end
 % baseline does not have PBD since Helix is not activated
 if strcmp(PBDAnalysis, 'Y')
     deltaPBD = mean(CL_result.WT1.PBD) - mean(OL_result.WT1.PBD);
-    disp(deltaPBD)
+%     disp(deltaPBD)
 end
 
 % === Numerical Comparsion between OL and CL
@@ -903,4 +893,45 @@ if strcmp(storyTellingBasic, 'Y')
     legend([b1(1), b1(2), b2], {'OL', 'CL', 'Uni'}, 'Location', 'northwest');
     ylabel('DEL Edgewise [Nm]');
     setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw);
+end
+
+if strcmp(thesisWritingPowerLoad, 'Y')
+    % Only power and load, without uniform dashed line
+    % Very Basic (Uniform Open-Loop Helix)
+    VBLpower = [VBL_result.WT1.power VBL_result.WT2.power VBL_result.All.power];
+    VBLDELflap = [VBL_result.WT1.DEL_flapwise VBL_result.WT2.DEL_flapwise VBL_result.All.DEL_flapwise];
+    VBLDELedge = [VBL_result.WT1.DEL_edgewise VBL_result.WT2.DEL_edgewise VBL_result.All.DEL_edgewise];
+    VBL_DEL = sqrt(VBLDELflap.^2 + VBLDELedge.^2);
+    % Pre-Control (Open-Loop Helix)
+    OLpower = [OL_result.WT1.power OL_result.WT2.power OL_result.All.power];
+    OLDELflap = [OL_result.WT1.DEL_flapwise OL_result.WT2.DEL_flapwise OL_result.All.DEL_flapwise];
+    OLDELedge = [OL_result.WT1.DEL_edgewise OL_result.WT2.DEL_edgewise OL_result.All.DEL_edgewise];
+    OL_DEL = sqrt(OLDELflap.^2 + OLDELedge.^2);
+    % Post-Control (Closed-Loop Helix)
+    CLpower = [CL_result.WT1.power CL_result.WT2.power CL_result.All.power];
+    CLDELflap = [CL_result.WT1.DEL_flapwise CL_result.WT2.DEL_flapwise CL_result.All.DEL_flapwise];
+    CLDELedge = [CL_result.WT1.DEL_edgewise CL_result.WT2.DEL_edgewise CL_result.All.DEL_edgewise];
+    CL_DEL = sqrt(CLDELflap.^2 + CLDELedge.^2);
+
+    % == Open-Loop vs. Closed-Loop
+    figure('Name', 'OL vs. CL', 'NumberTitle', 'off', 'Position', [100, 100, 600, 600]);
+    % Power
+    subplot(1, 2, 1)
+    b1 = bar([OLpower; CLpower]', 'grouped');
+    set(gca, 'XTickLabel', x_labels);
+    legend([b1(1), b1(2)], {'OL', 'CL'}, 'Location', 'northwest');
+    ylabel('Power [MW]');
+    title('Power')
+    ylim([0 6])
+    % DEL 
+    subplot(1, 2, 2)
+    b1 = bar([OL_DEL; CL_DEL]', 'grouped');
+    set(gca, 'XTickLabel', x_labels);
+    legend([b1(1), b1(2)], {'OL', 'CL'}, 'Location', 'northwest');
+    ylabel('DEL [Nm]');
+    title('DEL Whole')
+    ylim([0 6e7])
+    setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw);
+
+    % Explain why shear had so much increase in DEL
 end
