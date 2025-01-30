@@ -925,11 +925,11 @@ if strcmp(thesisWritingPowerLoad, 'Y')
     ylim([0 6])
     % DEL 
     subplot(1, 2, 2)
-    b1 = bar([OL_DEL; CL_DEL]', 'grouped');
+    b1 = bar([OLDELflap; CLDELflap]', 'grouped');
     set(gca, 'XTickLabel', x_labels);
     legend([b1(1), b1(2)], {'OL', 'CL'}, 'Location', 'northwest');
     ylabel('DEL [Nm]');
-    title('DEL Whole')
+    title('DEL Flapwise')
     ylim([0 6e7])
     setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw);
 

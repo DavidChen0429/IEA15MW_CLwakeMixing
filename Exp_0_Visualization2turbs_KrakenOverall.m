@@ -8,7 +8,7 @@ addpath('.\Functions');
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesLonger\';
 
-ControlOption = 'Kraken'; % Kraken, Helix
+ControlOption = 'Helix'; % Kraken, Helix
 % Different case
 if strcmp(ControlOption, 'Helix')
     basefile = '2Turbines_OL_Helix_mag3_4D.mat';
@@ -818,12 +818,9 @@ if strcmp(storyTellingBasic, 'Y')
     title('Power')
     hold off;
     
-    % DEL combined
-    OL_DEL = sqrt(OLDELedge.^2 + OLDELflap.^2);
-    CL_DEL = sqrt(CLDELedge.^2 + CLDELflap.^2);
-    FL_DEL = sqrt(FLDELedge.^2 + FLDELflap.^2);
+    % DEL Flapwise
     subplot(1, 2, 2)
-    b1 = bar([OL_DEL;CL_DEL;FL_DEL]', 'EdgeColor', 'k', 'LineWidth', 1.5);
+    b1 = bar([OLDELflap;CLDELflap;FLDELflap]', 'EdgeColor', 'k', 'LineWidth', 1.5);
     hold on;
     b2 = bar(VBLDELflap, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
     for i = 1:length(b1)
@@ -833,7 +830,7 @@ if strcmp(storyTellingBasic, 'Y')
     legend([b1, b2], {'S', 'T', 'S&T', 'Uni'}, 'Location', 'northwest');
     ylabel('DEL [Nm]');
     ylim([0 6e7]);
-    title('DEL Whole')
+    title('DEL Flapwise')
     hold off;
     setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw);
 
