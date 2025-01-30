@@ -4,6 +4,8 @@ close all
 addpath('.\Functions');
 %clc
 
+% check for github configuration update
+
 %% Data file (Chage this accordingly)
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesNew\';
