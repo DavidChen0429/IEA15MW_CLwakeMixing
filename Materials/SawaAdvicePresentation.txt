@@ -1,0 +1,52 @@
+Advice from Sawa 
+
+*Add more animation, but combine them 
+*MBC should be just shortly introduce, it's not the focus
+*Zero math, zero greek letters, try to make it so that dumbass can understand
+*Introduction: provide challenges instead of lecturing people about the BG knowledge
+*Make the storyline direct and has a main focus: every slide should have logical relationship with the latter one at least for introduction
+*To eliminate all the logical derivation for people, instead, I need to do it in slides by using animations, figures, and so on. Make sure that they don't need to think to follow my presentation
+ ----> Use animation to guide audience for what they should focus on, step by step
+
+Slide 
+1. supervisor? 
+2. don't do this, after the research questions
+4. Challenge is not relevant
+6. Don't use the big words, keep it simple for a child to understand 
+   try to make animations to make people understand 
+   Visualization
+10. too much info?
+12. Add why Helix is best, don't use a star, use a frame or sth
+13. Simplify MBC transform without using math, don't add equations
+    MBC is one of the plan, so shouldn't be a focus, cut the time
+14. Easier way in terms of control
+18,19. Too much info, use easy words and concepts, make people more engaged
+       leave out things that is unrelevant to the problem, get to the problem asap
+24. The figure is confusing, make it more intuitive to understand (combin with setup figure), maybe the figure under the setup
+30. Short mention about LiDAR configuration, or "we won't go very deep into the first one"
+32. make it a propoer control loop, what is the reference
+	Intoduce the system design block by block, use animations 
+34. when introducing the slice, take a slice from the wake animatnion, and explain to people that a LiDAR is able to sample that
+35. Be clear with people that the relationship between the hub jet and the helxi
+    Make it clear to people that hub jet is inherent in the wake, it's a feature of the turbine wake rather than sth that appears in Helix
+36. Explain what's going on in the animation, instead of just presenting the animation
+37. Too much line, the figure is not informative
+43. Quite a lot of line, just one figure is fine
+45. T is the HFT, make it clear by having consistency with the previous content, explain the complete loop step by step using animations or results
+51. Make the figure looks nicer by polishing the figure
+53. When teling the story, also form the loop, and then replace with terms
+54. Have better link with the story, G is Billy Bob, C is you, and so on
+55. VAF is what
+56. Mention the unstable zero, complexity increase
+61. Add a title, and remove the "hub"
+    label the figure properly
+67. Add the limitation figure 
+
+I spent too much fucking time in the future works
+Conclusion (stress that you have achieved something)
+	1. Great success! in big letters
+	2. Explain a bit of the feature of what you have achieved
+71. Simplify the figure and add text to clarify
+72. Try to avoid observation listing, present it as positive as you can, be proud of what I did
+73. Maybe start the conclusion with looking back at the research questions
+74. Future works is a bit too much, some can be explained in conclusion
