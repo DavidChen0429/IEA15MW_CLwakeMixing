@@ -8,7 +8,7 @@ addpath('.\Functions');
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesLonger\';
 
-ControlOption = 'Helix'; % Kraken, Helix
+ControlOption = 'Kraken'; % Kraken, Helix
 % Different case
 if strcmp(ControlOption, 'Helix')
     basefile = '2Turbines_OL_Helix_mag3_4D.mat';
@@ -53,7 +53,7 @@ biasShear = [0 0.0];    % [0 0.8]
 D_NREL5MW = 126;
 U_inflow = 10;
 timeStep = 0.1;
-filter = 3500;
+filter = 3500; %3500
 filter0 = 5000;    % Overall
 filter2 = 1;    % Wind info
 filter3 = 1;    % Rare data
@@ -768,11 +768,13 @@ if strcmp(storyTellingBasic, 'Y')
     set(gca, 'XTickLabel', x_labels);
     legend([b1, b2], {'S', 'T', 'S&T', 'Uni'}, 'Location', 'northwest');
     ylabel('Power [MW]');
-%     title('Power')
+    title('Power')
     hold off;
     
     % DEL Flapwise
     subplot(1, 3, 2)
+    OLDELflap = [3.12e7 1.78e7 4.895e7];
+    FLDELflap = [3.14e7 1.81e7 4.92e7];
     b1 = bar([OLDELflap;CLDELflap;FLDELflap]', 'EdgeColor', 'k', 'LineWidth', 1.5);
     hold on;
     b2 = bar(VBLDELflap, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
@@ -782,11 +784,13 @@ if strcmp(storyTellingBasic, 'Y')
     set(gca, 'XTickLabel', x_labels);
     legend([b1, b2], {'S', 'T', 'S&T', 'Uni'}, 'Location', 'northwest');
     ylabel('DEL Flapwise [Nm]');
-%     title('DEL Flapwise')
+    title('DEL Flapwise')
     hold off;
     
     % DEL Edgewise
     subplot(1, 3, 3)
+    OLDELedge = [8.29e6 3.77e6 12.02e6];
+    FLDELedge = [7.9496e6 4.1096e6 12.05e6];
     b1 = bar([OLDELedge;CLDELedge;FLDELedge]', 'EdgeColor', 'k', 'LineWidth', 1.5);
     hold on;
     b2 = bar(VBLDELedge, 'FaceColor', 'none', 'EdgeColor', 'k', 'LineStyle', '--', 'LineWidth', 1.5);
@@ -796,7 +800,7 @@ if strcmp(storyTellingBasic, 'Y')
     set(gca, 'XTickLabel', x_labels);
     legend([b1, b2], {'S', 'T', 'S&T', 'Uni'}, 'Location', 'northwest');
     ylabel('DEL Edgewise [Nm]');
-%     title('DEL Edgewise');
+    title('DEL Edgewise');
     hold off;
     setfigpaper('Width',[40,0.3],'Interpreter','tex','FontSize',Font,'linewidth',lw);
 

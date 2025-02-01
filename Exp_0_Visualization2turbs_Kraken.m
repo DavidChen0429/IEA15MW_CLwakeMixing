@@ -9,7 +9,7 @@ turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\2TurbinesLonger\';
 
 % Different case
-windCase = 'ShearRC3';
+windCase = 'BothRC2';
 % Uniform
 % Turb 
 % ShearRC3, Shear, ShearRC, ShearRC2
@@ -93,7 +93,7 @@ DELAnalysis = 'N';
 PBDAnalysis = 'N';
 powerDELAnalysis = 'N';
 numericalAnalysis = 'N';
-storyTellingBasic = 'N';
+storyTellingBasic = 'Y';
 showCompnent = 'N';
 thesisWritingPowerLoad = 'Y';
 
