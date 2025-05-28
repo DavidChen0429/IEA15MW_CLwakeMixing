@@ -25,12 +25,12 @@ DesignOption = 'Matrix2';
 
 % Check result option
 showBasicOption = 'N';      % Basic property
-showController = 'Y';
+showController = 'N';
 showWeight = 'N';
 showFreqOption = 'N';       % BD of S, T, U, L
-showFreq2Option = 'Y';      % BD of WpS, WuU
-showSingularValue = 'N';    % Singular value of S, T
-showTimeOption = 'Y';       % Step response
+showFreq2Option = 'N';      % BD of WpS, WuU
+showSingularValue = 'Y';    % Singular value of S, T
+showTimeOption = 'N';       % Step response
 showIteraitve = 'N';
 showNyquist = 'N';          % Nyquist stability check
 showPerformance = 'N';
@@ -188,14 +188,15 @@ end
 
 % Singular Value
 if strcmp(showSingularValue, 'Y')
-    figure('Name', 'Singular Value', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 600]);
+    figure('Name', 'Peak Singular Value', 'NumberTitle', 'off', 'Position', [100, 100, 1000, 500]);
     subplot(2, 1, 1)
     sigma(S_mimo);
     hold on
     yline(6,'k--')
     hold off
-    ylabel('Magnitude [dB]')
+    ylabel('Magnitude')
     ylim([-20 10])
+    title('Peak Singular Value')
     legend('S','6dB','Location','southeast')
     grid on
     subplot(2, 1, 2)
@@ -203,7 +204,7 @@ if strcmp(showSingularValue, 'Y')
     hold on
     yline(2,'k--')
     hold off
-    ylabel('Magnitude [dB]')
+    ylabel('Magnitude')
     ylim([-100 10])
     title('')
     legend('T','2dB','Location','southeast')
