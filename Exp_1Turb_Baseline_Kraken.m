@@ -6,9 +6,9 @@ addpath('.\Functions');
 
 %% Define paths
 UserPath = 'C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\IEA15MW_CLwakeMixing\'; 
-QBladePath = 'C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\QBladeEE_2.0.6.4\'; 
+QBladePath = 'C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\QBladeEE_2.0.6.4\';  % change
 SourcePath = [UserPath 'Source\'];
-DllPath = [QBladePath 'QBladeEE_2.0.6.dll'];
+DllPath = [QBladePath 'QBladeEE_2.0.6.dll']; % change
 simFile = [SourcePath 'NREL5MW_1turbine_turbulence.sim'];
 addpath('.\Functions');
 
