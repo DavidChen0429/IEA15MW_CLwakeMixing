@@ -29,7 +29,7 @@ data(:, :, 5) = [3e7, 1.85e7, 4.85e7;   % OL (WT1,WT2,All)
                  2.95e7, 1.95e7, 4.9e7];  % CL (WT1,WT2,All)
 % subplot(3,2) --- DELe
 data(:, :, 8) = [7.6e6, 3.7e6, 11.3e6;   % OL (WT1,WT2,All)
-                 7.4e6, 3.9e6, 11.3e6];  % CL (WT1,WT2,All)
+                 7.59e6, 3.71e6, 11.3e6];  % CL (WT1,WT2,All)
 
 % ======== Combined
 % subplot(1,3) --- power
