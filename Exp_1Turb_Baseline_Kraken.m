@@ -6,9 +6,11 @@ addpath('.\Functions');
 
 %% Define paths
 UserPath = 'C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\IEA15MW_CLwakeMixing\'; 
-QBladePath = 'C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\QBladeEE_2.0.6.4\';  % change
+% QBladePath = 'C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\QBladeEE_2.0.6.4\';  % change
+QBladePath = 'C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\QBladeCE_2.0.9\';  % change
 SourcePath = [UserPath 'Source\'];
-DllPath = [QBladePath 'QBladeEE_2.0.6.dll']; % change
+% DllPath = [QBladePath 'QBladeEE_2.0.6.dll']; % change
+DllPath = [QBladePath 'QBladeCE_2.0.9.dll']; % change
 simFile = [SourcePath 'NREL5MW_1turbine_turbulence.sim'];
 addpath('.\Functions');
 
@@ -23,7 +25,7 @@ simTime = 6000;     % in timestep, actual time is simTime*timestep(Q-blade defin
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 saveOption = 'N';
-windtype = 'TItry'; % Check .sim file (right. bts file) !!!!!!! 
+windtype = 'Debug'; % Check .sim file (right. bts file) !!!!!!! 
 
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\1Turbine\';
