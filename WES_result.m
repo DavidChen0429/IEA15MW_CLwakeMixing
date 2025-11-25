@@ -108,7 +108,7 @@ for i = 1:9
         xticks([]);       % Hide ticks
         xticklabels({});  % Hide labels
     end
-    grid on;
+%     grid on;
 
     % Add column titles to top row
     if i <= 3

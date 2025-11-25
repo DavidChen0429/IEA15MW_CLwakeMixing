@@ -21,10 +21,10 @@ if isempty(m)
 end
 
 %% Data file (Chage this accordingly)
-simTime = 6000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 1200;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
-saveOption = 'Y';
+saveOption = 'N';
 
 turbineName = '.\Data\NREL5MW\';
 caseName = 'Experiment\Str0.3_U10_1Dd_10Hz_CCW\1Turbine\';
@@ -128,8 +128,8 @@ HF_helixCenter_filtered = zeros(simTime, 2);
 PitchAngles = zeros(simTime, 3);
 FF_helixCenter = zeros(simTime, 2);
 HF_helixCenter = zeros(simTime, 2);
-% templateStruct = struct('x', [], 'y', [], 'z', [], 'u_x', [], 'u_y', [], 'u_z', [], 'u_norm', [], 'u_los', []);
-% LiDAR_data(simTime, 1) = templateStruct;
+templateStruct = struct('x', [], 'y', [], 'z', [], 'u_x', [], 'u_y', [], 'u_z', [], 'u_norm', [], 'u_los', []);
+LiDAR_data(simTime, 1) = templateStruct;
 
 % Sliding window
 ws_filter = 100;
@@ -253,7 +253,7 @@ for i = 1:1:simTime
     PitchAngles(i,:) = [Pitch1 Pitch2 Pitch3];
     FF_helixCenter(i, :) = [wakeCenter(1) wakeCenter(2)]; % Z(tilt), Y(yaw)
     HF_helixCenter(i, :) = [center_e(1) center_e(2)];   % Ze(tilt), Ye(yaw) 
-%     LiDAR_data(i) = windspeed;
+    LiDAR_data(i) = windspeed;
 
     waitbar(i/simTime, f, sprintf('Simulation Running: %.1f%%', (i/simTime)*100));
 
@@ -337,7 +337,7 @@ title('Center HF')
 % legend('z_e', 'y_e', 'z_{e,f}', 'y_{e,f}')
 legend('z_{e,f}', 'y_{e,f}')
 
-% ringVisualization2(LiDAR_data, D_NREL5MW)
+ringVisualization2(LiDAR_data, D_NREL5MW)
 
 %% Unload Library 
 % unloadlibrary 'QBladeDLL'
