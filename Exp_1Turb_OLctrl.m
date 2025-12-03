@@ -19,7 +19,7 @@ if isempty(m)
 end
 
 %% Data file (Chage this accordingly)
-simTime = 6000;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 3000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 mag = 3; % 2, 3, 99(customize), -1(doesn't work)
@@ -378,7 +378,7 @@ title('Center HF')
 % legend('z_e', 'y_e', 'z_{e,f}', 'y_{e,f}')
 legend('z_{e,f}', 'y_{e,f}')
 
-% ringVisualization2(LiDAR_data, D_NREL5MW)
+ringVisualization2(LiDAR_data, D_NREL5MW)
 
 %% Unload Library 
 % unloadlibrary 'QBladeDLL'
