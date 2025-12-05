@@ -5,11 +5,9 @@ addpath('.\Functions');
 %clc
 
 %% Define paths
-UserPath = 'C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\IEA15MW_CLwakeMixing\'; 
-% QBladePath = 'C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\QBladeEE_2.0.6.4\';  % change
-QBladePath = 'C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\QBladeEE_2.0.9\';  % change
+UserPath = 'D:\1_Master_TUDelft\Thesis\IEA15MW_CLwakeMixing\'; 
+QBladePath = 'D:\1_Master_TUDelft\Thesis\QBladeEE_2.0.9\';  % change
 SourcePath = [UserPath 'Source\'];
-% DllPath = [QBladePath 'QBladeEE_2.0.6.dll']; % change
 DllPath = [QBladePath 'QBladeEE_2.0.9.dll']; % change
 simFile = [SourcePath 'NREL5MW_1turbine.sim'];
 addpath('.\Functions');
@@ -21,7 +19,7 @@ if isempty(m)
 end
 
 %% Data file (Chage this accordingly)
-simTime = 1200;     % in timestep, actual time is simTime*timestep(Q-blade define)
+simTime = 3000;     % in timestep, actual time is simTime*timestep(Q-blade define)
 timeStep = 0.1;    % same with the Q-blade setting
 simLen = simTime * timeStep; % seconds
 saveOption = 'N';
@@ -33,29 +31,29 @@ QprName = '1Turbine_Baseline.qpr';
 
 %% Load project and Initialize simulation
 %this is setup using relative path and depends on the location of this file
-calllib('QBladeDLL','createInstance',2,64)  % 64 for ring
-calllib('QBladeDLL','setLibraryPath',DllPath)   % set lib path
-calllib('QBladeDLL','loadSimDefinition',simFile)
+calllib('QBladeDLL','createInstance',1,64);  % 64 for ring
+calllib('QBladeDLL','setLibraryPath',DllPath);   % set lib path
+calllib('QBladeDLL','loadSimDefinition',simFile);
 calllib('QBladeDLL','initializeSimulation')
 
 % Variables we care
 valuestr = 'Rotational Speed [rpm]';
-valuestr2 = 'Gen. HSS Torque [Nm]';
+valuestr2 = 'Aerodynamic Torque [Nm]'; % Need to be confirmed
 valuestr3 = 'Tip Speed Ratio [-]';
-Azimu1 = 'Azimuthal Position Blade 1 [deg]';
-Azimu2 = 'Azimuthal Position Blade 2 [deg]';
-Azimu3 = 'Azimuthal Position Blade 3 [deg]';
-Pit1 = 'Pitch Angle Blade 1 [deg]';
-Pit2 = 'Pitch Angle Blade 2 [deg]';
-Pit3 = 'Pitch Angle Blade 3 [deg]';
-PowerVar = 'Aerodynamic Power [kW]';
+Azimu1 = 'Azimuthal Angle BLD_1 [deg]';
+Azimu2 = 'Azimuthal Angle BLD_2 [deg]';
+Azimu3 = 'Azimuthal Angle BLD_3 [deg]';
+Pit1 = 'Pitch Angle BLD_1 [deg]';
+Pit2 = 'Pitch Angle BLD_2 [deg]';
+Pit3 = 'Pitch Angle BLD_3 [deg]';
+PowerVar = 'Aerodynamic Power [W]';
 CpVar = 'Power Coefficient [-]';
-Moop1Var = 'Aero. OOP RootBend. Mom. Blade 1 [Nm]';
-Mip1Var = 'Aero. IP RootBend. Mom. Blade 1 [Nm]';
-Moop2Var = 'Aero. OOP RootBend. Mom. Blade 2 [Nm]';
-Mip2Var = 'Aero. IP RootBend. Mom. Blade 2 [Nm]';
-Moop3Var = 'Aero. OOP RootBend. Mom. Blade 3 [Nm]';
-Mip3Var = 'Aero. IP RootBend. Mom. Blade 3 [Nm]';
+Moop1Var = 'Aero. OOP RootBend. Mom. BLD_1 [Nm]';
+Mip1Var = 'Aero. IP RootBend. Mom. BLD_1 [Nm]';
+Moop2Var = 'Aero. OOP RootBend. Mom. BLD_2 [Nm]';
+Mip2Var = 'Aero. IP RootBend. Mom. BLD_2 [Nm]';
+Moop3Var = 'Aero. OOP RootBend. Mom. BLD_3 [Nm]';
+Mip3Var = 'Aero. IP RootBend. Mom. BLD_3 [Nm]';
 
 %% Load internal model
 buf_sys = load('Model\RightTransform_Azimuth96\ModelOrder4_noise1p_opposite_decoupled.mat');
@@ -149,7 +147,10 @@ filterState4 = zeros(n, 1);
 % start simulation
 tic
 f = waitbar(0,'Initializing Simulation');
+calllib('QBladeDLL','setLogFile','log.txt');
+disp("Initialized")
 for i = 1:1:simTime
+    % success = calllib('QBladeDLL','advanceTurbineSimulation')
     calllib('QBladeDLL','advanceTurbineSimulation')
     
     % Get current value
@@ -222,7 +223,7 @@ for i = 1:1:simTime
 
     % Send control signal to qblade
     calllib('QBladeDLL','setControlVars_at_num',[genTorque 0 ...
-        betaBlade_Helix(1) betaBlade_Helix(2) betaBlade_Helix(3)],0)
+        betaBlade_Helix(1) betaBlade_Helix(2) betaBlade_Helix(3)],0);
 
     % ==================== Store values 
 %     omega_store(i,:) = omega;
@@ -283,7 +284,7 @@ if strcmp(saveOption, 'Y')
                                           'Medge3_store', ...
                                           'PitchAngles');
 end
-calllib('QBladeDLL','closeInstance')
+calllib('QBladeDLL','closeInstance');
 toc 
 
 %% Visualization
@@ -337,6 +338,7 @@ title('Center HF')
 % legend('z_e', 'y_e', 'z_{e,f}', 'y_{e,f}')
 legend('z_{e,f}', 'y_{e,f}')
 
+disp(Power_store)
 ringVisualization2(LiDAR_data, D_NREL5MW)
 
 %% Unload Library 

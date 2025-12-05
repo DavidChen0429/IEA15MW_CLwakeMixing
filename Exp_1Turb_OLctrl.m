@@ -5,10 +5,10 @@ addpath('.\Functions');
 %clc
 
 %% Define paths
-UserPath = 'C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\IEA15MW_CLwakeMixing\'; 
-QBladePath = 'C:\Users\DAVID CHEN\Desktop\TU_Delft\Thesis\QBladeEE_2.0.6.4\'; 
+UserPath = 'D:\1_Master_TUDelft\Thesis\IEA15MW_CLwakeMixing'; 
+QBladePath = 'D:\1_Master_TUDelft\Thesis\QBladeEE_2.0.9\';  % change
 SourcePath = [UserPath 'Source\'];
-DllPath = [QBladePath 'QBladeEE_2.0.6.dll'];
+DllPath = [QBladePath 'QBladeEE_2.0.9.dll']; % change
 simFile = [SourcePath 'NREL5MW_1turbine.sim'];
 addpath('.\Functions');
 
@@ -378,7 +378,7 @@ title('Center HF')
 % legend('z_e', 'y_e', 'z_{e,f}', 'y_{e,f}')
 legend('z_{e,f}', 'y_{e,f}')
 
-ringVisualization2(LiDAR_data, D_NREL5MW)
+% ringVisualization2(LiDAR_data, D_NREL5MW)
 
 %% Unload Library 
 % unloadlibrary 'QBladeDLL'

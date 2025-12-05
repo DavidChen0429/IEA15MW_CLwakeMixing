@@ -19,17 +19,6 @@ NREL 5MW Turbine
 56780		HUBMASS - Hub Mass (kg)
 115926		HUBINER - Hub Inertia (kg*m^2)
 
-------------------------------- NACELLE DRAG ------------------------------
-10.0            NACCAX - Downwind distance from the tower-top to the nacelle CD (m) (HAWT only)
-0.0             NACCAY - Lateral  distance from the tower-top to the nacelle CD (m) (HAWT only)
-1.75            NACCAZ - Vertical distance from the tower-top to the nacelle CD (m) (HAWT only)
-15              NACARX - Downwind area of the nacelle (m^2) (HAWT only)
-90              NACARY - Lateral  area of the nacelle (m^2) (HAWT only)
-60              NACARZ - Vertical area of the nacelle (m^2) (HAWT only)
-1.2             NACCDX - Downwind drag coefficient of the nacelle (-) (HAWT only)
-1.2             NACCDY - Lateral drag coefficient of the nacelle (-) (HAWT only)
-1.2             NACCDZ - Vertical drag coefficient of the nacelle (-) (HAWT only)
-
 ------------------------------- DRIVETRAIN MODEL --------------------------
 97			GBRATIO - gearbox ratio (N)
 1.0			GBOXEFF - gearbox efficiency (0-1)
